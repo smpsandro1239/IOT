@@ -18,10 +18,8 @@ Route::get('/', function () {
 });
 
 // Placeholder for Admin Dashboard Routes (authentication will be needed)
-Route::prefix('admin')->middleware('auth')->group(function () {
-    Route::get('/dashboard', function () {
-        return "Admin Dashboard"; // Placeholder
-    })->name('admin.dashboard');
+Route::prefix('admin')->middleware('auth')->group(function () { // TODO: Implementar middleware 'auth' real
+    Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('admin.dashboard');
 
     // Vehicle Management Routes
     Route::resource('vehicles', App\Http\Controllers\VehicleController::class)->names([
