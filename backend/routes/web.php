@@ -37,6 +37,7 @@ Route::prefix('admin')->middleware('auth')->group(function () {
     // Access Log Routes
     Route::get('access-logs', [App\Http\Controllers\AccessLogController::class, 'index'])->name('admin.access-logs.index');
 
-    // Firmware Management Routes (placeholders)
-    // Route::resource('firmwares', App\Http\Controllers\FirmwareController::class)->names('admin.firmwares'); // Exemplo se fosse resource
+    // Firmware Management Routes
+    Route::resource('firmwares', App\Http\Controllers\FirmwareController::class, ['as' => 'admin'])->except(['show']);
+    Route::patch('firmwares/{firmware}/set-active', [App\Http\Controllers\FirmwareController::class, 'setActive'])->name('admin.firmwares.set-active');
 });
