@@ -23,11 +23,19 @@ Route::prefix('admin')->middleware('auth')->group(function () {
         return "Admin Dashboard"; // Placeholder
     })->name('admin.dashboard');
 
-    // Vehicle Management Routes (placeholders)
-    // Route::resource('vehicles', App\Http\Controllers\VehicleController::class);
+    // Vehicle Management Routes
+    Route::resource('vehicles', App\Http\Controllers\VehicleController::class)->names([
+        'index' => 'admin.vehicles.index',
+        'create' => 'admin.vehicles.create',
+        'store' => 'admin.vehicles.store',
+        'show' => 'admin.vehicles.show',
+        'edit' => 'admin.vehicles.edit',
+        'update' => 'admin.vehicles.update',
+        'destroy' => 'admin.vehicles.destroy',
+    ]);
 
     // Access Log Routes (placeholders)
-    // Route::get('access-logs', [App\Http\Controllers\AccessLogController::class, 'index'])->name('access-logs.index');
+    // Route::get('access-logs', [App\Http\Controllers\AccessLogController::class, 'index'])->name('admin.access-logs.index');
 
     // Firmware Management Routes (placeholders)
     // Route::resource('firmwares', App\Http\Controllers\FirmwareController::class);
