@@ -67,8 +67,8 @@ void mostraNoDisplay() {
   display.print("Enviados: "); display.println(contadorEnvios);
   display.print("Data/Hora:"); display.println(dataHoraAtual);
   display.print("Status: "); display.println(statusLoRa);
-  display.print("Ult. resposta:"); display.println(ultimaResposta);
-  display.print("Ult. RSSI: "); display.println(ultimoRSSI);
+  // display.print("Ult. resposta:"); display.println(ultimaResposta); // Removido ACK
+  // display.print("Ult. RSSI: "); display.println(ultimoRSSI); // Removido ACK
   display.println("Ult. pacote:");
   if (ultimoPacote.length() > 16) {
     display.println(ultimoPacote.substring(0, 16));
@@ -139,22 +139,11 @@ void loop() {
 
   Serial.print("Enviado: "); Serial.println(pacote);
 
-  // Tenta receber resposta da direção
-  unsigned long startWait = millis();
-  ultimaResposta = "Aguardando...";
-  ultimoRSSI = 0;
-  while (millis() - startWait < 500) {
-    int packetSize = LoRa.parsePacket();
-    if (packetSize) {
-      String resposta = "";
-      while (LoRa.available()) { resposta += (char)LoRa.read(); }
-      ultimaResposta = resposta;
-      ultimoRSSI = LoRa.packetRssi();
-      Serial.print("ACK da direcao: "); Serial.println(resposta);
-      break;
-    }
-  }
+  // Bloco de recebimento de ACK removido conforme plano (Passo 1.2)
+  // O veículo agora apenas transmite.
+  // ultimaResposta = "N/A"; // Pode ser definido para um valor padrão
+  // ultimoRSSI = 0;
 
   mostraNoDisplay();
-  delay(2000);
+  delay(2000); // Manter o delay entre envios
 }
