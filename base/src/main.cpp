@@ -42,6 +42,8 @@ const char* password = "Benfica456+++++";
 // String apiBaseUrl = "http://" + String(API_HOST) + ":" + String(API_PORT) + String(API_BASE_PATH);
 // A linha acima não pode ser usada para #define, então construiremos a URL nas funções HTTP.
 
+#define API_AUTH_TOKEN "PLAIN_TEXT_TOKEN_GERADO_PELO_SANCTUM" // <<< SUBSTITUIR PELO TOKEN REAL
+
 #define WIFI_CONNECTION_TIMEOUT_MS 15000 // 15 segundos para conectar ao WiFi
 
 
@@ -177,6 +179,8 @@ String httpGETRequest(const char* endpoint) {
 
     // http.setReuse(true); // Considerar para múltiplas requisições ao mesmo host
     http.begin(serverPath);
+    http.addHeader("Authorization", "Bearer " + String(API_AUTH_TOKEN));
+    http.addHeader("Accept", "application/json");
 
     int httpResponseCode = http.GET();
     String payload = "{\"error\":\"Request failed or no payload\"}"; // Default error payload
@@ -208,9 +212,9 @@ String httpPOSTRequest(const char* endpoint, const String& jsonPayload) {
 
     // http.setReuse(true);
     http.begin(serverPath);
+    http.addHeader("Authorization", "Bearer " + String(API_AUTH_TOKEN));
     http.addHeader("Content-Type", "application/json");
     http.addHeader("Accept", "application/json");
-
 
     int httpResponseCode = http.POST(jsonPayload);
     String responsePayload = "{\"error\":\"Request failed or no payload\"}"; // Default error payload
