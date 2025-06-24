@@ -22,8 +22,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 // API for ESP32 Base Station
-// TODO: Add API authentication middleware (e.g., Sanctum token or a simple shared secret)
-Route::prefix('v1')->group(function () { // Versioning the API
+Route::prefix('v1')->middleware('auth:sanctum')->group(function () { // Proteger todo o grupo v1 com Sanctum
     // Endpoint for ESP32 to register access events
     Route::post('/access-logs', [AccessLogController::class, 'store'])->name('api.accesslogs.store');
 
