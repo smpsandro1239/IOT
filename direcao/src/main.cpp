@@ -22,7 +22,8 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 const char* ssid = "50N43Everywere 3";
 const char* password = "Benfica456+++++";
-const char* direcao = "NS"; // "NS" ou "SN" conforme a placa
+const char* direcao_config = "NS"; // "NS" ou "SN" conforme a placa - renomeado para evitar conflito com nome de variavel no JSON
+const char* SENSOR_ID = "DIR_DEFAULT_01"; // ID Unico deste sensor (ex: "DIR_N_1", "DIR_S_1")
 
 char chipid_str[13];
 unsigned long contadorRecebidos = 0;
@@ -60,9 +61,10 @@ void mostraNoDisplay() {
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(0, 0);
-  display.println("== DIRECAO LoRa ==");
+  display.println("== SENSOR LoRa =="); // Renomeado para Sensor
   display.print("MAC: "); display.println(chipid_str);
-  display.print("Dir: "); display.println(direcao);
+  display.print("ID: "); display.println(SENSOR_ID); // Mostrar SENSOR_ID
+  display.print("Cfg: "); display.println(direcao_config); // Mostrar config original
   display.print("Recebidos: "); display.println(contadorRecebidos);
   display.print("Envios base: "); display.println(contadorEnvios);
   display.print("Tentativas: "); display.println(tentativasEnvio);
@@ -130,15 +132,17 @@ void loop() {
     if (packetSize) {
       String pacoteRecebido = "";
       while (LoRa.available()) { pacoteRecebido += (char)LoRa.read(); }
+      int rssiVeiculo = LoRa.packetRssi(); // Captura RSSI do veículo
       contadorRecebidos++;
       dataHoraAtual = getDataHoraString();
 
-      // Monta pacote para a base
-      StaticJsonDocument<256> doc;
-      doc["direcao"] = direcao;
-      doc["mac_direcao"] = chipid_str;
-      doc["datahora_direcao"] = dataHoraAtual;
-      doc["payload"] = pacoteRecebido;
+      // Monta pacote para a base com novo formato
+      StaticJsonDocument<384> doc; // Aumentar um pouco o tamanho para os novos campos
+      doc["sensor_id"] = SENSOR_ID;
+      doc["rssi_veiculo"] = rssiVeiculo;
+      doc["mac_sensor"] = chipid_str;
+      doc["datahora_sensor"] = dataHoraAtual;
+      doc["payload_veiculo"] = pacoteRecebido; // Este é o JSON do veículo como string
       String pacote;
       serializeJson(doc, pacote);
 
@@ -158,8 +162,9 @@ void loop() {
     if (LoRa.parsePacket()) {
       String resposta = "";
       while (LoRa.available()) { resposta += (char)LoRa.read(); }
-      if (resposta.indexOf("RECEBIDO") >= 0 || resposta.indexOf("OK") >= 0) {
-        ultimaResposta = "ACK recebido da base";
+      // Alinhado com as respostas da base: "AUTORIZADO" ou "NEGADO" são considerados ACKs
+      if (resposta.indexOf("AUTORIZADO") >= 0 || resposta.indexOf("NEGADO") >= 0) {
+        ultimaResposta = "Resp. base: " + resposta; // Mostrar a resposta real
         esperandoACK = false;
         pacoteSalvo = "";
         tentativasEnvio = 0;
