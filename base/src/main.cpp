@@ -6,6 +6,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <ArduinoJson.h>
+#include <HTTPClient.h> // Para requisições HTTP
 
 #define LORA_SS 18
 #define LORA_RST 14
@@ -23,13 +24,23 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 const char* ssid = "50N43Everywere 3";
 const char* password = "Benfica456+++++";
 
-// MACs autorizados (exemplo)
-const char* macs_autorizados[] = {
-  "24A160123456", // Substitua pelos MACs reais
-  "24A160654321",
-  "102B22286F24",
-};
-const int num_autorizados = 3;
+// Configurações da API Laravel
+#define API_HOST "192.168.1.100" // <<< SUBSTITUIR PELO IP/HOST DO SERVIDOR LARAVEL
+#define API_PORT 8000            // <<< SUBSTITUIR PELA PORTA DO SERVIDOR LARAVEL (se não for 80)
+#define API_BASE_PATH "/api/v1"  // Caminho base da API no servidor
+// String apiBaseUrl = "http://" + String(API_HOST) + ":" + String(API_PORT) + String(API_BASE_PATH);
+// A linha acima não pode ser usada para #define, então construiremos a URL nas funções HTTP.
+
+#define WIFI_CONNECTION_TIMEOUT_MS 15000 // 15 segundos para conectar ao WiFi
+
+
+// MACs autorizados (exemplo) - Removido, agora via API
+// const char* macs_autorizados[] = {
+//   "24A160123456",
+//   "24A160654321",
+//   "102B22286F24",
+// };
+// const int num_autorizados = 3;
 
 unsigned long totalAutorizados = 0;
 unsigned long totalNegados = 0;
@@ -39,6 +50,12 @@ String ultimaDirecaoDisplay = ""; // Para o display, mostrará a direção final
 String dataHoraAtual = "A sincronizar...";
 String ultimaDataVeiculo = "";
 String ultimaDataDirecao = ""; // Timestamp do pacote do sensor
+
+// Variáveis globais para informações do último sensor para logging
+int g_ultimoRssiVeiculoReportado = 0;
+String g_ultimoSensorIdReportado = "N/A";
+String g_timestampUltimoSensor = "N/A";
+
 
 // --- Lógica de Deteção de Direção ---
 // IDs dos sensores esperados (exemplos, devem corresponder ao SENSOR_ID configurado em cada direcao/main.cpp)
@@ -100,6 +117,181 @@ unsigned long timestampBloqueioOpostoSul = 0;
 unsigned long timestampAberturaCancelaNorte = 0;
 unsigned long timestampAberturaCancelaSul = 0;
 // --- Fim Lógica de Controle de Barreiras ---
+
+// Função para garantir conexão WiFi
+bool ensureWiFiConnected() {
+    if (WiFi.status() == WL_CONNECTED) {
+        return true;
+    }
+    Serial.println("WiFi: Tentando conectar...");
+    // WiFi.mode(WIFI_STA); // Definido no setup
+    WiFi.begin(ssid, password); // Tenta conectar ou reconectar
+
+    unsigned long startTime = millis();
+    while (WiFi.status() != WL_CONNECTED && (millis() - startTime < WIFI_CONNECTION_TIMEOUT_MS)) {
+        Serial.print(".");
+        delay(500);
+    }
+
+    if (WiFi.status() == WL_CONNECTED) {
+        Serial.println("\nWiFi: Conectado!");
+        Serial.print("WiFi IP: ");
+        Serial.println(WiFi.localIP());
+        return true;
+    } else {
+        Serial.println("\nWiFi: Falha ao conectar.");
+        return false;
+    }
+}
+
+// Funções HTTP para comunicação com a API Laravel
+String buildApiUrl(const char* endpoint) {
+    String url = "http://" + String(API_HOST);
+    if (API_PORT != 80 && API_PORT != 443) { // Adicionar porta apenas se não for padrão HTTP/HTTPS
+        url += ":" + String(API_PORT);
+    }
+    url += String(API_BASE_PATH) + String(endpoint);
+    return url;
+}
+
+String httpGETRequest(const char* endpoint) {
+    if (!ensureWiFiConnected()) {
+        return "{\"error\":\"WiFi not connected\"}";
+    }
+
+    HTTPClient http;
+    String serverPath = buildApiUrl(endpoint);
+
+    Serial.print("HTTP GET: "); Serial.println(serverPath);
+
+    // http.setReuse(true); // Considerar para múltiplas requisições ao mesmo host
+    http.begin(serverPath);
+
+    int httpResponseCode = http.GET();
+    String payload = "{\"error\":\"Request failed or no payload\"}"; // Default error payload
+
+    if (httpResponseCode > 0) {
+        Serial.print("HTTP Response code: "); Serial.println(httpResponseCode);
+        payload = http.getString();
+        if (payload == "") { // Se getString retornar vazio mesmo com código > 0 (ex: 204 No Content)
+            payload = "{\"status_code\":" + String(httpResponseCode) + ", \"message\":\"Success with no content\"}";
+        }
+    } else {
+        Serial.print("HTTP GET Error code: "); Serial.println(httpResponseCode);
+        payload = "{\"error\":\"HTTP GET failed\",\"code\":" + String(httpResponseCode) + "}";
+    }
+    http.end();
+    return payload;
+}
+
+String httpPOSTRequest(const char* endpoint, const String& jsonPayload) {
+    if (!ensureWiFiConnected()) {
+        return "{\"error\":\"WiFi not connected\"}";
+    }
+
+    HTTPClient http;
+    String serverPath = buildApiUrl(endpoint);
+
+    Serial.print("HTTP POST: "); Serial.println(serverPath);
+    Serial.print("Payload: "); Serial.println(jsonPayload);
+
+    // http.setReuse(true);
+    http.begin(serverPath);
+    http.addHeader("Content-Type", "application/json");
+    http.addHeader("Accept", "application/json");
+
+
+    int httpResponseCode = http.POST(jsonPayload);
+    String responsePayload = "{\"error\":\"Request failed or no payload\"}"; // Default error payload
+
+    if (httpResponseCode > 0) {
+        Serial.print("HTTP Response code: "); Serial.println(httpResponseCode);
+        responsePayload = http.getString();
+         if (responsePayload == "" && httpResponseCode >= 200 && httpResponseCode < 300) {
+            responsePayload = "{\"status_code\":" + String(httpResponseCode) + ", \"message\":\"Success with no content (e.g. 201/204)\"}";
+        }
+    } else {
+        Serial.print("HTTP POST Error code: "); Serial.println(httpResponseCode);
+        responsePayload = "{\"error\":\"HTTP POST failed\",\"code\":" + String(httpResponseCode) + "}";
+    }
+    http.end();
+    return responsePayload;
+}
+
+// Função para enviar log de acesso para a API
+void enviarLogAcesso(const String& macVeiculo, DirecaoVeiculo direcao, bool statusAutorizacao) {
+    // Não envia log se o MAC do veículo for inválido/erro, pois não é um evento de veículo real
+    if (macVeiculo.length() == 0 || macVeiculo == "N/A" || macVeiculo.startsWith("Err")) {
+        Serial.println("Log API: MAC do veículo inválido, log não será enviado.");
+        return;
+    }
+
+    if (!ensureWiFiConnected()) {
+        Serial.println("Log API: WiFi não conectado, não é possível enviar log.");
+        return;
+    }
+
+    StaticJsonDocument<512> logDoc;
+
+    logDoc["vehicle_lora_id"] = macVeiculo;
+
+    struct tm timeinfo_log;
+    if(getLocalTime(&timeinfo_log, 5000)){ // Timeout de 5s para obter hora
+        char buffer[25];
+        strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &timeinfo_log);
+        logDoc["timestamp_event"] = String(buffer);
+    } else {
+        logDoc["timestamp_event"] = "1970-01-01 00:00:01Z"; // Fallback UTC se NTP falhou
+        Serial.println("Log API: NTP falhou, usando timestamp de fallback UTC para log.");
+    }
+
+    String direcaoStr = "undefined";
+    switch (direcao) {
+        case DirecaoVeiculo::NORTE_SUL: direcaoStr = "north_south"; break;
+        case DirecaoVeiculo::SUL_NORTE: direcaoStr = "south_north"; break;
+        case DirecaoVeiculo::CONFLITO: direcaoStr = "conflito"; break;
+        case DirecaoVeiculo::INDETERMINADA: direcaoStr = "undefined"; break; // Se só passou por um sensor, por ex.
+    }
+    logDoc["direction_detected"] = direcaoStr;
+
+    char baseMacStr[18];
+    uint8_t macAddr[6];
+    WiFi.macAddress(macAddr);
+    sprintf(baseMacStr, "%02X%02X%02X%02X%02X%02X", macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
+    logDoc["base_station_id"] = String(baseMacStr);
+
+    JsonArray sensorReports = logDoc.createNestedArray("sensor_reports");
+    if (g_ultimoSensorIdReportado != "N/A" && g_ultimoSensorIdReportado != "") {
+        JsonObject report = sensorReports.createNestedObject();
+        report["sensor_id"] = g_ultimoSensorIdReportado;
+        report["rssi"] = g_ultimoRssiVeiculoReportado;
+        // Formatar g_timestampUltimoSensor se necessário para YYYY-MM-DD HH:MM:SS
+        // Se g_timestampUltimoSensor já estiver no formato dd/mm/yyyy HH:MM:SS do ESP32,
+        // o backend precisará ser flexível ou o ESP32 precisa converter.
+        // Por simplicidade, enviamos como está. O backend pode precisar de tratamento.
+        report["timestamp_sensor"] = g_timestampUltimoSensor;
+    }
+
+    logDoc["authorization_status"] = statusAutorizacao;
+    // logDoc["notes"] = "Log ESP32"; // Opcional
+
+    String jsonLogPayload;
+    serializeJson(logDoc, jsonLogPayload);
+
+    Serial.println("Log API: Enviando log de acesso...");
+    String httpResponse = httpPOSTRequest("/access-logs", jsonLogPayload);
+    Serial.println("Log API: Resposta do servidor de log: " + httpResponse);
+
+    // Analisar a resposta para verificar se foi bem-sucedido (ex: HTTP 201)
+    StaticJsonDocument<128> docResp; // Para analisar a resposta JSON do servidor
+    DeserializationError errResp = deserializeJson(docResp, httpResponse);
+    if (!errResp && docResp.containsKey("message")) {
+        Serial.println("Log API: Mensagem do servidor: " + docResp["message"].as<String>());
+    } else if (!errResp && docResp.containsKey("error")) {
+         Serial.println("Log API: Erro do servidor: " + docResp["error"].as<String>());
+    }
+}
+
 
 // Funções para atualizar display das barreiras
 void atualizarDisplayBarreiraNorte() {
@@ -248,10 +440,26 @@ void gerenciarEstadoCancelas() {
 
 
 void sincronizaHora() {
-  configTime(3600, 0, "pool.ntp.org", "time.nist.gov");
+  if (!ensureWiFiConnected()) {
+    Serial.println("NTP: WiFi não conectado, não é possível sincronizar hora.");
+    // dataHoraAtual = "WiFi Falhou"; // Atualiza para feedback no display
+    return;
+  }
+  Serial.println("NTP: Sincronizando hora...");
+  configTime(3600, 0, "pool.ntp.org", "time.nist.gov"); // UTC+1 Portugal Continental
   struct tm timeinfo;
   int tentativas = 0;
-  while (!getLocalTime(&timeinfo) && tentativas < 20) { delay(500); tentativas++; }
+  while (!getLocalTime(&timeinfo) && tentativas < 20) {
+    delay(500);
+    tentativas++;
+    Serial.print("N"); // NTP attempt
+  }
+  if(tentativas < 20) {
+    Serial.println("\nNTP: Hora sincronizada.");
+  } else {
+    Serial.println("\nNTP: Falha ao sincronizar hora.");
+    // dataHoraAtual = "NTP Falhou";
+  }
 }
 
 String getDataHoraString() {
@@ -285,12 +493,51 @@ void mostraNoDisplay() {
   display.display();
 }
 
+// Verifica autorização do MAC chamando a API
 bool isMacAutorizado(const String& mac) {
-  for (int i = 0; i < num_autorizados; i++) {
-    if (mac == macs_autorizados[i]) return true;
-  }
-  return false;
+    if (mac.length() == 0 || mac == "N/A" || mac.startsWith("Err")) { // Verifica MACs inválidos ou de erro
+        Serial.println("API Auth: MAC inválido para consulta: " + mac);
+        return false;
+    }
+
+    String endpoint = "/vehicles/authorize/" + mac;
+    Serial.println("API Auth: Consultando autorizacao para MAC: " + mac);
+    String httpResponse = httpGETRequest(endpoint.c_str()); // .c_str() é importante para const char*
+    Serial.println("API Auth: Resposta recebida: " + httpResponse);
+
+    // Aumentar o tamanho do documento JSON se a resposta da API for maior
+    StaticJsonDocument<256> doc;
+    DeserializationError error = deserializeJson(doc, httpResponse);
+
+    if (error) {
+        Serial.print("API Auth: Erro ao desserializar JSON da resposta: ");
+        Serial.println(error.c_str());
+        return false; // Falha na comunicação ou JSON inválido, considera não autorizado por segurança
+    }
+
+    // Checa se a chave 'error' existe no JSON de resposta (indicando erro na chamada HTTP ou WiFi)
+    if (doc.containsKey("error")) {
+        String apiError = doc["error"];
+        Serial.print("API Auth: Erro retornado pela camada HTTP/WiFi: ");
+        Serial.println(apiError);
+        return false;
+    }
+
+    // Verifica o campo 'authorized' da resposta da API
+    // O operador `| false` garante que se "authorized" não existir ou for null, retorna false.
+    bool autorizado = doc["authorized"] | false;
+
+    if (autorizado) {
+        String vehicleName = doc["name"] | "Desconhecido"; // Pega o nome do veículo se disponível
+        Serial.println("API Auth: Veiculo " + mac + " (" + vehicleName + ") AUTORIZADO pela API.");
+    } else {
+        // Se a API retornou 'authorized: false', pode haver um campo 'reason'
+        String reason = doc["reason"] | "Sem detalhes da API";
+        Serial.println("API Auth: Veiculo " + mac + " NAO AUTORIZADO pela API. Motivo: " + reason);
+    }
+    return autorizado;
 }
+
 
 void setup() {
   Serial.begin(115200);
@@ -301,19 +548,25 @@ void setup() {
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { while (1); }
 
   display.clearDisplay(); display.setCursor(0, 0); display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE); display.println("A ligar WiFi..."); display.display();
+  display.setTextColor(SSD1306_WHITE); display.println("Iniciando WiFi..."); display.display();
 
-  WiFi.begin(ssid, password);
-  int tentativas = 0;
-  while (WiFi.status() != WL_CONNECTED && tentativas < 20) { delay(500); tentativas++; }
+  WiFi.mode(WIFI_STA); // Define o modo WiFi como Station
+  // A conexão será tentada pela sincronizaHora ou antes de chamadas HTTP
+  // Tentativa inicial de sincronização de hora (que tentará conectar WiFi)
+  sincronizaHora();
+  // Não desligamos o WiFi aqui, ele permanecerá ativo ou tentará reconectar quando necessário.
+
+  // Atualiza display com status do WiFi e NTP após a primeira tentativa
   if (WiFi.status() == WL_CONNECTED) {
-    display.println("WiFi OK!"); display.display();
-    sincronizaHora();
-    WiFi.disconnect(true); WiFi.mode(WIFI_OFF);
+    display.println("WiFi OK!");
   } else {
-    display.println("WiFi Falhou!"); display.display();
+    display.println("WiFi Falhou.");
   }
-  delay(1000);
+  // Mostra a hora atual (ou mensagem de erro se NTP falhou)
+  dataHoraAtual = getDataHoraString(); // Atualiza dataHoraAtual
+  // A função mostraNoDisplay() será chamada no final do setup, então não precisa aqui.
+
+  delay(1000); // Pequeno delay para o usuário ler o status do WiFi/NTP
 
   display.clearDisplay(); display.setCursor(0, 0); display.println("Iniciando LoRa..."); display.display();
 
@@ -379,9 +632,12 @@ void loop() {
 
     if (!error) {
       sensorIdRecebido = doc["sensor_id"] | "N/A";
-      // rssiDoVeiculo = doc["rssi_veiculo"] | 0;
-      // macDoSensor = doc["mac_sensor"] | "N/A";
-      timestampDoSensor = doc["datahora_sensor"] | "N/A";
+      g_ultimoSensorIdReportado = sensorIdRecebido;
+      g_ultimoRssiVeiculoReportado = doc["rssi_veiculo"] | 0;
+      g_timestampUltimoSensor = doc["datahora_sensor"] | "N/A";
+
+      timestampDoSensor = g_timestampUltimoSensor; // Usada para 'ultimaDataDirecao' no display
+      // macDoSensor = doc["mac_sensor"] | "N/A"; // Se precisar do MAC do sensor
       String payload_veiculo_str = doc["payload_veiculo"] | "";
 
       StaticJsonDocument<128> docPayloadVeiculo;
@@ -502,6 +758,57 @@ void loop() {
       // para "Norte Entrada" ou "Sul Entrada" ou "Sensor N/REC", e esperamos o próximo evento.
       // Não enviamos ACK LoRa aqui para não confundir o sensor que espera AUTORIZADO/NEGADO.
     }
+
+    // Enviar log de acesso para a API, independentemente de ser um evento completo ou parcial
+    // desde que tenhamos um MAC de veículo válido.
+    // A variável direcaoDeterminadaEsteLoop e ultimoStatus (para autorização) refletem o evento.
+    bool statusFinalAutorizacaoParaLog = false;
+    if (direcaoDeterminadaEsteLoop == DirecaoVeiculo::NORTE_SUL || direcaoDeterminadaEsteLoop == DirecaoVeiculo::SUL_NORTE) {
+        // Somente se a direção foi determinada, verificamos o status de autorização que foi efetivamente usado.
+        // Assumindo que 'ultimoStatus' foi corretamente definido como "AUTORIZADO" ou "NEGADO".
+        if (ultimoStatus == "AUTORIZADO") {
+            statusFinalAutorizacaoParaLog = true;
+        } else if (ultimoStatus == "NEGADO") {
+            statusFinalAutorizacaoParaLog = false;
+        }
+        // Se ultimoStatus for "BN BLOQ MAC" ou "BS BLOQ MAC", o veículo foi autorizado pela API,
+        // mas a cancela não abriu. Para o log, o status da autorização da API é o que conta.
+        // A chamada isMacAutorizado já foi feita. Precisamos do resultado dela.
+        // Revisitando: a chamada a isMacAutorizado é feita DENTRO do if de direção determinada.
+        // Vamos usar uma variável para armazenar o resultado da autorização.
+    }
+    // Para outros casos (INDETERMINADA, CONFLITO), statusFinalAutorizacaoParaLog será false.
+
+    // Refatorando a obtenção do status de autorização para o log:
+    // Se uma direção foi determinada, a autorização foi checada.
+    // Se foi autorizado pela API (mesmo que a cancela física tenha sido bloqueada por outra razão), logamos como autorizado.
+    bool autorizadoPelaApi = false; // Default
+    if (direcaoDeterminadaEsteLoop == DirecaoVeiculo::NORTE_SUL || direcaoDeterminadaEsteLoop == DirecaoVeiculo::SUL_NORTE) {
+        // A lógica de autorização já foi executada e o `ultimoStatus` reflete o resultado final (AUTORIZADO, NEGADO, BLOQ MAC)
+        // Precisamos do resultado da chamada a `isMacAutorizado(macDoVeiculo)`
+        // Vamos assumir que se `ultimoStatus` é "AUTORIZADO" OU "BN BLOQ MAC" OU "BS BLOQ MAC", a API autorizou.
+        if (ultimoStatus == "AUTORIZADO" || ultimoStatus == "BN BLOQ MAC" || ultimoStatus == "BS BLOQ MAC") {
+            autorizadoPelaApi = true;
+        } else { // NEGADO, CONFLITO (já tratado), etc.
+            autorizadoPelaApi = false;
+        }
+    }
+    // Se a direção não foi determinada (INDETERMINADA), ou foi CONFLITO, autorizadoPelaApi permanece false.
+
+    enviarLogAcesso(macDoVeiculo, direcaoDeterminadaEsteLoop, autorizadoPelaApi);
+
     mostraNoDisplay(); // Atualiza o display com o status final do processamento deste pacote
-  }
-}
+  } // Fim do if (jsonOk && macDoVeiculo != "N/A")
+    // Se não for jsonOk ou macDoVeiculo for N/A, um mostraNoDisplay() já foi chamado antes.
+    // Adicionar um aqui garante que o display seja atualizado mesmo se o pacote LoRa não for processado completamente.
+    // No entanto, o mostraNoDisplay() já é chamado no final do if(packetSize)
+} // Fim do if(packetSize)
+
+// Adicionar um mostraNoDisplay() fora do if(packetSize) para atualizar a hora e status das cancelas regularmente
+// No, o mostraNoDisplay() é chamado dentro do if(packetSize) e gerenciarEstadoCancelas atualiza o display se necessário.
+// O dataHoraAtual é atualizado no inicio do loop.
+// A questão é se mostraNoDisplay() deve ser chamado sempre no final do loop ou só com eventos.
+// Por agora, manter como está: display atualiza com eventos LoRa.
+// A hora no display só atualiza quando um pacote LoRa é recebido. Isso pode ser melhorado
+// movendo mostraNoDisplay() para o final do loop() e atualizando dataHoraAtual sempre.
+// Contudo, para este passo, o foco é o log.
