@@ -10,12 +10,37 @@ class AccessLogController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Placeholder for admin dashboard to view logs
-        // $logs = AccessLog::orderBy('timestamp_event', 'desc')->paginate(50);
-        // return view('admin.access-logs.index', compact('logs'));
-        return response()->json(['message' => 'AccessLogController@index placeholder']);
+        $query = AccessLog::with('vehicle') // Eager load vehicle relationship
+                          ->orderBy('timestamp_event', 'desc');
+
+        // Filtro por ID do Veículo (lora_id)
+        if ($request->filled('vehicle_lora_id')) {
+            $query->where('vehicle_lora_id', 'like', '%' . $request->vehicle_lora_id . '%');
+        }
+
+        // Filtro por Data (timestamp_event)
+        if ($request->filled('date_from')) {
+            $query->whereDate('timestamp_event', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('timestamp_event', '<=', $request->date_to);
+        }
+
+        // Filtro por Direção
+        if ($request->filled('direction_detected') && $request->direction_detected !== 'all') {
+            $query->where('direction_detected', $request->direction_detected);
+        }
+
+        // Filtro por Status de Autorização
+        if ($request->filled('authorization_status') && $request->authorization_status !== 'all') {
+            $query->where('authorization_status', (bool)$request->authorization_status);
+        }
+
+        $logs = $query->paginate(25)->withQueryString(); // withQueryString para manter os filtros na paginação
+
+        return view('admin.access-logs.index', compact('logs'));
     }
 
     /**

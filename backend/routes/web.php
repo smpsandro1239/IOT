@@ -34,9 +34,9 @@ Route::prefix('admin')->middleware('auth')->group(function () {
         'destroy' => 'admin.vehicles.destroy',
     ]);
 
-    // Access Log Routes (placeholders)
-    // Route::get('access-logs', [App\Http\Controllers\AccessLogController::class, 'index'])->name('admin.access-logs.index');
+    // Access Log Routes
+    Route::get('access-logs', [App\Http\Controllers\AccessLogController::class, 'index'])->name('admin.access-logs.index');
 
     // Firmware Management Routes (placeholders)
-    // Route::resource('firmwares', App\Http\Controllers\FirmwareController::class);
+    // Route::resource('firmwares', App\Http\Controllers\FirmwareController::class)->names('admin.firmwares'); // Exemplo se fosse resource
 });
