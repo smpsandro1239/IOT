@@ -10,9 +10,27 @@ class VehicleController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $vehicles = Vehicle::orderBy('name', 'asc')->paginate(15);
+        $query = Vehicle::orderBy('name', 'asc');
+
+        // Filtro por ID LoRa
+        if ($request->filled('lora_id_filter')) {
+            $query->where('lora_id', 'like', '%' . $request->lora_id_filter . '%');
+        }
+
+        // Filtro por Nome
+        if ($request->filled('name_filter')) {
+            $query->where('name', 'like', '%' . $request->name_filter . '%');
+        }
+
+        // Filtro por Status de Autorização
+        if ($request->filled('is_authorized_filter') && $request->is_authorized_filter !== 'all') {
+            $query->where('is_authorized', (bool)$request->is_authorized_filter);
+        }
+
+        $vehicles = $query->paginate(15)->withQueryString(); // Manter filtros na paginação
+
         return view('admin.vehicles.index', compact('vehicles'));
     }
 
