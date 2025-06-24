@@ -12,8 +12,16 @@ class VehicleController extends Controller
      */
     public function index()
     {
-        // Placeholder: return Vehicle::all();
-        return response()->json(['message' => 'VehicleController@index placeholder']);
+        $vehicles = Vehicle::orderBy('name', 'asc')->paginate(15);
+        return view('admin.vehicles.index', compact('vehicles'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        return view('admin.vehicles.create');
     }
 
     /**
@@ -21,35 +29,68 @@ class VehicleController extends Controller
      */
     public function store(Request $request)
     {
-        // Placeholder: Validate and create vehicle
-        return response()->json(['message' => 'VehicleController@store placeholder']);
+        $validatedData = $request->validate([
+            'lora_id' => 'required|string|max:16|unique:vehicles,lora_id',
+            'name' => 'nullable|string|max:255',
+            // 'is_authorized' é tratado abaixo
+        ]);
+
+        $validatedData['is_authorized'] = $request->boolean('is_authorized'); // Correct way to get boolean from request
+
+        Vehicle::create($validatedData);
+
+        return redirect()->route('admin.vehicles.index')->with('success', 'Veículo criado com sucesso!');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Vehicle $vehicle) // Using Route Model Binding
     {
-        // Placeholder: return Vehicle::findOrFail($id);
-        return response()->json(['message' => "VehicleController@show placeholder for ID: $id"]);
+        // Se tiver um show.blade.php:
+        // return view('admin.vehicles.show', compact('vehicle'));
+        return redirect()->route('admin.vehicles.edit', $vehicle); // Ou simplesmente redireciona para edição
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Vehicle $vehicle) // Using Route Model Binding
+    {
+        return view('admin.vehicles.edit', compact('vehicle'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Vehicle $vehicle) // Using Route Model Binding
     {
-        // Placeholder: Validate and update vehicle
-        return response()->json(['message' => "VehicleController@update placeholder for ID: $id"]);
+        $validatedData = $request->validate([
+            'lora_id' => 'required|string|max:16|unique:vehicles,lora_id,' . $vehicle->id,
+            'name' => 'nullable|string|max:255',
+            // 'is_authorized' é tratado abaixo
+        ]);
+
+        $validatedData['is_authorized'] = $request->boolean('is_authorized');
+
+        $vehicle->update($validatedData);
+
+        return redirect()->route('admin.vehicles.index')->with('success', 'Veículo atualizado com sucesso!');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Vehicle $vehicle) // Using Route Model Binding
     {
-        // Placeholder: Delete vehicle
-        return response()->json(['message' => "VehicleController@destroy placeholder for ID: $id"]);
+        try {
+            $vehicle->delete();
+            return redirect()->route('admin.vehicles.index')->with('success', 'Veículo excluído com sucesso!');
+        } catch (\Exception $e) {
+            // TODO: Log the error
+            // Considerar foreign key constraints se AccessLogs dependerem de Vehicles
+            return redirect()->route('admin.vehicles.index')->with('error', 'Erro ao excluir veículo. Pode estar em uso.');
+        }
     }
 
     /**
