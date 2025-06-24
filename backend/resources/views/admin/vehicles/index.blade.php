@@ -18,6 +18,26 @@
 <body>
     <h1>Gerenciar Veículos</h1>
 
+    <div class="filters" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; background-color: #f9f9f9;">
+        <form method="GET" action="{{ route('admin.vehicles.index') }}">
+            <label for="lora_id_filter">Filtrar por ID LoRa:</label>
+            <input type="text" name="lora_id_filter" id="lora_id_filter" value="{{ request('lora_id_filter') }}" style="margin-right: 10px; padding: 8px;">
+
+            <label for="name_filter">Filtrar por Nome:</label>
+            <input type="text" name="name_filter" id="name_filter" value="{{ request('name_filter') }}" style="margin-right: 10px; padding: 8px;">
+
+            <label for="is_authorized_filter">Autorizado:</label>
+            <select name="is_authorized_filter" id="is_authorized_filter" style="margin-right: 10px; padding: 8px;">
+                <option value="all" {{ request('is_authorized_filter') == 'all' ? 'selected' : '' }}>Todos</option>
+                <option value="1" {{ request('is_authorized_filter') == '1' ? 'selected' : '' }}>Sim</option>
+                <option value="0" {{ request('is_authorized_filter') == '0' && request('is_authorized_filter') !== null ? 'selected' : '' }}>Não</option>
+            </select>
+
+            <button type="submit" style="padding: 8px 15px;">Filtrar</button>
+            <a href="{{ route('admin.vehicles.index') }}" style="padding: 8px 15px; text-decoration: none; color: #333; background-color: #eee; border: 1px solid #ccc;">Limpar</a>
+        </form>
+    </div>
+
     <a href="{{ route('admin.vehicles.create') }}" class="create-link">Adicionar Novo Veículo</a>
 
     @if (session('success'))
