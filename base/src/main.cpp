@@ -8,10 +8,21 @@
 #include <ArduinoJson.h>
 #include <HTTPClient.h> // Para requisições HTTP
 
+#include <HTTPUpdate.h>   // Para OTA (Over The Air Updates)
+
 #define LORA_SS 18
 #define LORA_RST 14
 #define LORA_DIO0 26
 #define LORA_BAND 868E6
+
+// Versão atual do Firmware da Placa Base (DEVE SER ATUALIZADA A CADA NOVA COMPILAÇÃO DE FIRMWARE)
+#define FIRMWARE_VERSION "0.1.0" // Exemplo inicial
+
+// OTA Update settings
+#define OTA_CHECK_INTERVAL_MS (1 * 60 * 60 * 1000) // Verificar a cada 1 hora
+// #define OTA_CHECK_INTERVAL_MS (2 * 60 * 1000) // Para testes: a cada 2 minutos
+unsigned long lastOtaCheckMs = 0;
+String otaStatusMessage = "OTA: Pronto";
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -292,6 +303,103 @@ void enviarLogAcesso(const String& macVeiculo, DirecaoVeiculo direcao, bool stat
     }
 }
 
+void checkAndApplyOTA() {
+    Serial.println("OTA: Verificando por atualizacoes...");
+    otaStatusMessage = "OTA: Verificando...";
+    mostraNoDisplay();
+
+    if (!ensureWiFiConnected()) {
+        Serial.println("OTA: WiFi nao conectado. Impossivel verificar.");
+        otaStatusMessage = "OTA: WiFi Falhou";
+        // mostraNoDisplay(); // Atualiza no próximo ciclo de loop ou após o intervalo.
+        return;
+    }
+
+    HTTPClient httpClientForCheck; // Cliente HTTP para a verificação
+    WiFiClient clientForUpdate;    // Cliente WiFi para o update em si
+
+    String boardMAC = WiFi.macAddress();
+    // boardMAC.replace(":", ""); // A API não usa board_id por enquanto, mas se usasse, ajustar formato.
+
+    String checkUrl = buildApiUrl("/firmware/check");
+    checkUrl += "?current_version=" + String(FIRMWARE_VERSION);
+    // checkUrl += "&board_id=" + boardMAC; // Descomentar se a API usar board_id
+
+    Serial.print("OTA: URL de verificacao: "); Serial.println(checkUrl);
+
+    httpClientForCheck.begin(clientForUpdate, checkUrl); // Reutilizar o clientForUpdate para a conexão inicial
+    int httpCode = httpClientForCheck.GET();
+
+    if (httpCode == HTTP_CODE_OK) {
+        String payload = httpClientForCheck.getString();
+        Serial.print("OTA: Resposta do servidor de verificacao: "); Serial.println(payload);
+        httpClientForCheck.end(); // Fecha a conexão do GET
+
+        StaticJsonDocument<512> doc;
+        DeserializationError error = deserializeJson(doc, payload);
+
+        if (error) {
+            Serial.print("OTA: Erro ao desserializar JSON de verificacao: "); Serial.println(error.c_str());
+            otaStatusMessage = "OTA: Err JSON Chk";
+            return;
+        }
+
+        bool updateAvailable = doc["update_available"] | false;
+        if (updateAvailable) {
+            String newVersion = doc["new_version"] | "N/A";
+            String downloadUrl = doc["download_url"] | "";
+            // long newSizeBytes = doc["size_bytes"] | 0; // Se quiser usar para algo
+
+            if (downloadUrl == "") {
+                Serial.println("OTA: URL de download vazia recebida da API.");
+                otaStatusMessage = "OTA: URL Vazia";
+                return;
+            }
+
+            Serial.println("OTA: Atualizacao disponivel!");
+            Serial.println("OTA: Nova versao: " + newVersion);
+            Serial.println("OTA: URL Download: " + downloadUrl);
+            // Serial.println("OTA: Tamanho: " + String(newSizeBytes) + " bytes");
+            otaStatusMessage = "OTA: Baixando v" + newVersion;
+            mostraNoDisplay();
+
+            // HTTPUpdate::update() é uma função estática da classe, ou você usa um objeto.
+            // A forma comum é usar um objeto httpUpdate.
+            // No ESP32, a biblioteca HTTPUpdate.h fornece httpUpdate globalmente.
+            // Se for HTTP direto (não HTTPS)
+            // httpUpdate.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS); // Opcional
+            t_httpUpdate_return ret = httpUpdate.update(clientForUpdate, downloadUrl);
+            // Se a URL for HTTPS, clientForUpdate precisaria ser WiFiClientSecure configurado.
+
+            switch (ret) {
+                case HTTP_UPDATE_FAILED:
+                    Serial.printf("OTA: HTTP_UPDATE_FAILED Error (%d): %s\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
+                    otaStatusMessage = "OTA: Falha DL/Upd";
+                    break;
+                case HTTP_UPDATE_NO_UPDATES: // Não deveria ocorrer aqui se updateAvailable é true
+                    Serial.println("OTA: HTTP_UPDATE_NO_UPDATES");
+                    otaStatusMessage = "OTA: Sem Upd (API?)";
+                    break;
+                case HTTP_UPDATE_OK:
+                    Serial.println("OTA: HTTP_UPDATE_OK (Atualizacao bem sucedida, reiniciando)");
+                    otaStatusMessage = "OTA: OK, Reinicio"; // Não será visto
+                    // ESP.restart() é chamado internamente pela biblioteca Update.
+                    break;
+            }
+        } else {
+            Serial.println("OTA: Nenhuma atualizacao disponivel.");
+            otaStatusMessage = "OTA: Atualizado (" + String(FIRMWARE_VERSION) + ")";
+        }
+    } else {
+        Serial.printf("OTA: Falha na verificacao HTTP. Codigo: %d\n", httpCode);
+        String errorPayload = httpClientForCheck.getString(); // Tenta pegar corpo do erro
+        Serial.println("OTA: Erro retornado: " + errorPayload);
+        otaStatusMessage = "OTA: Err Chk HTTP " + String(httpCode);
+        httpClientForCheck.end(); // Garante fechar conexão
+    }
+    // httpClientForCheck.end(); // Já fechado acima ou não necessário se GET falhou e não abriu conexão.
+}
+
 
 // Funções para atualizar display das barreiras
 void atualizarDisplayBarreiraNorte() {
@@ -490,6 +598,8 @@ void mostraNoDisplay() {
   display.print(barreiraNorteStatusDisplay);
   display.print(" ");
   display.println(barreiraSulStatusDisplay);
+  display.setCursor(0, display.getCursorY()); // Próxima linha
+  display.print(otaStatusMessage); // Exibe status do OTA
   display.display();
 }
 
@@ -812,3 +922,9 @@ void loop() {
 // A hora no display só atualiza quando um pacote LoRa é recebido. Isso pode ser melhorado
 // movendo mostraNoDisplay() para o final do loop() e atualizando dataHoraAtual sempre.
 // Contudo, para este passo, o foco é o log.
+
+    // Verificar atualizações OTA periodicamente
+    if (millis() - lastOtaCheckMs > OTA_CHECK_INTERVAL_MS) {
+        lastOtaCheckMs = millis();
+        checkAndApplyOTA();
+    }
