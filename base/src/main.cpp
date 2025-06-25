@@ -15,8 +15,37 @@
 #define LORA_DIO0 26
 #define LORA_BAND 868E6
 
-// Versão atual do Firmware da Placa Base (DEVE SER ATUALIZADA A CADA NOVA COMPILAÇÃO DE FIRMWARE)
-#define FIRMWARE_VERSION "0.1.0" // Exemplo inicial
+
+// =================================================================================================
+// == CONFIGURAÇÕES PRINCIPAIS DA PLACA BASE ==
+// =================================================================================================
+// ATENÇÃO: Revise e configure estas definições antes de compilar e carregar o firmware.
+
+// -- Versão do Firmware --
+// Incremente esta versão a cada novo build de firmware para que o sistema OTA possa identificar atualizações.
+#define FIRMWARE_VERSION "0.1.0" // Formato sugerido: "X.Y.Z"
+
+// -- Credenciais WiFi --
+// const char* ssid = "SUA_REDE_WIFI"; // Definido mais abaixo, mas importante
+// const char* password = "SUA_SENHA_WIFI"; // Definido mais abaixo
+
+// -- Configurações da API Laravel --
+// #define API_HOST "IP_DO_SEU_SERVIDOR_LARAVEL" // Definido mais abaixo
+// #define API_PORT 8000 // Porta do servidor Laravel (se não for 80)
+// #define API_AUTH_TOKEN "SEU_TOKEN_API_SANCTUM_LONGO_AQUI" // Definido mais abaixo. Gerado no dashboard admin.
+
+// -- IDs dos Sensores de Direção Esperados --
+// Estes IDs DEVEM CORRESPONDER aos SENSOR_ID configurados nos firmwares dos respectivos sensores de direção.
+// #define SENSOR_ID_NORTE_ENTRADA "DIR_N_1" // Definido mais abaixo
+// #define SENSOR_ID_NORTE_SAIDA   "DIR_N_2" // Definido mais abaixo
+// #define SENSOR_ID_SUL_ENTRADA   "DIR_S_1" // Definido mais abaixo
+// #define SENSOR_ID_SUL_SAIDA     "DIR_S_2" // Definido mais abaixo
+
+// -- Pinos GPIO para Controle das Barreiras (LEDs de simulação) --
+// #define LED_BARREIRA_NORTE 25 // LED_BUILTIN na Heltec V2 (Definido mais abaixo)
+// #define LED_BARREIRA_SUL 2    // Outro GPIO (Definido mais abaixo)
+// =================================================================================================
+
 
 // OTA Update settings
 #define OTA_CHECK_INTERVAL_MS (1 * 60 * 60 * 1000) // Verificar a cada 1 hora
@@ -42,7 +71,9 @@ const char* password = "Benfica456+++++";
 // String apiBaseUrl = "http://" + String(API_HOST) + ":" + String(API_PORT) + String(API_BASE_PATH);
 // A linha acima não pode ser usada para #define, então construiremos a URL nas funções HTTP.
 
-#define API_AUTH_TOKEN "PLAIN_TEXT_TOKEN_GERADO_PELO_SANCTUM" // <<< SUBSTITUIR PELO TOKEN REAL
+// ATENÇÃO: Substitua o valor abaixo pelo token de API gerado no painel de administração do Laravel.
+// Este token é usado para autenticar as requisições da placa base para a API.
+#define API_AUTH_TOKEN "PLAIN_TEXT_TOKEN_GERADO_PELO_SANCTUM"
 
 #define WIFI_CONNECTION_TIMEOUT_MS 15000 // 15 segundos para conectar ao WiFi
 

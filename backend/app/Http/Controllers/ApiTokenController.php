@@ -70,7 +70,10 @@ class ApiTokenController extends Controller
             $token->delete();
             return redirect()->route('admin.api-tokens.index')->with('success', 'Token API revogado com sucesso!');
         }
-
+        // Se o token não for encontrado ou não pertencer ao usuário, isso não é necessariamente um erro do sistema,
+        // mas um comportamento esperado para uma tentativa inválida.
+        // Um log de aviso pode ser útil se isso acontecer com frequência, indicando possível abuso ou erro de front-end.
+        \Illuminate\Support\Facades\Log::warning("Tentativa de revogar token API não encontrado ou não pertencente ao usuário. User ID: {$user->id}, Token ID: {$tokenId}");
         return redirect()->route('admin.api-tokens.index')->with('error', 'Token API não encontrado ou não pertence a este usuário.');
     }
 }
