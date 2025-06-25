@@ -39,10 +39,28 @@ class BarrierController extends Controller
         }
 
         $barriers = $query->withCount('accessLogs')->paginate(15)->withQueryString(); // Adiciona contagem de logs
-        $sites_for_filter = Site::orderBy('name')->get();
+        $sites_for_filter = Site::orderBy('name')->get(); // TODO: Considerar filtrar sites pela empresa selecionada, se houver
         $companies_for_filter = Company::orderBy('name')->get();
 
-        return view('admin.barriers.index', compact('barriers', 'sites_for_filter', 'companies_for_filter'));
+        $currentSiteFromController = null;
+        $currentCompanyFromController = null;
+
+        // Prioriza o filtro de site, pois ele contém a empresa
+        $siteIdParam = $request->input('site_filter', $request->input('site_id'));
+        if ($siteIdParam) {
+            $currentSiteFromController = Site::with('company')->find($siteIdParam);
+            if ($currentSiteFromController) {
+                $currentCompanyFromController = $currentSiteFromController->company;
+            }
+        } else {
+            // Se não há filtro de site, verifica se há filtro de empresa
+            $companyIdParam = $request->input('company_filter', $request->input('company_id'));
+            if ($companyIdParam) {
+                $currentCompanyFromController = Company::find($companyIdParam);
+            }
+        }
+
+        return view('admin.barriers.index', compact('barriers', 'sites_for_filter', 'companies_for_filter', 'currentSiteFromController', 'currentCompanyFromController'));
     }
 
     /**
