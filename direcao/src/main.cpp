@@ -20,10 +20,26 @@
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-const char* ssid = "50N43Everywere 3";
-const char* password = "Benfica456+++++";
-const char* direcao_config = "NS"; // "NS" ou "SN" conforme a placa - renomeado para evitar conflito com nome de variavel no JSON
-const char* SENSOR_ID = "DIR_DEFAULT_01"; // ID Unico deste sensor (ex: "DIR_N_1", "DIR_S_1")
+// =================================================================================================
+// == CONFIGURAÇÕES PRINCIPAIS DO SENSOR DE DIREÇÃO ==
+// =================================================================================================
+// ATENÇÃO: Revise e configure estas definições antes de compilar e carregar o firmware.
+
+// -- ID Único do Sensor --
+// Este ID deve ser único para cada dispositivo sensor e corresponder
+// a uma das definições SENSOR_ID_*_ENTRADA/SAIDA no firmware da Placa Base.
+// Exemplos: "DIR_N_1", "DIR_N_2", "DIR_S_1", "DIR_S_2"
+const char* SENSOR_ID = "DIR_DEFAULT_01";
+
+// -- Configuração de Direção (Opcional/Informativo) --
+// Usado para display local, não essencial para a lógica da Placa Base se SENSOR_ID for único.
+const char* direcao_config = "NS"; // Ex: "NS" (Norte-Sul), "SN" (Sul-Norte), "PONTO_A", etc.
+
+// -- Credenciais WiFi (usadas apenas para sincronização NTP no setup) --
+const char* ssid = "50N43Everywere 3"; // Substitua pela sua rede WiFi
+const char* password = "Benfica456+++++";    // Substitua pela sua senha WiFi
+// =================================================================================================
+
 
 char chipid_str[13];
 unsigned long contadorRecebidos = 0;

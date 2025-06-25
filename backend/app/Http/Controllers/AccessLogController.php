@@ -66,11 +66,16 @@ class AccessLogController extends Controller
         // Assuming model's $casts handles 'sensor_reports' => 'array', so direct assignment is fine.
 
         try {
-            $log = \App\Models\AccessLog::create($validatedData);
+            $log = AccessLog::create($validatedData); // Model já está use'd
             return response()->json(['message' => 'Access log created successfully', 'log_id' => $log->id], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // A validação do Laravel já retorna uma resposta JSON formatada em caso de falha na API.
+            // Mas se quisermos logar explicitamente:
+            \Illuminate\Support\Facades\Log::warning('Falha na validação ao criar log de acesso: ' . $e->getMessage() . ' Data: ' . json_encode($request->all()));
+            throw $e; // Relança para o Laravel lidar com a resposta JSON.
         } catch (\Exception $e) {
-            // Log::error('Failed to create access log: ' . $e->getMessage()); // Requires Log facade
-            return response()->json(['message' => 'Failed to create access log', 'error' => $e->getMessage()], 500);
+            \Illuminate\Support\Facades\Log::error('Falha ao criar log de acesso: ' . $e->getMessage() . ' Data: ' . json_encode($validatedData));
+            return response()->json(['message' => 'Falha ao criar log de acesso no servidor.', 'error' => $e->getMessage()], 500);
         }
     }
 }

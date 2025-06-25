@@ -56,6 +56,8 @@ class FirmwareController extends Controller
             return redirect()->route('admin.firmwares.index')->with('success', 'Firmware carregado com sucesso!');
         }
 
+        // Se chegou aqui, o arquivo não foi enviado ou não era válido
+        \Illuminate\Support\Facades\Log::warning('Tentativa de upload de firmware falhou. Request data: ' . json_encode($request->except('firmware_file')));
         return back()->with('error', 'Falha no upload do arquivo de firmware. Verifique o arquivo e tente novamente.')->withInput();
     }
 
@@ -93,8 +95,8 @@ class FirmwareController extends Controller
             $firmware->delete();
             return redirect()->route('admin.firmwares.index')->with('success', 'Firmware excluído com sucesso!');
         } catch (\Exception $e) {
-            // Log::error("Erro ao excluir firmware {$firmware->id}: " . $e->getMessage()); // Descomentar com Log facade
-            return redirect()->route('admin.firmwares.index')->with('error', 'Erro ao excluir firmware.');
+            \Illuminate\Support\Facades\Log::error("Erro ao excluir firmware ID {$firmware->id} (Versão: {$firmware->version}, Arquivo: {$firmware->filename}): " . $e->getMessage());
+            return redirect()->route('admin.firmwares.index')->with('error', 'Erro ao excluir firmware. Consulte os logs do sistema.');
         }
     }
 
