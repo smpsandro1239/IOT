@@ -37,4 +37,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () { // Proteger
     // Por simplicidade, vamos assumir que o ESP32 recebe um ID (ou nome de arquivo único) do endpoint /check.
     // O plano original diz {firmware_id}, então vamos manter assim.
     Route::get('/firmware/download/{firmware}', [FirmwareController::class, 'download'])->name('api.firmware.download');
+
+    // Endpoints para carregar dados para formulários dinâmicos (ex: permissões de veículos)
+    Route::get('companies/{company_ids_str}/sites', [\App\Http\Controllers\Api\DataController::class, 'getSitesForCompanies'])->name('api.v1.sites_for_companies');
+    Route::get('sites/{site_ids_str}/barriers', [\App\Http\Controllers\Api\DataController::class, 'getBarriersForSites'])->name('api.v1.barriers_for_sites');
 });
