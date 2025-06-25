@@ -38,4 +38,11 @@ Route::prefix('admin')->middleware('auth')->group(function () { // TODO: Impleme
     // Firmware Management Routes
     Route::resource('firmwares', App\Http\Controllers\FirmwareController::class, ['as' => 'admin'])->except(['show']);
     Route::patch('firmwares/{firmware}/set-active', [App\Http\Controllers\FirmwareController::class, 'setActive'])->name('admin.firmwares.set-active');
+
+    // API Token Management Routes
+    Route::prefix('api-tokens')->name('admin.api-tokens.')->group(function () {
+        Route::get('/', [App\Http\Controllers\ApiTokenController::class, 'index'])->name('index');
+        Route::post('/', [App\Http\Controllers\ApiTokenController::class, 'store'])->name('store');
+        Route::delete('/{tokenId}', [App\Http\Controllers\ApiTokenController::class, 'destroy'])->name('destroy');
+    });
 });
