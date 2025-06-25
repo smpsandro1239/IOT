@@ -60,4 +60,28 @@ class Vehicle extends Model
                     })
                     ->exists();
     }
+
+    /**
+     * Get only the company permissions for the vehicle.
+     */
+    public function companyPermissions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->permissions()->where('permissible_type', Company::class);
+    }
+
+    /**
+     * Get only the site permissions for the vehicle.
+     */
+    public function sitePermissions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->permissions()->where('permissible_type', Site::class);
+    }
+
+    /**
+     * Get only the barrier permissions for the vehicle.
+     */
+    public function barrierPermissions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->permissions()->where('permissible_type', Barrier::class);
+    }
 }

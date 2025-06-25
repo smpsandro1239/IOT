@@ -29,7 +29,9 @@ class VehicleController extends Controller
         //     $query->where('is_authorized', (bool)$request->is_authorized_filter);
         // }
 
-        $vehicles = $query->paginate(15)->withQueryString(); // Manter filtros na paginação
+        $vehicles = $query->withCount(['companyPermissions', 'sitePermissions', 'barrierPermissions'])
+                           ->paginate(15)
+                           ->withQueryString(); // Manter filtros na paginação
 
         return view('admin.vehicles.index', compact('vehicles'));
     }
