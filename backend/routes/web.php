@@ -49,4 +49,7 @@ Route::prefix('admin')->middleware('auth')->group(function () { // TODO: Impleme
     // Company Management Routes
     Route::resource('companies', App\Http\Controllers\CompanyController::class, ['as' => 'admin'])->except(['show']);
     // 'show' pode ser adicionado depois se necessário, talvez para mostrar sites da empresa.
+
+    // Site Management Routes
+    Route::resource('sites', App\Http\Controllers\SiteController::class, ['as' => 'admin'])->except(['show']);
 });
