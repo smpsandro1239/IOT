@@ -52,7 +52,7 @@
             <tr>
                 <th>ID LoRa</th>
                 <th>Nome</th>
-                {{-- Coluna Autorizado? Removida --}}
+                <th>Permissões (E|S|B)</th>
                 <th>Criado em</th>
                 <th>Ações</th>
             </tr>
@@ -62,7 +62,11 @@
                 <tr>
                     <td>{{ $vehicle->lora_id }}</td>
                     <td>{{ $vehicle->name ?: '-' }}</td>
-                    {{-- <td>{{ $vehicle->is_authorized ? 'Sim' : 'Não' }}</td> --}}
+                    <td>
+                        E:{{ $vehicle->company_permissions_count ?? 0 }} |
+                        S:{{ $vehicle->site_permissions_count ?? 0 }} |
+                        B:{{ $vehicle->barrier_permissions_count ?? 0 }}
+                    </td>
                     <td>{{ $vehicle->created_at->format('d/m/Y H:i') }}</td>
                     <td class="actions">
                         <a href="{{ route('admin.vehicles.edit', $vehicle) }}">Editar Permissões</a>
@@ -75,7 +79,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4">Nenhum veículo encontrado.</td>
+                    <td colspan="5">Nenhum veículo encontrado.</td>
                 </tr>
             @endforelse
         </tbody>
