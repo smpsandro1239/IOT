@@ -51,22 +51,30 @@ class AccessLogController extends Controller
     {
         // TODO: Add more robust error handling for validation failures, e.g., logging
         $validatedData = $request->validate([
-            'vehicle_lora_id' => 'required|string|max:16', // MAC address length typically
-            'timestamp_event' => 'required|date_format:Y-m-d H:i:s', // Expecting this format from ESP32
+            'vehicle_lora_id' => 'required|string|max:16',
+            'timestamp_event' => 'required|date_format:Y-m-d H:i:s',
             'direction_detected' => 'required|string|in:north_south,south_north,undefined,conflito',
-            'base_station_id' => 'required|string|max:16', // MAC address length
-            'sensor_reports' => 'nullable|json', // Validates if it's a JSON string
+            'base_station_id' => 'required|string|max:17', // MAC da placa base, formato XX:XX:XX:XX:XX:XX
+            'sensor_reports' => 'nullable|json',
             'authorization_status' => 'required|boolean',
             'notes' => 'nullable|string|max:500',
         ]);
 
-        // The 'sensor_reports' is already validated as a JSON string.
-        // If it needs to be stored as a JSON type in DB, no further casting needed here if model handles it.
-        // If it's an array in the request, ensure it's converted to JSON string before create or model handles array casting.
-        // Assuming model's $casts handles 'sensor_reports' => 'array', so direct assignment is fine.
+        $barrier = \App\Models\Barrier::where('base_station_mac_address', $validatedData['base_station_id'])->first();
+
+        if (!$barrier) {
+            \Illuminate\Support\Facades\Log::warning("AccessLog: Tentativa de log para estação base desconhecida. Base MAC: {$validatedData['base_station_id']}, Veículo: {$validatedData['vehicle_lora_id']}");
+            // Decidir se retorna erro ou cria o log sem barrier_id (se a coluna for nullable).
+            // Pela migration, barrier_id é constrained, então não pode ser null. Retornar erro.
+            return response()->json(['message' => 'Base station (barrier) not found for the provided MAC address.'], 404);
+        }
+
+        // Adicionar barrier_id aos dados para criação do log
+        $dataToCreate = $validatedData;
+        $dataToCreate['barrier_id'] = $barrier->id;
 
         try {
-            $log = AccessLog::create($validatedData); // Model já está use'd
+            $log = AccessLog::create($dataToCreate);
             return response()->json(['message' => 'Access log created successfully', 'log_id' => $log->id], 201);
         } catch (\Illuminate\Validation\ValidationException $e) {
             // A validação do Laravel já retorna uma resposta JSON formatada em caso de falha na API.
