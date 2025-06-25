@@ -17,7 +17,7 @@ class Vehicle extends Model
     protected $fillable = [
         'lora_id',
         'name',
-        'is_authorized',
+        // 'is_authorized', // Removido
     ];
 
     /**
@@ -26,7 +26,7 @@ class Vehicle extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'is_authorized' => 'boolean',
+        // 'is_authorized' => 'boolean', // Removido
     ];
 
     /**
@@ -35,5 +35,29 @@ class Vehicle extends Model
     public function accessLogs()
     {
         return $this->hasMany(AccessLog::class, 'vehicle_lora_id', 'lora_id');
+    }
+
+    /**
+     * Get all of the vehicle's permissions.
+     */
+    public function permissions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(VehiclePermission::class);
+    }
+
+    // Helper para verificar permissão para uma entidade específica
+    public function hasPermissionFor($permissible): bool
+    {
+        if (!$permissible instanceof Model) {
+            return false;
+        }
+        return $this->permissions()
+                    ->where('permissible_type', $permissible->getMorphClass())
+                    ->where('permissible_id', $permissible->getKey())
+                    ->where(function ($query) {
+                        $query->whereNull('expires_at')
+                              ->orWhere('expires_at', '>', now());
+                    })
+                    ->exists();
     }
 }
