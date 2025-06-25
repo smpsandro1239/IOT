@@ -104,10 +104,13 @@ class VehicleController extends Controller
         try {
             $vehicle->delete();
             return redirect()->route('admin.vehicles.index')->with('success', 'Veículo excluído com sucesso!');
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Captura especificamente exceções de query (como violações de FK)
+            \Illuminate\Support\Facades\Log::error("Erro de Query ao excluir veículo ID {$vehicle->id}: " . $e->getMessage());
+            return redirect()->route('admin.vehicles.index')->with('error', 'Erro ao excluir veículo. Verifique se está sendo usado em logs de acesso.');
         } catch (\Exception $e) {
-            // TODO: Log the error
-            // Considerar foreign key constraints se AccessLogs dependerem de Vehicles
-            return redirect()->route('admin.vehicles.index')->with('error', 'Erro ao excluir veículo. Pode estar em uso.');
+            \Illuminate\Support\Facades\Log::error("Erro geral ao excluir veículo ID {$vehicle->id}: " . $e->getMessage());
+            return redirect()->route('admin.vehicles.index')->with('error', 'Erro ao excluir veículo.');
         }
     }
 
