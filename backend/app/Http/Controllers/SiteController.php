@@ -30,7 +30,19 @@ class SiteController extends Controller
         $sites = $query->withCount('barriers')->paginate(15)->withQueryString(); // Adiciona contagem de barreiras
         $companies_for_filter = Company::orderBy('name')->get();
 
-        return view('admin.sites.index', compact('sites', 'companies_for_filter'));
+        $currentCompanyFromController = null;
+        // Usamos company_filter porque é o que o filtro da página usa.
+        // O link de 'companies.index' usa 'company_id', mas o request()->filled('company_id') no blade
+        // deve ser atualizado para request()->filled('company_filter') ou unificar o nome do parâmetro.
+        // Por agora, vamos assumir que o filtro da página 'company_filter' é o que queremos para o título/breadcrumb.
+        // Ou melhor, vamos verificar os dois, dando prioridade ao filtro explícito.
+        $companyIdForBreadcrumb = $request->input('company_filter', $request->input('company_id'));
+
+        if ($companyIdForBreadcrumb) {
+            $currentCompanyFromController = Company::find($companyIdForBreadcrumb);
+        }
+
+        return view('admin.sites.index', compact('sites', 'companies_for_filter', 'currentCompanyFromController'));
     }
 
     /**

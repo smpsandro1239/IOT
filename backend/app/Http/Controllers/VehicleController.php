@@ -24,10 +24,10 @@ class VehicleController extends Controller
             $query->where('name', 'like', '%' . $request->name_filter . '%');
         }
 
-        // Filtro por Status de Autorização
-        if ($request->filled('is_authorized_filter') && $request->is_authorized_filter !== 'all') {
-            $query->where('is_authorized', (bool)$request->is_authorized_filter);
-        }
+        // Filtro por Status de Autorização (REMOVIDO - is_authorized não é mais usado diretamente)
+        // if ($request->filled('is_authorized_filter') && $request->is_authorized_filter !== 'all') {
+        //     $query->where('is_authorized', (bool)$request->is_authorized_filter);
+        // }
 
         $vehicles = $query->paginate(15)->withQueryString(); // Manter filtros na paginação
 
@@ -39,7 +39,16 @@ class VehicleController extends Controller
      */
     public function create()
     {
-        return view('admin.vehicles.create');
+        // Para o formulário de criação, não temos um $vehicle ainda, então $vehiclePermissions estará vazio.
+        // Mas precisamos passar as listas de companhias, sites e barreiras.
+        $companies = \App\Models\Company::orderBy('name')->get();
+        $sites = \App\Models\Site::with('company')->orderBy('company_id')->orderBy('name')->get();
+        $barriers = \App\Models\Barrier::with('site.company')->orderBy('site_id')->orderBy('name')->get();
+
+        // Passamos um array vazio para vehiclePermissions para que o form não falhe
+        $vehiclePermissions = ['companies' => [], 'sites' => [], 'barriers' => []];
+
+        return view('admin.vehicles.create', compact('companies', 'sites', 'barriers', 'vehiclePermissions'));
     }
 
     /**
@@ -53,11 +62,41 @@ class VehicleController extends Controller
             // 'is_authorized' é tratado abaixo
         ]);
 
-        $validatedData['is_authorized'] = $request->boolean('is_authorized'); // Correct way to get boolean from request
+        // $validatedData['is_authorized'] = $request->boolean('is_authorized'); // Removido
 
-        Vehicle::create($validatedData);
+        $vehicle = Vehicle::create($validatedData);
 
-        return redirect()->route('admin.vehicles.index')->with('success', 'Veículo criado com sucesso!');
+        // Gerenciar Permissões (similar ao update)
+        $permissionsInput = $request->input('permissions', []);
+
+        if (!empty($permissionsInput['companies'])) {
+            foreach ($permissionsInput['companies'] as $companyId) {
+                $vehicle->permissions()->create([
+                    'permissible_type' => \App\Models\Company::class,
+                    'permissible_id' => $companyId,
+                ]);
+            }
+        }
+
+        if (!empty($permissionsInput['sites'])) {
+            foreach ($permissionsInput['sites'] as $siteId) {
+                $vehicle->permissions()->create([
+                    'permissible_type' => \App\Models\Site::class,
+                    'permissible_id' => $siteId,
+                ]);
+            }
+        }
+
+        if (!empty($permissionsInput['barriers'])) {
+            foreach ($permissionsInput['barriers'] as $barrierId) {
+                $vehicle->permissions()->create([
+                    'permissible_type' => \App\Models\Barrier::class,
+                    'permissible_id' => $barrierId,
+                ]);
+            }
+        }
+
+        return redirect()->route('admin.vehicles.index')->with('success', 'Veículo criado e permissões sincronizadas com sucesso!');
     }
 
     /**
@@ -75,7 +114,20 @@ class VehicleController extends Controller
      */
     public function edit(Vehicle $vehicle) // Using Route Model Binding
     {
-        return view('admin.vehicles.edit', compact('vehicle'));
+        $vehicle->load('permissions'); // Carrega as permissões existentes do veículo
+
+        $companies = \App\Models\Company::orderBy('name')->get();
+        $sites = \App\Models\Site::with('company')->orderBy('company_id')->orderBy('name')->get();
+        $barriers = \App\Models\Barrier::with('site.company')->orderBy('site_id')->orderBy('name')->get();
+
+        // Para pré-selecionar nos formulários, criamos arrays de IDs das permissões existentes
+        $vehiclePermissions = [
+            'companies' => $vehicle->permissions->where('permissible_type', \App\Models\Company::class)->pluck('permissible_id')->toArray(),
+            'sites' => $vehicle->permissions->where('permissible_type', \App\Models\Site::class)->pluck('permissible_id')->toArray(),
+            'barriers' => $vehicle->permissions->where('permissible_type', \App\Models\Barrier::class)->pluck('permissible_id')->toArray(),
+        ];
+
+        return view('admin.vehicles.edit', compact('vehicle', 'companies', 'sites', 'barriers', 'vehiclePermissions'));
     }
 
     /**
@@ -89,11 +141,45 @@ class VehicleController extends Controller
             // 'is_authorized' é tratado abaixo
         ]);
 
-        $validatedData['is_authorized'] = $request->boolean('is_authorized');
-
+        // $validatedData['is_authorized'] = $request->boolean('is_authorized'); // Removido - não usamos mais is_authorized diretamente no veículo
         $vehicle->update($validatedData);
 
-        return redirect()->route('admin.vehicles.index')->with('success', 'Veículo atualizado com sucesso!');
+        // Gerenciar Permissões
+        // 1. Remover todas as permissões existentes para este veículo
+        $vehicle->permissions()->delete();
+
+        // 2. Adicionar novas permissões com base no request
+        $permissionsInput = $request->input('permissions', []);
+
+        if (!empty($permissionsInput['companies'])) {
+            foreach ($permissionsInput['companies'] as $companyId) {
+                $vehicle->permissions()->create([
+                    'permissible_type' => \App\Models\Company::class,
+                    'permissible_id' => $companyId,
+                    // 'expires_at' => null, // Opcional: Adicionar lógica para data de expiração se necessário
+                ]);
+            }
+        }
+
+        if (!empty($permissionsInput['sites'])) {
+            foreach ($permissionsInput['sites'] as $siteId) {
+                $vehicle->permissions()->create([
+                    'permissible_type' => \App\Models\Site::class,
+                    'permissible_id' => $siteId,
+                ]);
+            }
+        }
+
+        if (!empty($permissionsInput['barriers'])) {
+            foreach ($permissionsInput['barriers'] as $barrierId) {
+                $vehicle->permissions()->create([
+                    'permissible_type' => \App\Models\Barrier::class,
+                    'permissible_id' => $barrierId,
+                ]);
+            }
+        }
+
+        return redirect()->route('admin.vehicles.index')->with('success', 'Veículo atualizado e permissões sincronizadas com sucesso!');
     }
 
     /**

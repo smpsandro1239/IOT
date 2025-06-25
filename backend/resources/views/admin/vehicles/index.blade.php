@@ -26,12 +26,13 @@
             <label for="name_filter">Filtrar por Nome:</label>
             <input type="text" name="name_filter" id="name_filter" value="{{ request('name_filter') }}" style="margin-right: 10px; padding: 8px;">
 
-            <label for="is_authorized_filter">Autorizado:</label>
+            {{-- Filtro de Autorizado Removido --}}
+            {{-- <label for="is_authorized_filter">Autorizado:</label>
             <select name="is_authorized_filter" id="is_authorized_filter" style="margin-right: 10px; padding: 8px;">
                 <option value="all" {{ request('is_authorized_filter') == 'all' ? 'selected' : '' }}>Todos</option>
                 <option value="1" {{ request('is_authorized_filter') == '1' ? 'selected' : '' }}>Sim</option>
                 <option value="0" {{ request('is_authorized_filter') == '0' && request('is_authorized_filter') !== null ? 'selected' : '' }}>Não</option>
-            </select>
+            </select> --}}
 
             <button type="submit" style="padding: 8px 15px;">Filtrar</button>
             <a href="{{ route('admin.vehicles.index') }}" style="padding: 8px 15px; text-decoration: none; color: #333; background-color: #eee; border: 1px solid #ccc;">Limpar</a>
@@ -51,7 +52,7 @@
             <tr>
                 <th>ID LoRa</th>
                 <th>Nome</th>
-                <th>Autorizado?</th>
+                {{-- Coluna Autorizado? Removida --}}
                 <th>Criado em</th>
                 <th>Ações</th>
             </tr>
@@ -61,10 +62,10 @@
                 <tr>
                     <td>{{ $vehicle->lora_id }}</td>
                     <td>{{ $vehicle->name ?: '-' }}</td>
-                    <td>{{ $vehicle->is_authorized ? 'Sim' : 'Não' }}</td>
+                    {{-- <td>{{ $vehicle->is_authorized ? 'Sim' : 'Não' }}</td> --}}
                     <td>{{ $vehicle->created_at->format('d/m/Y H:i') }}</td>
                     <td class="actions">
-                        <a href="{{ route('admin.vehicles.edit', $vehicle) }}">Editar</a>
+                        <a href="{{ route('admin.vehicles.edit', $vehicle) }}">Editar Permissões</a>
                         <form action="{{ route('admin.vehicles.destroy', $vehicle) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este veículo?');">
                             @csrf
                             @method('DELETE')
@@ -74,7 +75,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5">Nenhum veículo encontrado.</td>
+                    <td colspan="4">Nenhum veículo encontrado.</td>
                 </tr>
             @endforelse
         </tbody>
