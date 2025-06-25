@@ -45,4 +45,8 @@ Route::prefix('admin')->middleware('auth')->group(function () { // TODO: Impleme
         Route::post('/', [App\Http\Controllers\ApiTokenController::class, 'store'])->name('store');
         Route::delete('/{tokenId}', [App\Http\Controllers\ApiTokenController::class, 'destroy'])->name('destroy');
     });
+
+    // Company Management Routes
+    Route::resource('companies', App\Http\Controllers\CompanyController::class, ['as' => 'admin'])->except(['show']);
+    // 'show' pode ser adicionado depois se necessário, talvez para mostrar sites da empresa.
 });
