@@ -52,4 +52,7 @@ Route::prefix('admin')->middleware('auth')->group(function () { // TODO: Impleme
 
     // Site Management Routes
     Route::resource('sites', App\Http\Controllers\SiteController::class, ['as' => 'admin'])->except(['show']);
+
+    // Barrier Management Routes
+    Route::resource('barriers', App\Http\Controllers\BarrierController::class, ['as' => 'admin'])->except(['show']);
 });
