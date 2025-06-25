@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('vehicles', function (Blueprint $table) {
+        Schema::create('companies', function (Blueprint $table) {
             $table->id();
-            $table->string('lora_id')->unique();
-            $table->string('name')->nullable();
-            // $table->boolean('is_authorized')->default(true); // Removido - será gerenciado por VehiclePermission
+            $table->string('name')->unique();
+            $table->string('contact_email')->nullable()->unique();
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('vehicles');
+        Schema::dropIfExists('companies');
     }
 };
