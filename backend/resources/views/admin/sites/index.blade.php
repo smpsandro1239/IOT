@@ -46,7 +46,17 @@
 
     <div class="container">
         <div class="card">
-            <h2>Gerenciar Sites</h2>
+            <div style="margin-bottom: 15px; font-size: 0.9em; color: #555;">
+                <a href="{{ route('admin.dashboard') }}">Admin</a> &gt;
+                @if(isset($currentCompanyFromController))
+                    <a href="{{ route('admin.companies.index') }}">Empresas</a> &gt;
+                    {{-- Link para a empresa específica se estivermos a filtrar por ela --}}
+                    <a href="{{ route('admin.sites.index', ['company_filter' => $currentCompanyFromController->id]) }}">{{ $currentCompanyFromController->name }}</a> &gt; Sites
+                @else
+                    <a href="{{ route('admin.companies.index') }}">Empresas</a> &gt; Sites
+                @endif
+            </div>
+            <h2>Gerenciar Sites @if(isset($currentCompanyFromController)) - {{ $currentCompanyFromController->name }} @endif</h2>
 
             <div class="filters">
                 <form method="GET" action="{{ route('admin.sites.index') }}">
