@@ -20,9 +20,16 @@ class DatabaseSeeder extends Seeder
         // ]);
 
         $this->call([
+            // Primeiro os veículos, pois as permissões dependem deles
             VehicleSeeder::class,
+            // Depois as entidades de localização/empresa
+            CompanySeeder::class,
+            SiteSeeder::class,
+            BarrierSeeder::class,
+            // Por último, as permissões que ligam veículos a entidades
+            VehiclePermissionSeeder::class,
             // Outros seeders podem ser adicionados aqui no futuro
-            // Example: AccessLogSeeder::class,
+            // Example: AccessLogSeeder::class, // Se quiser popular logs de acesso
         ]);
     }
 }

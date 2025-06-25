@@ -27,7 +27,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () { // Proteger
     Route::post('/access-logs', [AccessLogController::class, 'store'])->name('api.accesslogs.store');
 
     // Endpoint for ESP32 to validate vehicle authorization
-    Route::get('/vehicles/authorize/{lora_id}', [VehicleController::class, 'checkAuthorization'])->name('api.vehicles.authorize');
+    // Lora ID e MAC da estação base serão passados como query parameters
+    Route::get('/vehicles/authorize', [VehicleController::class, 'checkAuthorization'])->name('api.vehicles.authorize');
 
     // Endpoints for ESP32 OTA Firmware Updates
     Route::get('/firmware/check', [FirmwareController::class, 'checkForUpdate'])->name('api.firmware.check');
