@@ -16,6 +16,7 @@ class AccessLog extends Model
      */
     protected $fillable = [
         'vehicle_lora_id',
+        'barrier_id', // Adicionado
         'timestamp_event',
         'direction_detected',
         'base_station_id',
@@ -31,18 +32,23 @@ class AccessLog extends Model
      */
     protected $casts = [
         'timestamp_event' => 'datetime',
-        'sensor_reports' => 'array', // Cast JSON to array
+        'sensor_reports' => 'array',
         'authorization_status' => 'boolean',
     ];
 
     /**
-     * Get the vehicle that owns the access log.
-     * Note: This assumes 'vehicle_lora_id' in this table maps to 'lora_id' in 'vehicles' table.
-     * This is not a true foreign key relationship in the DB schema by default with this setup,
-     * but Eloquent can still relate them.
+     * Get the vehicle associated with the access log.
      */
-    public function vehicle()
+    public function vehicle(): BelongsTo
     {
         return $this->belongsTo(Vehicle::class, 'vehicle_lora_id', 'lora_id');
+    }
+
+    /**
+     * Get the barrier where the access log occurred.
+     */
+    public function barrier(): BelongsTo
+    {
+        return $this->belongsTo(Barrier::class);
     }
 }

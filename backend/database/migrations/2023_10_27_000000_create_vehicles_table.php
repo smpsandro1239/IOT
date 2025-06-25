@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('lora_id')->unique();
             $table->string('name')->nullable();
-            $table->boolean('is_authorized')->default(true);
+            // $table->boolean('is_authorized')->default(true); // Removido - será gerenciado por VehiclePermission
             $table->timestamps();
         });
     }

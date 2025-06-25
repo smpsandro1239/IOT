@@ -13,11 +13,15 @@ return new class extends Migration
     {
         Schema::create('access_logs', function (Blueprint $table) {
             $table->id();
-            $table->string('vehicle_lora_id')->index();
-            $table->timestamp('timestamp_event'); // Using timestamp for flexibility with timezones
-            $table->string('direction_detected'); // e.g., 'north_south', 'south_north', 'undefined'
-            $table->string('base_station_id')->index();
-            $table->json('sensor_reports')->nullable(); // Array of objects: {sensor_id, rssi, timestamp_sensor}
+            $table->string('vehicle_lora_id')->index(); // Mantém para referência rápida do veículo
+            // $table->foreignId('vehicle_id')->nullable()->constrained('vehicles')->nullOnDelete(); // Opcional: link direto para vehicle.id
+
+            $table->foreignId('barrier_id')->constrained('barriers')->onDelete('cascade'); // Nova FK
+
+            $table->timestamp('timestamp_event');
+            $table->string('direction_detected');
+            $table->string('base_station_id')->index()->comment('MAC da Placa Base que registrou o log'); // Mantido para referência original
+            $table->json('sensor_reports')->nullable();
             $table->boolean('authorization_status');
             $table->text('notes')->nullable();
             $table->timestamps();
