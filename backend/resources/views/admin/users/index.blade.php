@@ -92,42 +92,25 @@
                                 @endif
                             </td>
                             <td>
-                                @php $canUpdate = false; @endphp
-                                @if(Auth::user()->isSuperAdmin())
-                                    @can('users:update-any') @php $canUpdate = true; @endphp @endcan
-                                @elseif(Auth::user()->hasRole('company-admin') && Auth::user()->company_id === $managedUser->company_id)
-                                    @can('users:update-own-company-user', $managedUser) @php $canUpdate = true; @endphp @endcan
-                                @elseif(Auth::id() === $managedUser->id) {{-- Editar o próprio perfil --}}
-                                     @can('users:update-own', $managedUser) @php $canUpdate = true; @endphp @endcan
-                                @endif
+                                {{-- O Gate 'users:update' deve ser definido no AuthServiceProvider para abranger os diferentes cenários --}}
+                                @can('update', $managedUser)
+                                    <a href="{{ route('admin.users.edit', $managedUser->id) }}" class="btn btn-xs btn-warning">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                @endcan
 
-                                @if($canUpdate)
-                                <a href="{{ route('admin.users.edit', $managedUser->id) }}" class="btn btn-xs btn-warning">
-                                    <i class="fas fa-edit"></i> Edit
-                                </a>
-                                @endif
-
-                                @if(Auth::id() !== $managedUser->id) {{-- Não pode excluir a si mesmo --}}
-                                    @php $canDelete = false; @endphp
-                                    @if(Auth::user()->isSuperAdmin())
-                                        @can('users:delete-any') @php $canDelete = true; @endphp @endcan
-                                    @elseif(Auth::user()->hasRole('company-admin') && Auth::user()->company_id === $managedUser->company_id)
-                                        @can('users:delete-own-company-user', $managedUser)
-                                            @if($managedUser->hasRole('site-manager')) {{-- CompanyAdmin só pode excluir SiteManagers --}}
-                                                @php $canDelete = true; @endphp
-                                            @endif
-                                        @endcan
-                                    @endif
-
-                                    @if($canDelete)
-                                    <form action="{{ route('admin.users.destroy', $managedUser->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this user?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-xs btn-danger">
-                                            <i class="fas fa-trash"></i> Delete
-                                        </button>
-                                    </form>
-                                    @endif
+                                {{-- O Gate 'users:delete' deve ser definido para os diferentes cenários --}}
+                                {{-- Prevenir auto-exclusão já está no Controller, mas pode ser reforçado no Gate se necessário --}}
+                                @if(Auth::id() !== $managedUser->id)
+                                    @can('delete', $managedUser)
+                                        <form action="{{ route('admin.users.destroy', $managedUser->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this user? This action cannot be undone.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-xs btn-danger">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    @endcan
                                 @endif
                             </td>
                         </tr>

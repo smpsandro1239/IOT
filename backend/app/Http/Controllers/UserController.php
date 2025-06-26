@@ -189,12 +189,16 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $managedUser->id],
             'password' => ['nullable', 'confirmed', Rules\Password::defaults()], // Password é opcional na atualização
-            'role_ids' => ['sometimes', 'required', 'array'], // 'sometimes' para que não seja obrigatório se não se estiver a mudar papéis
+            'role_ids' => ['sometimes', 'array'], // 'sometimes' para que não seja obrigatório se não se estiver a mudar papéis
+                                                 // Se 'role_ids' é enviado, deve ser um array. Se for um array vazio, remove todos os papéis (se permitido).
             'role_ids.*' => ['exists:roles,id'],
             'company_id' => ['nullable', 'exists:companies,id'],
         ]);
 
-        $target_role_ids = $request->input('role_ids', $managedUser->roles->pluck('id')->toArray());
+        // Determinar os papéis alvo e a empresa alvo
+        // Se role_ids não estiver no request, mantém os papéis existentes.
+        // Se role_ids for um array vazio, significa que se pretende remover todos os papéis.
+        $target_role_ids = $request->has('role_ids') ? ($validatedData['role_ids'] ?? []) : $managedUser->roles->pluck('id')->toArray();
         $target_role_names = Role::whereIn('id', $target_role_ids)->pluck('name');
         $new_company_id = $request->input('company_id', $managedUser->company_id);
 
@@ -208,28 +212,42 @@ class UserController extends Controller
             // SuperAdmin pode mudar tudo.
         } elseif ($editor->hasRole('company-admin') && $editor->company_id === $managedUser->company_id) {
             $this->authorize('users:update-own-company-user', $managedUser);
-            // CompanyAdmin só pode gerir 'site-manager'
-            if (!$target_role_names->contains('site-manager') || $target_role_names->filter(fn($name) => $name !== 'site-manager')->isNotEmpty()) {
-                 if (!$target_role_names->isEmpty() || ($target_role_names->isEmpty() && $request->has('role_ids'))) { // Permite desatribuir o papel de site-manager
-                    abort(403, 'Company Admins can only assign/unassign the Site Manager role.');
+
+            // CompanyAdmin só pode gerir 'site-manager'. Não pode atribuir outros papéis.
+            // Pode remover o papel de 'site-manager' se o utilizador o tiver.
+            $allowed_target_roles = true;
+            foreach($target_role_names as $role_name) {
+                if($role_name !== 'site-manager') {
+                    $allowed_target_roles = false;
+                    break;
+                }
+            }
+            if (!$allowed_target_roles && !empty($target_role_ids)) { // Se está a tentar atribuir algo que não seja site-manager
+                 abort(403, 'Company Admins can only assign/unassign the Site Manager role.');
+            }
+            // Se o utilizador original não era site-manager e estamos a tentar mudar papéis, bloquear (a menos que estejamos a remover todos os papéis de um user que não era site-manager)
+            if (!$managedUser->hasRole('site-manager') && $request->has('role_ids') && !empty($target_role_ids)) {
+                 if(!$target_role_names->contains('site-manager') || $target_role_names->count() > 1) {
+                    abort(403, 'Company Admins can only manage users who are Site Managers or assign the Site Manager role.');
                  }
             }
+
             // CompanyAdmin não pode mudar a empresa do utilizador
-            if ($new_company_id != $editor->company_id) {
+            if ($request->has('company_id') && $new_company_id != $editor->company_id) {
                 abort(403, 'Company Admins cannot change the company of a user.');
             }
             $new_company_id = $editor->company_id; // Garantir
         } elseif ($editor->id === $managedUser->id) {
             $this->authorize('users:update-own', $managedUser);
             // Utilizador não pode mudar o seu próprio papel ou empresa através deste form.
-            // Se 'role_ids' ou 'company_id' vierem no request, devem ser ignorados ou validados para não mudar.
             if ($request->has('role_ids') && array_diff($target_role_ids, $managedUser->roles->pluck('id')->toArray())) {
                  abort(403, 'You cannot change your own roles.');
             }
+            $target_role_ids = $managedUser->roles->pluck('id')->toArray(); // Manter os papéis atuais
+
             if ($request->has('company_id') && $new_company_id != $managedUser->company_id) {
                  abort(403, 'You cannot change your own company assignment.');
             }
-            $target_role_ids = $managedUser->roles->pluck('id')->toArray(); // Manter os papéis atuais
             $new_company_id = $managedUser->company_id; // Manter a empresa atual
         } else {
             abort(403, 'THIS ACTION IS UNAUTHORIZED.');
