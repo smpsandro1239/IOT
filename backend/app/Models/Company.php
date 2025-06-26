@@ -29,6 +29,14 @@ class Company extends Model
     }
 
     /**
+     * Get the users associated with this company (e.g., company admins).
+     */
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class);
+    }
+
+    /**
      * Get all of the vehicle permissions for the company.
      */
     public function vehiclePermissions(): \Illuminate\Database\Eloquent\Relations\MorphMany
