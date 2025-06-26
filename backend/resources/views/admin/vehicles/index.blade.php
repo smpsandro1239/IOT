@@ -39,7 +39,9 @@
         </form>
     </div>
 
+    @can('create', App\Models\Vehicle::class)
     <a href="{{ route('admin.vehicles.create') }}" class="create-link">Adicionar Novo Veículo</a>
+    @endcan
 
     @if (session('success'))
         <div class="alert-success">
@@ -69,12 +71,16 @@
                     </td>
                     <td>{{ $vehicle->created_at->format('d/m/Y H:i') }}</td>
                     <td class="actions">
+                        @can('update', $vehicle) {{-- Gate para editar o veículo/suas permissões --}}
                         <a href="{{ route('admin.vehicles.edit', $vehicle) }}">Editar Permissões</a>
+                        @endcan
+                        @can('delete', $vehicle) {{-- Gate para excluir o veículo --}}
                         <form action="{{ route('admin.vehicles.destroy', $vehicle) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este veículo?');">
                             @csrf
                             @method('DELETE')
                             <button type="submit">Excluir</button>
                         </form>
+                        @endcan
                     </td>
                 </tr>
             @empty
