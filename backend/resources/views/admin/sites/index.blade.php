@@ -64,6 +64,7 @@
                         <label for="name_filter">Nome do Site:</label>
                         <input type="text" name="name_filter" id="name_filter" value="{{ request('name_filter') }}">
                     </div>
+                    @if(Auth::user()->isSuperAdmin()) {{-- Ou @can('sites:view-any') se preferir usar permissão --}}
                     <div>
                         <label for="company_filter">Empresa:</label>
                         <select name="company_filter" id="company_filter">
@@ -75,6 +76,7 @@
                             @endforeach
                         </select>
                     </div>
+                    @endif
                     <div>
                         <label for="is_active_filter">Status:</label>
                         <select name="is_active_filter" id="is_active_filter">
@@ -88,7 +90,9 @@
                 </form>
             </div>
 
-            <a href="{{ route('admin.sites.create') }}" class="create-link">Adicionar Novo Site</a>
+            @can('create', App\Models\Site::class) {{-- Gate genérico para criar Site --}}
+            <a href="{{ route('admin.sites.create', request()->query('company_filter') ? ['company_id' => request()->query('company_filter')] : []) }}" class="create-link">Adicionar Novo Site</a>
+            @endcan
 
             @if (session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
@@ -119,13 +123,19 @@
                             <td>{{ $site->barriers_count ?? $site->barriers()->count() }}</td>
                             <td>{{ $site->created_at->format('d/m/Y H:i') }}</td>
                             <td class="actions">
+                                @can('viewAny', [App\Models\Barrier::class, $site])
                                 <a href="{{ route('admin.barriers.index', ['site_id' => $site->id]) }}" class="button-style">Ver Barreiras</a>
+                                @endcan
+                                @can('update', $site)
                                 <a href="{{ route('admin.sites.edit', $site) }}" class="edit">Editar</a>
+                                @endcan
+                                @can('delete', $site)
                                 <form action="{{ route('admin.sites.destroy', $site) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este site? Todas as barreiras associadas também serão excluídas.');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="delete">Excluir</button>
                                 </form>
+                                @endcan
                             </td>
                         </tr>
                     @empty
