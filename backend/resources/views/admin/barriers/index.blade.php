@@ -80,6 +80,7 @@
                         <label for="base_station_mac_filter">MAC Placa Base:</label>
                         <input type="text" name="base_station_mac_filter" id="base_station_mac_filter" value="{{ request('base_station_mac_filter') }}">
                     </div>
+                    @if(Auth::user()->isSuperAdmin())
                      <div>
                         <label for="company_filter">Empresa:</label>
                         <select name="company_filter" id="company_filter">
@@ -91,18 +92,21 @@
                             @endforeach
                         </select>
                     </div>
+                    @endif
+                    @if(Auth::user()->isSuperAdmin() || Auth::user()->hasRole('company-admin'))
                     <div>
                         <label for="site_filter">Site:</label>
                         <select name="site_filter" id="site_filter">
-                            <option value="">Todos Sites</option>
-                            {{-- Este dropdown pode ser populado dinamicamente com JS baseado na empresa selecionada, ou listar todos --}}
+                            <option value="">Todos Sites @if(Auth::user()->hasRole('company-admin')) (da sua empresa) @endif</option>
+                            {{-- $sites_for_filter deve ser pré-filtrado no controller para CompanyAdmin --}}
                             @foreach($sites_for_filter as $site)
                                 <option value="{{ $site->id }}" {{ request('site_filter') == $site->id ? 'selected' : '' }}>
-                                    {{ $site->name }} ({{ $site->company->name ?? 'N/A' }})
+                                    {{ $site->name }} @if(Auth::user()->isSuperAdmin()) ({{ $site->company->name ?? 'N/A' }}) @endif
                                 </option>
                             @endforeach
                         </select>
                     </div>
+                    @endif
                     <div>
                         <label for="is_active_filter">Status:</label>
                         <select name="is_active_filter" id="is_active_filter">
@@ -116,7 +120,9 @@
                 </form>
             </div>
 
-            <a href="{{ route('admin.barriers.create') }}" class="create-link">Adicionar Nova Barreira</a>
+            @can('create', App\Models\Barrier::class) {{-- Gate genérico para criar Barreira --}}
+            <a href="{{ route('admin.barriers.create', request()->query('site_filter') ? ['site_id' => request()->query('site_filter')] : []) }}" class="create-link">Adicionar Nova Barreira</a>
+            @endcan
 
             @if (session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
@@ -145,12 +151,16 @@
                             <td>{{ $barrier->is_active ? 'Ativa' : 'Inativa' }}</td>
                             <td>{{ $barrier->created_at->format('d/m/Y H:i') }}</td>
                             <td class="actions">
+                                @can('update', $barrier)
                                 <a href="{{ route('admin.barriers.edit', $barrier) }}" class="edit">Editar</a>
+                                @endcan
+                                @can('delete', $barrier)
                                 <form action="{{ route('admin.barriers.destroy', $barrier) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir esta barreira?');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="delete">Excluir</button>
                                 </form>
+                                @endcan
                             </td>
                         </tr>
                     @empty

@@ -66,7 +66,9 @@
                 </form>
             </div>
 
+            @can('companies:create')
             <a href="{{ route('admin.companies.create') }}" class="create-link">Adicionar Nova Empresa</a>
+            @endcan
 
             @if (session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
@@ -95,13 +97,19 @@
                             <td>{{ $company->sites_count ?? $company->sites()->count() }}</td>
                             <td>{{ $company->created_at->format('d/m/Y H:i') }}</td>
                             <td class="actions">
-                                <a href="{{ route('admin.sites.index', ['company_id' => $company->id]) }}" class="button-style">Ver Sites</a>
-                                <a href="{{ route('admin.companies.edit', $company) }}" class="edit">Editar</a>
-                                <form action="{{ route('admin.companies.destroy', $company) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir esta empresa? Todos os sites e barreiras associados também serão excluídos.');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="delete">Excluir</button>
-                                </form>
+                                @can('viewAny', [App\Models\Site::class, $company]) {{-- Policy ou Gate para ver sites de uma empresa --}}
+                                    <a href="{{ route('admin.sites.index', ['company_id' => $company->id]) }}" class="button-style">Ver Sites</a>
+                                @endcan
+                                @can('update', $company)
+                                    <a href="{{ route('admin.companies.edit', $company) }}" class="edit">Editar</a>
+                                @endcan
+                                @can('delete', $company)
+                                    <form action="{{ route('admin.companies.destroy', $company) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir esta empresa? Todos os sites e barreiras associados também serão excluídos.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="delete">Excluir</button>
+                                    </form>
+                                @endcan
                             </td>
                         </tr>
                     @empty
