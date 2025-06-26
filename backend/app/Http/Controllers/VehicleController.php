@@ -12,6 +12,11 @@ class VehicleController extends Controller
      */
     public function index(Request $request)
     {
+        // Todos os papéis (SuperAdmin, CompanyAdmin, SiteManager) podem ver a lista de veículos
+        // para poderem atribuir-lhes permissões.
+        // A permissão 'vehicles:view-any' será atribuída a estes papéis.
+        $this->authorize('vehicles:view-any');
+
         $query = Vehicle::orderBy('name', 'asc');
 
         // Filtro por ID LoRa
@@ -41,13 +46,44 @@ class VehicleController extends Controller
      */
     public function create()
     {
-        // Para o formulário de criação, não temos um $vehicle ainda, então $vehiclePermissions estará vazio.
-        // Mas precisamos passar as listas de companhias, sites e barreiras.
-        $companies = \App\Models\Company::orderBy('name')->get();
-        $sites = \App\Models\Site::with('company')->orderBy('company_id')->orderBy('name')->get();
-        $barriers = \App\Models\Barrier::with('site.company')->orderBy('site_id')->orderBy('name')->get();
+        // Apenas SuperAdmin pode criar novos registos de veículos.
+        $this->authorize('vehicles:create-any');
 
-        // Passamos um array vazio para vehiclePermissions para que o form não falhe
+        $user = auth()->user();
+
+        // Listas de entidades para atribuir permissões.
+        // SuperAdmin vê tudo. CompanyAdmin/SiteManager vêem um subconjunto.
+        $companies_query = \App\Models\Company::query()->orderBy('name');
+        $sites_query = \App\Models\Site::query()->with('company')->orderBy('company_id')->orderBy('name');
+        $barriers_query = \App\Models\Barrier::query()->with('site.company')->orderBy('site_id')->orderBy('name');
+
+        if ($user->hasRole('company-admin') && $user->company_id) {
+            $company_id = $user->company_id;
+            $companies_query->where('id', $company_id);
+            $sites_query->where('company_id', $company_id);
+            $barriers_query->whereHas('site', function ($q) use ($company_id) {
+                $q->where('company_id', $company_id);
+            });
+        } elseif ($user->hasRole('site-manager') && $user->company_id) {
+            $company_id = $user->company_id;
+            // SiteManager só pode atribuir permissões a sites/barreiras da sua empresa,
+            // e idealmente apenas aos seus sites "atribuídos".
+            // Esta filtragem de "atribuídos" precisaria de uma tabela site_user ou similar.
+            // Por agora, limitamos à sua empresa.
+            $companies_query->where('id', $company_id); // Só a sua empresa
+            $sites_query->where('company_id', $company_id); // Sites da sua empresa
+            // TODO: Filtrar $sites_query para apenas os sites que o SiteManager gere.
+            $barriers_query->whereHas('site', function ($q) use ($company_id) {
+                $q->where('company_id', $company_id);
+                // TODO: Filtrar $barriers_query para apenas barreiras de sites que o SiteManager gere.
+            });
+        }
+        // SuperAdmin não tem restrições de query.
+
+        $companies = $companies_query->get();
+        $sites = $sites_query->get();
+        $barriers = $barriers_query->get();
+
         $vehiclePermissions = ['companies' => [], 'sites' => [], 'barriers' => []];
 
         return view('admin.vehicles.create', compact('companies', 'sites', 'barriers', 'vehiclePermissions'));
@@ -58,47 +94,128 @@ class VehicleController extends Controller
      */
     public function store(Request $request)
     {
+        // 1. Autorizar criação do REGISTO do veículo
+        $this->authorize('vehicles:create-any'); // Só SuperAdmin pode criar registos de veículos
+
         $validatedData = $request->validate([
             'lora_id' => 'required|string|max:16|unique:vehicles,lora_id',
             'name' => 'nullable|string|max:255',
-            // 'is_authorized' é tratado abaixo
         ]);
-
-        // $validatedData['is_authorized'] = $request->boolean('is_authorized'); // Removido
 
         $vehicle = Vehicle::create($validatedData);
 
-        // Gerenciar Permissões (similar ao update)
+        // 2. Autorizar ATRIBUIÇÃO de permissões de acesso
+        $user = auth()->user();
         $permissionsInput = $request->input('permissions', []);
 
+        if ($user->isSuperAdmin()) {
+            $this->authorize('vehicle-permissions:assign-to-any-company');
+        } elseif ($user->hasRole('company-admin')) {
+            $this->authorize('vehicle-permissions:assign-to-own-company');
+        } elseif ($user->hasRole('site-manager')) {
+            $this->authorize('vehicle-permissions:assign-to-assigned-site');
+        } else {
+            abort(403, 'UNAUTHORIZED: Cannot assign vehicle permissions.');
+        }
+
+        // Filtrar e validar $permissionsInput com base no papel do utilizador
+        $this->syncVehiclePermissions($vehicle, $permissionsInput, $user);
+
+        return redirect()->route('admin.vehicles.index')->with('success', 'Veículo criado e permissões sincronizadas com sucesso!');
+    }
+
+    /**
+     * Helper function to sync vehicle permissions based on user role.
+     */
+    private function syncVehiclePermissions(Vehicle $vehicle, array $permissionsInput, \App\Models\User $user)
+    {
+        $vehicle->permissions()->delete(); // Remove old permissions first
+
+        // Company Permissions
         if (!empty($permissionsInput['companies'])) {
             foreach ($permissionsInput['companies'] as $companyId) {
-                $vehicle->permissions()->create([
-                    'permissible_type' => \App\Models\Company::class,
-                    'permissible_id' => $companyId,
-                ]);
+                if ($user->isSuperAdmin() || ($user->hasRole('company-admin') && $user->company_id == $companyId)) {
+                    $vehicle->permissions()->create([
+                        'permissible_type' => \App\Models\Company::class,
+                        'permissible_id' => $companyId,
+                    ]);
+                } else if ($user->hasRole('site-manager') && $user->company_id == $companyId) {
+                    // Site manager pode implicitamente ter acesso à empresa se gere sites dessa empresa,
+                    // mas geralmente não atribui permissão a nível de empresa diretamente.
+                    // Permitir se a empresa for a do SiteManager, para consistência se ele puder ver essa opção.
+                     $vehicle->permissions()->create([
+                        'permissible_type' => \App\Models\Company::class,
+                        'permissible_id' => $companyId,
+                    ]);
+                } else {
+                     \Illuminate\Support\Facades\Log::warning("User {$user->id} attempted to assign unauthorized company permission {$companyId} to vehicle {$vehicle->id}");
+                }
             }
         }
 
+        // Site Permissions
         if (!empty($permissionsInput['sites'])) {
-            foreach ($permissionsInput['sites'] as $siteId) {
+            $allowedSiteIds = [];
+            if ($user->isSuperAdmin()) {
+                $allowedSiteIds = \App\Models\Site::whereIn('id', $permissionsInput['sites'])->pluck('id')->toArray();
+            } elseif ($user->hasRole('company-admin') && $user->company_id) {
+                $allowedSiteIds = \App\Models\Site::where('company_id', $user->company_id)
+                                       ->whereIn('id', $permissionsInput['sites'])
+                                       ->pluck('id')->toArray();
+            } elseif ($user->hasRole('site-manager') && $user->company_id) {
+                // SiteManager: apenas sites da sua empresa (e idealmente, apenas os que ele gere)
+                $allowedSiteIds = \App\Models\Site::where('company_id', $user->company_id)
+                                       // TODO: ->whereIn('id', $user->managedSiteIds()) // Se managedSiteIds() existir
+                                       ->whereIn('id', $permissionsInput['sites'])
+                                       ->pluck('id')->toArray();
+            }
+            foreach ($allowedSiteIds as $siteId) {
                 $vehicle->permissions()->create([
                     'permissible_type' => \App\Models\Site::class,
                     'permissible_id' => $siteId,
                 ]);
             }
+            // Log non-allowed attempts
+            $disallowedSiteIds = array_diff($permissionsInput['sites'], $allowedSiteIds);
+            if (!empty($disallowedSiteIds)) {
+                \Illuminate\Support\Facades\Log::warning("User {$user->id} attempted to assign unauthorized site permissions " . implode(',', $disallowedSiteIds) . " to vehicle {$vehicle->id}");
+            }
         }
 
+        // Barrier Permissions
         if (!empty($permissionsInput['barriers'])) {
-            foreach ($permissionsInput['barriers'] as $barrierId) {
+            $allowedBarrierIds = [];
+            if ($user->isSuperAdmin()) {
+                $allowedBarrierIds = \App\Models\Barrier::whereIn('id', $permissionsInput['barriers'])->pluck('id')->toArray();
+            } elseif ($user->hasRole('company-admin') && $user->company_id) {
+                $company_id = $user->company_id;
+                $allowedBarrierIds = \App\Models\Barrier::whereHas('site', function ($q) use ($company_id) {
+                                           $q->where('company_id', $company_id);
+                                       })
+                                       ->whereIn('id', $permissionsInput['barriers'])
+                                       ->pluck('id')->toArray();
+            } elseif ($user->hasRole('site-manager') && $user->company_id) {
+                $company_id = $user->company_id;
+                // SiteManager: apenas barreiras de sites da sua empresa (e idealmente, apenas dos sites que ele gere)
+                $allowedBarrierIds = \App\Models\Barrier::whereHas('site', function ($q) use ($company_id) {
+                                           $q->where('company_id', $company_id);
+                                           // TODO: ->whereIn('id', $user->managedSiteIds()) // Se managedSiteIds() existir
+                                       })
+                                       ->whereIn('id', $permissionsInput['barriers'])
+                                       ->pluck('id')->toArray();
+            }
+            foreach ($allowedBarrierIds as $barrierId) {
                 $vehicle->permissions()->create([
                     'permissible_type' => \App\Models\Barrier::class,
                     'permissible_id' => $barrierId,
                 ]);
             }
+            // Log non-allowed attempts
+            $disallowedBarrierIds = array_diff($permissionsInput['barriers'], $allowedBarrierIds);
+            if (!empty($disallowedBarrierIds)) {
+                 \Illuminate\Support\Facades\Log::warning("User {$user->id} attempted to assign unauthorized barrier permissions " . implode(',', $disallowedBarrierIds) . " to vehicle {$vehicle->id}");
+            }
         }
-
-        return redirect()->route('admin.vehicles.index')->with('success', 'Veículo criado e permissões sincronizadas com sucesso!');
     }
 
     /**
@@ -116,11 +233,54 @@ class VehicleController extends Controller
      */
     public function edit(Vehicle $vehicle) // Using Route Model Binding
     {
-        $vehicle->load('permissions'); // Carrega as permissões existentes do veículo
+        // Apenas SuperAdmin pode editar os DETALHES do veículo (lora_id, name).
+        // CompanyAdmin/SiteManager podem editar as PERMISSÕES DE ACESSO do veículo.
+        // A view _form.blade.php terá que distinguir campos editáveis vs. atribuição de permissões.
 
-        $companies = \App\Models\Company::orderBy('name')->get();
-        $sites = \App\Models\Site::with('company')->orderBy('company_id')->orderBy('name')->get();
-        $barriers = \App\Models\Barrier::with('site.company')->orderBy('site_id')->orderBy('name')->get();
+        // Autorizar a intenção de "gerir" permissões (para popular o form corretamente)
+        $user = auth()->user();
+        if ($user->isSuperAdmin()) {
+            $this->authorize('vehicle-permissions:assign-to-any-company');
+        } elseif ($user->hasRole('company-admin')) {
+            $this->authorize('vehicle-permissions:assign-to-own-company');
+        } elseif ($user->hasRole('site-manager')) {
+            $this->authorize('vehicle-permissions:assign-to-assigned-site');
+        } else {
+            // Se o utilizador não tiver nenhuma destas, não deve poder nem ver a página de edição
+            // (a menos que haja uma permissão genérica de 'vehicles:view-details' ou similar)
+            abort(403, 'UNAUTHORIZED: Cannot manage vehicle permissions.');
+        }
+        // A autorização para editar os campos do veículo em si (lora_id, name) será verificada
+        // com 'vehicles:update-any', e a view pode desabilitar esses campos se o user não tiver essa perm.
+
+        $vehicle->load('permissions');
+
+        // Filtrar listas de Companies, Sites, Barriers para o formulário de permissões
+        $companies_query = \App\Models\Company::query()->orderBy('name');
+        $sites_query = \App\Models\Site::query()->with('company')->orderBy('company_id')->orderBy('name');
+        $barriers_query = \App\Models\Barrier::query()->with('site.company')->orderBy('site_id')->orderBy('name');
+
+        if ($user->hasRole('company-admin') && $user->company_id) {
+            $company_id = $user->company_id;
+            $companies_query->where('id', $company_id);
+            $sites_query->where('company_id', $company_id);
+            $barriers_query->whereHas('site', function ($q) use ($company_id) {
+                $q->where('company_id', $company_id);
+            });
+        } elseif ($user->hasRole('site-manager') && $user->company_id) {
+            $company_id = $user->company_id;
+            $companies_query->where('id', $company_id);
+            $sites_query->where('company_id', $user->company_id);
+            // TODO: Filtrar $sites_query para apenas os sites que o SiteManager gere.
+            $barriers_query->whereHas('site', function ($q) use ($company_id) {
+                $q->where('company_id', $company_id);
+                // TODO: Filtrar $barriers_query para apenas barreiras de sites que o SiteManager gere.
+            });
+        }
+
+        $companies = $companies_query->get();
+        $sites = $sites_query->get();
+        $barriers = $barriers_query->get();
 
         // Para pré-selecionar nos formulários, criamos arrays de IDs das permissões existentes
         $vehiclePermissions = [
@@ -137,48 +297,34 @@ class VehicleController extends Controller
      */
     public function update(Request $request, Vehicle $vehicle) // Using Route Model Binding
     {
-        $validatedData = $request->validate([
-            'lora_id' => 'required|string|max:16|unique:vehicles,lora_id,' . $vehicle->id,
-            'name' => 'nullable|string|max:255',
-            // 'is_authorized' é tratado abaixo
-        ]);
+        $user = auth()->user();
 
-        // $validatedData['is_authorized'] = $request->boolean('is_authorized'); // Removido - não usamos mais is_authorized diretamente no veículo
-        $vehicle->update($validatedData);
-
-        // Gerenciar Permissões
-        // 1. Remover todas as permissões existentes para este veículo
-        $vehicle->permissions()->delete();
-
-        // 2. Adicionar novas permissões com base no request
-        $permissionsInput = $request->input('permissions', []);
-
-        if (!empty($permissionsInput['companies'])) {
-            foreach ($permissionsInput['companies'] as $companyId) {
-                $vehicle->permissions()->create([
-                    'permissible_type' => \App\Models\Company::class,
-                    'permissible_id' => $companyId,
-                    // 'expires_at' => null, // Opcional: Adicionar lógica para data de expiração se necessário
-                ]);
-            }
+        // 1. Autorizar atualização dos DETALHES do veículo (lora_id, name)
+        // Apenas SuperAdmin pode fazer isto.
+        // Se o request contiver 'lora_id' ou 'name', verificar a permissão.
+        if ($request->has('lora_id') || $request->has('name')) {
+            $this->authorize('vehicles:update-any');
+            $validatedVehicleData = $request->validate([
+                'lora_id' => 'required|string|max:16|unique:vehicles,lora_id,' . $vehicle->id,
+                'name' => 'nullable|string|max:255',
+            ]);
+            $vehicle->update($validatedVehicleData);
         }
 
-        if (!empty($permissionsInput['sites'])) {
-            foreach ($permissionsInput['sites'] as $siteId) {
-                $vehicle->permissions()->create([
-                    'permissible_type' => \App\Models\Site::class,
-                    'permissible_id' => $siteId,
-                ]);
+        // 2. Autorizar ATRIBUIÇÃO de permissões de acesso
+        // Se o request contiver 'permissions'
+        if ($request->has('permissions')) {
+            if ($user->isSuperAdmin()) {
+                $this->authorize('vehicle-permissions:assign-to-any-company');
+            } elseif ($user->hasRole('company-admin')) {
+                $this->authorize('vehicle-permissions:assign-to-own-company');
+            } elseif ($user->hasRole('site-manager')) {
+                $this->authorize('vehicle-permissions:assign-to-assigned-site');
+            } else {
+                abort(403, 'UNAUTHORIZED: Cannot assign vehicle permissions.');
             }
-        }
-
-        if (!empty($permissionsInput['barriers'])) {
-            foreach ($permissionsInput['barriers'] as $barrierId) {
-                $vehicle->permissions()->create([
-                    'permissible_type' => \App\Models\Barrier::class,
-                    'permissible_id' => $barrierId,
-                ]);
-            }
+            $permissionsInput = $request->input('permissions', []);
+            $this->syncVehiclePermissions($vehicle, $permissionsInput, $user);
         }
 
         return redirect()->route('admin.vehicles.index')->with('success', 'Veículo atualizado e permissões sincronizadas com sucesso!');
@@ -189,6 +335,9 @@ class VehicleController extends Controller
      */
     public function destroy(Vehicle $vehicle) // Using Route Model Binding
     {
+        // Apenas SuperAdmin pode excluir registos de veículos.
+        $this->authorize('vehicles:delete-any');
+
         try {
             $vehicle->delete();
             return redirect()->route('admin.vehicles.index')->with('success', 'Veículo excluído com sucesso!');
