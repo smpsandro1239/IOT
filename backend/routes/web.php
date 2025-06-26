@@ -55,4 +55,7 @@ Route::prefix('admin')->middleware('auth')->group(function () { // TODO: Impleme
 
     // Barrier Management Routes
     Route::resource('barriers', App\Http\Controllers\BarrierController::class, ['as' => 'admin'])->except(['show']);
+
+    // User Management Routes
+    Route::resource('users', App\Http\Controllers\UserController::class, ['as' => 'admin'])->except(['show']);
 });
