@@ -1,0 +1,29 @@
+# Laravel padrão
+/vendor
+/node_modules
+/public/storage
+/storage/*.key
+.env
+.env.*
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+
+# IDEs e editores
+*.sublime-workspace
+*.sublime-project
+.idea
+.vscode
+
+# Sistemas Operacionais
+.DS_Store
+Thumbs.db
+
+# Composer
+composer.lock
+
+# NPM/Yarn
+package-lock.json
+yarn.lock
