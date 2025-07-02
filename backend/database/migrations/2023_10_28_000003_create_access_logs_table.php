@@ -12,7 +12,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('vehicle_id')->constrained()->onDelete('cascade');
             $table->foreignId('barrier_id')->constrained()->onDelete('cascade');
-            $table->boolean('access_granted')->default(false);
+            $table->timestamp('accessed_at');
+            $table->boolean('is_authorized')->default(false);
             $table->timestamps();
         });
     }
