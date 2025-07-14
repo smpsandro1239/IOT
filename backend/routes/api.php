@@ -41,4 +41,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () { // Proteger
     // Endpoints para carregar dados para formulários dinâmicos (ex: permissões de veículos)
     Route::get('companies/{company_ids_str}/sites', [\App\Http\Controllers\Api\DataController::class, 'getSitesForCompanies'])->name('api.v1.sites_for_companies');
     Route::get('sites/{site_ids_str}/barriers', [\App\Http\Controllers\Api\DataController::class, 'getBarriersForSites'])->name('api.v1.barriers_for_sites');
+
+    // Endpoint para receber telemetria/heartbeat das barreiras (via Base)
+    Route::post('telemetry/barrier', [\App\Http\Controllers\Api\TelemetryController::class, 'storeBarrierTelemetry'])->name('api.v1.telemetry.barrier.store');
 });
