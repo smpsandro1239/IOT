@@ -17,6 +17,10 @@ Route::get('/', function () {
     return view('welcome'); // Assume a 'welcome' view will exist or be created later
 });
 
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->name('dashboard');
+
 // Placeholder for Admin Dashboard Routes (authentication will be needed)
 Route::prefix('admin')->middleware('auth')->group(function () { // TODO: Implementar middleware 'auth' real
     Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('admin.dashboard');
