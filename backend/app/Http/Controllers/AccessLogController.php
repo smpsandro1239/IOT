@@ -44,6 +44,40 @@ class AccessLogController extends Controller
     }
 
     /**
+     * Get the latest system status for the dashboard.
+     */
+    public function getLatest(Request $request)
+    {
+        $latestLog = AccessLog::with('vehicle')->orderBy('timestamp_event', 'desc')->first();
+
+        // Placeholder for barrier status. In a real scenario, this would come
+        // from a cache, a separate table, or a direct device communication proxy.
+        // For now, we'll simulate it based on the last log.
+        $barrierStatus = [
+            'north' => ['state' => 'closed', 'last_updated' => now()],
+            'south' => ['state' => 'closed', 'last_updated' => now()],
+        ];
+
+        if ($latestLog) {
+            if ($latestLog->direction_detected === 'north_south' && $latestLog->authorization_status) {
+                $barrierStatus['north']['state'] = 'open';
+                $barrierStatus['north']['last_updated'] = $latestLog->timestamp_event;
+            } elseif ($latestLog->direction_detected === 'south_north' && $latestLog->authorization_status) {
+                $barrierStatus['south']['state'] = 'open';
+                $barrierStatus['south']['last_updated'] = $latestLog->timestamp_event;
+            }
+        }
+
+        return response()->json([
+            'latest_log' => $latestLog,
+            'barrier_status' => $barrierStatus,
+            'system_status' => 'operational', // Could be dynamic based on other factors
+            'server_time' => now(),
+        ]);
+    }
+
+
+    /**
      * Store a newly created resource in storage.
      * API endpoint for ESP32.
      */

@@ -22,9 +22,13 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 // API for ESP32 Base Station
-Route::prefix('v1')->middleware('auth:sanctum')->group(function () { // Proteger todo o grupo v1 com Sanctum
-    // Endpoint for ESP32 to register access events
-    Route::post('/access-logs', [AccessLogController::class, 'store'])->name('api.accesslogs.store');
+Route::prefix('v1')->group(function () {
+    // Public endpoint for the dashboard to get the latest status
+    Route::get('/status/latest', [AccessLogController::class, 'getLatest'])->name('api.status.latest');
+
+    Route::middleware('auth:sanctum')->group(function() { // Proteger as rotas seguintes com Sanctum
+        // Endpoint for ESP32 to register access events
+        Route::post('/access-logs', [AccessLogController::class, 'store'])->name('api.accesslogs.store');
 
     // Endpoint for ESP32 to validate vehicle authorization
     // Lora ID e MAC da estação base serão passados como query parameters
