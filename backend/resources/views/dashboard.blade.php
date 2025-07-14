@@ -356,6 +356,53 @@
             }
         }
 
+        async function sendBarrierCommand(barrierId, command) {
+            // Disable button to prevent multiple clicks
+            const button = document.getElementById(barrierId === 1 ? 'north-toggle' : 'south-toggle');
+            button.disabled = true;
+
+            try {
+                const url = `/api/v1/barriers/${barrierId}/command`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}' // Important for Laravel POST requests
+                    },
+                    body: JSON.stringify({ command: command })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Erro ao enviar comando');
+                }
+
+                addLog(`Comando '${command}' enviado para barreira ${barrierId}.`, new Date());
+
+            } catch (error) {
+                console.error(`Failed to send command to barrier ${barrierId}:`, error);
+                addLog(`Erro ao enviar comando para barreira ${barrierId}.`, new Date());
+            } finally {
+                // Re-enable button
+                button.disabled = false;
+            }
+        }
+
+        // Add event listeners for manual control buttons
+        // We assume North barrier is ID 1, South is ID 2. This should be made dynamic in a real app.
+        northToggle.addEventListener('click', () => {
+            // This is a simplified toggle. A real app might need more complex state management.
+            const command = northToggle.textContent.includes('Fechada') ? 'open' : 'close';
+            sendBarrierCommand(1, command);
+        });
+
+        southToggle.addEventListener('click', () => {
+            const command = southToggle.textContent.includes('Fechada') ? 'open' : 'close';
+            sendBarrierCommand(2, command);
+        });
+
+
         // Initial fetch and set interval to fetch data every 5 seconds
         fetchLatestData();
         setInterval(fetchLatestData, 5000);

@@ -26,7 +26,13 @@ Route::prefix('v1')->group(function () {
     // Public endpoint for the dashboard to get the latest status
     Route::get('/status/latest', [AccessLogController::class, 'getLatest'])->name('api.status.latest');
 
+    // Public endpoint for the dashboard to send manual commands to a barrier
+    Route::post('/barriers/{barrier}/command', [\App\Http\Controllers\BarrierController::class, 'handleCommand'])->name('api.barriers.command');
+
     Route::middleware('auth:sanctum')->group(function() { // Proteger as rotas seguintes com Sanctum
+        // Endpoint for ESP32 to retrieve pending commands
+        Route::get('/barriers/{barrier}/command', [\App\Http\Controllers\BarrierController::class, 'getPendingCommand'])->name('api.barriers.get_command');
+
         // Endpoint for ESP32 to register access events
         Route::post('/access-logs', [AccessLogController::class, 'store'])->name('api.accesslogs.store');
 

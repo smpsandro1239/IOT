@@ -160,6 +160,14 @@ unsigned long timestampBloqueioOpostoSul = 0;
 #define TEMPO_CANCELA_ABERTA_MS 5000 // 5 segundos
 unsigned long timestampAberturaCancelaNorte = 0;
 unsigned long timestampAberturaCancelaSul = 0;
+
+// --- Lógica de Comando Manual ---
+#define BARRIER_ID 1 // <<< ID desta barreira no banco de dados. Mudar conforme necessário.
+#define COMMAND_CHECK_INTERVAL_MS 5000 // Verificar por comandos a cada 5 segundos
+unsigned long lastCommandCheckMs = 0;
+String commandStatusMessage = "CMD: Pronto";
+// --- Fim Lógica de Comando Manual ---
+
 // --- Fim Lógica de Controle de Barreiras ---
 
 // Função para garantir conexão WiFi
@@ -495,54 +503,82 @@ void fecharBarreira(DirecaoVeiculo direcao) { // Modificado para aceitar Direcao
 // Declaração antecipada para abrirBarreira poder chamar mostraNoDisplay
 void mostraNoDisplay();
 
+// Sobrecarga ou modificação das funções de controle de barreira para aceitar comandos manuais
+// que não dependem de uma direção de veículo.
+void controlarBarreira(DirecaoVeiculo direcao, String comando) {
+    if (comando == "close") {
+        if (direcao == DirecaoVeiculo::NORTE_SUL) {
+            Serial.println("Fechando Barreira Norte (Manual/Auto)...");
+            estadoBarreiraNorte = EstadoBarreira::FECHANDO;
+            atualizarDisplayBarreiraNorte();
+            delay(100);
+            digitalWrite(LED_BARREIRA_NORTE, LOW);
+            estadoBarreiraNorte = EstadoBarreira::FECHADA;
+            timestampAberturaCancelaNorte = 0;
+            atualizarDisplayBarreiraNorte();
+        } else if (direcao == DirecaoVeiculo::SUL_NORTE) {
+            Serial.println("Fechando Barreira Sul (Manual/Auto)...");
+            estadoBarreiraSul = EstadoBarreira::FECHANDO;
+            atualizarDisplayBarreiraSul();
+            delay(100);
+            digitalWrite(LED_BARREIRA_SUL, LOW);
+            estadoBarreiraSul = EstadoBarreira::FECHADA;
+            timestampAberturaCancelaSul = 0;
+            atualizarDisplayBarreiraSul();
+        }
+    } else if (comando == "open") {
+         if (direcao == DirecaoVeiculo::NORTE_SUL) {
+            if (estadoBarreiraNorte == EstadoBarreira::FECHADA) {
+                 Serial.println("Abrindo Barreira Norte...");
+                estadoBarreiraNorte = EstadoBarreira::ABRINDO;
+                atualizarDisplayBarreiraNorte();
+                delay(100);
+                digitalWrite(LED_BARREIRA_NORTE, HIGH);
+                estadoBarreiraNorte = EstadoBarreira::ABERTA;
+                timestampAberturaCancelaNorte = millis();
+                atualizarDisplayBarreiraNorte();
+            }
+        } else if (direcao == DirecaoVeiculo::SUL_NORTE) {
+            if (estadoBarreiraSul == EstadoBarreira::FECHADA) {
+                Serial.println("Abrindo Barreira Sul...");
+                estadoBarreiraSul = EstadoBarreira::ABRINDO;
+                atualizarDisplayBarreiraSul();
+                delay(100);
+                digitalWrite(LED_BARREIRA_SUL, HIGH);
+                estadoBarreiraSul = EstadoBarreira::ABERTA;
+                timestampAberturaCancelaSul = millis();
+                atualizarDisplayBarreiraSul();
+            }
+        }
+    }
+}
+
+
 void abrirBarreira(DirecaoVeiculo direcao) {
     if (direcao == DirecaoVeiculo::NORTE_SUL) {
-        if (estadoBarreiraNorte == EstadoBarreira::FECHADA) {
-            if (macVeiculoBloqueioOpostoNorte == ultimoMac && (millis() - timestampBloqueioOpostoNorte < TEMPO_BLOQUEIO_OPOSTA_MS)) {
-                Serial.println("Barreira Norte BLOQUEADA para MAC " + ultimoMac + " (passou por Sul recentemente).");
-                ultimoStatus = "BN BLOQ MAC";
-                atualizarDisplayBarreiraNorte(); // Garante que o display reflita o bloqueio
-                // A resposta LoRa "AUTORIZADO" já foi enviada, aqui é só o controle físico.
-                return;
-            }
-            Serial.println("Abrindo Barreira Norte...");
-            estadoBarreiraNorte = EstadoBarreira::ABRINDO;
+        if (macVeiculoBloqueioOpostoNorte == ultimoMac && (millis() - timestampBloqueioOpostoNorte < TEMPO_BLOQUEIO_OPOSTA_MS)) {
+            Serial.println("Barreira Norte BLOQUEADA para MAC " + ultimoMac + " (passou por Sul recentemente).");
+            ultimoStatus = "BN BLOQ MAC";
             atualizarDisplayBarreiraNorte();
-            // mostraNoDisplay(); // Evitar muitos redraws
-            delay(100); // Simula tempo real de abertura da cancela (reduzido)
-            digitalWrite(LED_BARREIRA_NORTE, HIGH);
-            estadoBarreiraNorte = EstadoBarreira::ABERTA;
-            timestampAberturaCancelaNorte = millis();
-            atualizarDisplayBarreiraNorte();
-
-            macVeiculoBloqueioOpostoSul = ultimoMac;
-            timestampBloqueioOpostoSul = millis();
-            Serial.println("Barreira Sul BLOQUEADA para MAC " + ultimoMac + " por " + String(TEMPO_BLOQUEIO_OPOSTA_MS/1000) + "s.");
-            atualizarDisplayBarreiraSul(); // Atualiza display da barreira Sul para mostrar possível '*'
+            return;
         }
+        controlarBarreira(DirecaoVeiculo::NORTE_SUL, "open");
+        macVeiculoBloqueioOpostoSul = ultimoMac;
+        timestampBloqueioOpostoSul = millis();
+        Serial.println("Barreira Sul BLOQUEADA para MAC " + ultimoMac + " por " + String(TEMPO_BLOQUEIO_OPOSTA_MS/1000) + "s.");
+        atualizarDisplayBarreiraSul();
     } else if (direcao == DirecaoVeiculo::SUL_NORTE) {
-        if (estadoBarreiraSul == EstadoBarreira::FECHADA) {
-            if (macVeiculoBloqueioOpostoSul == ultimoMac && (millis() - timestampBloqueioOpostoSul < TEMPO_BLOQUEIO_OPOSTA_MS)) {
-                Serial.println("Barreira Sul BLOQUEADA para MAC " + ultimoMac + " (passou por Norte recentemente).");
-                ultimoStatus = "BS BLOQ MAC";
-                atualizarDisplayBarreiraSul();
-                return;
-            }
-            Serial.println("Abrindo Barreira Sul...");
-            estadoBarreiraSul = EstadoBarreira::ABRINDO;
+        if (macVeiculoBloqueioOpostoSul == ultimoMac && (millis() - timestampBloqueioOpostoSul < TEMPO_BLOQUEIO_OPOSTA_MS)) {
+            Serial.println("Barreira Sul BLOQUEADA para MAC " + ultimoMac + " (passou por Norte recentemente).");
+            ultimoStatus = "BS BLOQ MAC";
             atualizarDisplayBarreiraSul();
-            // mostraNoDisplay();
-            delay(100);
-            digitalWrite(LED_BARREIRA_SUL, HIGH);
-            estadoBarreiraSul = EstadoBarreira::ABERTA;
-            timestampAberturaCancelaSul = millis();
-            atualizarDisplayBarreiraSul();
-
-            macVeiculoBloqueioOpostoNorte = ultimoMac;
-            timestampBloqueioOpostoNorte = millis();
-            Serial.println("Barreira Norte BLOQUEADA para MAC " + ultimoMac + " por " + String(TEMPO_BLOQUEIO_OPOSTA_MS/1000) + "s.");
-            atualizarDisplayBarreiraNorte();
+            return;
         }
+        controlarBarreira(DirecaoVeiculo::SUL_NORTE, "open");
+        macVeiculoBloqueioOpostoNorte = ultimoMac;
+        timestampBloqueioOpostoNorte = millis();
+        Serial.println("Barreira Norte BLOQUEADA para MAC " + ultimoMac + " por " + String(TEMPO_BLOQUEIO_OPOSTA_MS/1000) + "s.");
+        atualizarDisplayBarreiraNorte();
     }
 }
 
@@ -634,8 +670,50 @@ void mostraNoDisplay() {
   display.print(" ");
   display.println(barreiraSulStatusDisplay);
   display.setCursor(0, display.getCursorY()); // Próxima linha
-  display.print(otaStatusMessage); // Exibe status do OTA
+  display.print(otaStatusMessage);
+  display.print(" | ");
+  display.println(commandStatusMessage);
   display.display();
+}
+
+void verificarEExecutarComandoManual() {
+    commandStatusMessage = "CMD: Verificando...";
+
+    String endpoint = "/barriers/" + String(BARRIER_ID) + "/command";
+    String httpResponse = httpGETRequest(endpoint.c_str());
+
+    if (httpResponse.startsWith("{\"error\"")) {
+        commandStatusMessage = "CMD: Err API";
+        Serial.println("Comando Manual: Erro ao contatar API.");
+        return;
+    }
+
+    if (httpResponse.indexOf("command") > 0) {
+        StaticJsonDocument<128> doc;
+        DeserializationError error = deserializeJson(doc, httpResponse);
+
+        if (!error) {
+            String command = doc["command"];
+            commandStatusMessage = "CMD: " + command;
+            Serial.println("Comando Manual recebido: " + command);
+
+            // ATENÇÃO: Simplificação. Assume que o comando é para a barreira principal (Norte)
+            // A lógica pode ser expandida para um ID de barreira específico (Norte/Sul)
+            if (command == "open") {
+                controlarBarreira(DirecaoVeiculo::NORTE_SUL, "open"); // Abre a barreira Norte
+            } else if (command == "close") {
+                controlarBarreira(DirecaoVeiculo::NORTE_SUL, "close"); // Fecha a barreira Norte
+            }
+            // Outros comandos como "lock" podem ser implementados aqui.
+
+        } else {
+            commandStatusMessage = "CMD: Err JSON";
+            Serial.println("Comando Manual: Erro ao processar JSON.");
+        }
+    } else {
+        commandStatusMessage = "CMD: Nenhum";
+        // HTTP 204 No Content, ou JSON vazio, significa que não há comando.
+    }
 }
 
 // Verifica autorização do MAC chamando a API
@@ -962,4 +1040,10 @@ void loop() {
     if (millis() - lastOtaCheckMs > OTA_CHECK_INTERVAL_MS) {
         lastOtaCheckMs = millis();
         checkAndApplyOTA();
+    }
+
+    // Verificar comandos manuais periodicamente
+    if (millis() - lastCommandCheckMs > COMMAND_CHECK_INTERVAL_MS) {
+        lastCommandCheckMs = millis();
+        verificarEExecutarComandoManual();
     }

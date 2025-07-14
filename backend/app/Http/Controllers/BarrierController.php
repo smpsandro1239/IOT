@@ -383,4 +383,57 @@ class BarrierController extends Controller
             return redirect()->route('admin.barriers.index')->with('error', 'Erro ao excluir barreira.');
         }
     }
+
+    // --- API Methods for Dashboard and ESP32 ---
+
+    /**
+     * Handles manual commands from the dashboard.
+     * Stores the command to be picked up by the ESP32 base station.
+     */
+    public function handleCommand(Request $request, Barrier $barrier)
+    {
+        $validated = $request->validate([
+            'command' => ['required', 'string', Rule::in(['open', 'close', 'lock', 'unlock'])],
+        ]);
+
+        $command = $validated['command'];
+
+        // Store the command in the database for the ESP32 to retrieve.
+        $barrier->pending_command = $command;
+        $barrier->command_last_updated_at = now();
+        $barrier->save();
+
+        Log::info("Comando '{$command}' para a barreira '{$barrier->name}' (ID: {$barrier->id}) foi armazenado na base de dados.");
+
+        return response()->json([
+            'message' => "Comando '{$command}' para a barreira '{$barrier->name}' foi registado.",
+            'barrier_id' => $barrier->id,
+            'command_sent' => $command,
+        ]);
+    }
+
+    /**
+     * Called by the ESP32 base station to check for a pending command.
+     * If a command is found, it's returned and cleared from the database.
+     */
+    public function getPendingCommand(Request $request, Barrier $barrier)
+    {
+        $command = $barrier->pending_command;
+
+        if ($command) {
+            // Clear the command after retrieving it to prevent re-execution.
+            $barrier->pending_command = null;
+            $barrier->save();
+
+            Log::info("Comando '{$command}' para a barreira '{$barrier->name}' (ID: {$barrier->id}) foi entregue à Placa Base.");
+
+            return response()->json([
+                'command' => $command,
+                'timestamp' => $barrier->command_last_updated_at,
+            ]);
+        }
+
+        // No command pending, return empty response.
+        return response()->json(null, 204); // 204 No Content
+    }
 }
