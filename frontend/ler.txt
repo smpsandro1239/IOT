@@ -1,0 +1,17 @@
+//testar conecção com o servidor
+//
+curl -X POST http://192.168.1.69:8000/api/v1/access-logs -H "Content-Type: application/json" -d '{"mac":"24A160123456","direcao":"NS","datahora":"2025-07-14 20:00:00","status":"AUTORIZADO"}'
+
+//iniciar o servidor
+http-server
+
+//iniciar o websocket
+php artisan websockets:serve
+
+//iniciar o servidor backend
+php artisan serve
+
+//acessar o banco de dados
+mysql -u root -p laravel_barrier_control
+1234567890aa
+SELECT * FROM telemetria;

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #vehiclePlate, #vehicleDirection, #vehicleDistance { margin: 10px 0; }
+        #logs { max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; }
+        .log-entry { margin: 5px 0; }
+        .gate { margin: 10px 0; }
+        .open { color: green; }
+        .closed { color: red; }
+        .locked { color: gray; }
+    </style>
+</head>
+<body>
+    <h1>IoT Dashboard</h1>
+    <div>Placa: <span id="vehiclePlate">Desconhecido</span></div>
+    <div>Direção: <span id="vehicleDirection">Desconhecido</span></div>
+    <div>Distância: <span id="vehicleDistance">0 m</span></div>
+    <div>Estado da Barreira Norte: <span id="gateNorth" class="locked">Fechada</span></div>
+    <div>Estado da Barreira Sul: <span id="gateSouth" class="locked">Fechada</span></div>
+    <div>Logs: <div id="logs"></div></div>
+    <script src="https://js.pusher.com/7.0/pusher.min.js?v=1"></script>
+    <script src="https://unpkg.com/laravel-echo@1.11.3/dist/echo.iife.js?v=1"></script>
+    <script>
+        window.Pusher = Pusher;
+        const echo = new Echo({
+            broadcaster: 'pusher',
+            key: 'iot-key',
+            wsHost: '127.0.0.1',
+            wsPort: 6001,
+            forceTLS: false,
+            disableStats: true,
+            cluster: 'mt1' // Added to match PUSHER_APP_CLUSTER
+        });
+
+        const gateStates = { north: 'locked', south: 'locked' };
+        const gateNorth = document.getElementById('gateNorth');
+        const gateSouth = document.getElementById('gateSouth');
+
+        function updateGates() {
+            gateNorth.textContent = gateStates.north === 'open' ? 'Aberta' : gateStates.north === 'closed' ? 'Fechada' : 'Trancada';
+            gateSouth.textContent = gateStates.south === 'open' ? 'Aberta' : gateStates.south === 'closed' ? 'Fechada' : 'Trancada';
+            gateNorth.className = gateStates.north;
+            gateSouth.className = gateStates.south;
+        }
+
+        echo.channel('telemetria')
+            .listen('TelemetriaUpdated', (e) => {
+                document.getElementById('vehiclePlate').textContent = e.mac || 'Desconhecido';
+                document.getElementById('vehicleDirection').textContent = e.direcao === 'NS' ? 'Norte → Sul' : 'Sul → Norte';
+                document.getElementById('vehicleDistance').textContent = '100 m'; // Adjust with real data
+                gateStates[e.direcao === 'NS' ? 'north' : 'south'] = e.status === 'AUTORIZADO' ? 'open' : 'closed';
+                gateStates[e.direcao === 'NS' ? 'south' : 'north'] = 'locked';
+                updateGates();
+                const logs = document.getElementById('logs');
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                logEntry.textContent = `[${e.datahora}] Veículo ${e.mac} - ${e.status}`;
+                logs.prepend(logEntry);
+            });
+    </script>
+</body>
+</html>
