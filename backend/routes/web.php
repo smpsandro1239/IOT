@@ -13,6 +13,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('/laravel-websockets', '\BeyondCode\LaravelWebSockets\Dashboard\Http\Controllers\DashboardController@index');
+Route::get('/laravel-websockets/auth', '\BeyondCode\LaravelWebSockets\Dashboard\Http\Controllers\AuthorizeController@websocketAuth')
+    ->name('laravel-websockets.auth')
+    ->middleware('\BeyondCode\LaravelWebSockets\Dashboard\Http\Middleware\Authorize');
+
 Route::get('/', function () {
     return view('welcome'); // Assume a 'welcome' view will exist or be created later
 });
