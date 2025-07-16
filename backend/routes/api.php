@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AccessLogController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\FirmwareController;
+use App\Http\Controllers\MacsAutorizadosController;
 
 /*
 |------------------------------------------------------------------------
@@ -28,6 +29,15 @@ Route::prefix('v1')->group(function () {
 
     // Public endpoint for ESP32 to register access events
     Route::post('/access-logs', [AccessLogController::class, 'store'])->name('api.accesslogs.store');
+
+    // Public endpoint to add authorized MAC addresses
+    Route::post('/macs-autorizados', [MacsAutorizadosController::class, 'store'])->name('api.macs.store');
+    
+    // Public endpoint to get all authorized MAC addresses
+    Route::get('/macs-autorizados', [MacsAutorizadosController::class, 'index'])->name('api.macs.index');
+    
+    // Public endpoint to check MAC authorization
+    Route::get('/macs-autorizados/authorize', [MacsAutorizadosController::class, 'checkAuthorization'])->name('api.macs.authorize');
 
     Route::middleware('auth:sanctum')->group(function () {
         // Endpoint for ESP32 to validate vehicle authorization
