@@ -33,6 +33,7 @@ Route::prefix('v1')->group(function () {
     // Public endpoint to add authorized MAC addresses
     Route::post('/macs-autorizados', [MacsAutorizadosController::class, 'store'])->name('api.macs.store');
     Route::post('/macs-autorizados/bulk', [MacsAutorizadosController::class, 'storeBulk'])->name('api.macs.store.bulk');
+    Route::get('/macs-autorizados/download', [MacsAutorizadosController::class, 'download'])->name('api.macs.download');
 
     // Public endpoint for the dashboard to get metrics
     Route::get('/metrics', 'MetricsController@getMetrics')->name('api.metrics');

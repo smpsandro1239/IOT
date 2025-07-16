@@ -184,6 +184,9 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">Adicionar por Ficheiro</label>
                         <input type="file" id="mac-file" class="w-full p-2 border rounded-lg">
                         <button id="file-instructions" class="mt-2 text-sm text-blue-600 hover:underline">Como formatar o ficheiro?</button>
+                        <button id="download-macs" class="mt-2 w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition">
+                            <i class="fas fa-download mr-1"></i> Baixar MACs
+                        </button>
                     </div>
                 </div>
 
@@ -399,6 +402,7 @@ AABBCCDDEEFF,XYZ5678
             document.getElementById('instructions-modal').classList.add('hidden');
         });
         document.getElementById('mac-file').addEventListener('change', handleFileUpload);
+        document.getElementById('download-macs').addEventListener('click', downloadMacs);
 
         // Functions
         async function handleFileUpload(event) {
@@ -430,6 +434,22 @@ AABBCCDDEEFF,XYZ5678
                 }
             };
             reader.readAsText(file);
+        }
+
+        async function downloadMacs() {
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/v1/macs-autorizados/download');
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'macs_autorizados.txt';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            } catch (error) {
+                addLog(`Erro ao baixar MACs: ${error.message}`);
+            }
         }
 
         async function addAuthorizedMac() {
