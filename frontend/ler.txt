@@ -1,17 +1,49 @@
-//testar conecção com o servidor
-//
-curl -X POST http://192.168.1.69:8000/api/v1/access-logs -H "Content-Type: application/json" -d '{"mac":"24A160123456","direcao":"NS","datahora":"2025-07-14 20:00:00","status":"AUTORIZADO"}'
+# Instructions to run the IoT Barrier Control System
 
-//iniciar o servidor
-http-server
+## 1. Start the backend server
 
-//iniciar o websocket
-php artisan websockets:serve
+Open a terminal and navigate to the `backend` directory. Then run the following commands:
 
-//iniciar o servidor backend
+```bash
 php artisan serve
+```
 
-//acessar o banco de dados
+## 2. Start the WebSocket server
+
+Open another terminal and navigate to the `backend` directory. Then run the following command:
+
+```bash
+php artisan websockets:serve
+```
+
+## 3. Start the frontend server
+
+Open a third terminal and navigate to the `frontend` directory. Then run the following command:
+
+```bash
+http-server
+```
+
+The frontend will be available at `http://127.0.0.1:8080`.
+
+## 4. Test the API
+
+You can use the following `curl` command to test the API endpoint for sending telemetry data:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/access-logs -H "Content-Type: application/json" -d '{"mac":"24A160123456","direcao":"NS","datahora":"2025-07-14 20:00:00","status":"AUTORIZADO"}'
+```
+
+## 5. Access the database
+
+To access the database, you can use the following command:
+
+```bash
 mysql -u root -p laravel_barrier_control
-1234567890aa
+```
+
+Then, enter your password when prompted. Once you are connected, you can run SQL queries, for example:
+
+```sql
 SELECT * FROM telemetria;
+```

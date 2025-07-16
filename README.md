@@ -39,8 +39,9 @@ cd iot-barrier-control
 
 ### 2. Backend Setup
 
+Open a terminal and navigate to the `backend` directory. Then run the following commands:
+
 ```bash
-cd backend
 composer install
 cp .env.example .env
 ```
@@ -63,21 +64,28 @@ php artisan key:generate
 php artisan migrate --seed
 ```
 
-Finally, start the backend server and the WebSocket server:
+### 3. Start the Servers
 
-```bash
-php artisan serve
-php artisan websockets:serve
-```
+You need to start three servers in separate terminals:
 
-### 3. Frontend Setup
+1.  **Backend Server:**
+    ```bash
+    cd backend
+    php artisan serve
+    ```
 
-```bash
-cd frontend
-npm install
-npm install http-server -g
-http-server
-```
+2.  **WebSocket Server:**
+    ```bash
+    cd backend
+    php artisan websockets:serve
+    ```
+
+3.  **Frontend Server:**
+    ```bash
+    cd frontend
+    npm install
+    http-server
+    ```
 
 The frontend will be available at `http://127.0.0.1:8080`.
 
