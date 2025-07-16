@@ -16,11 +16,16 @@ const char* authUrl = "http://127.0.0.1:8000/api/v1/vehicles/authorize";
 #define LORA_BW 125E3   // Bandwidth
 #define LORA_CR 5       // Coding rate
 
-// Simulated LoRa AoA detection
-float detectAoA() {
-  // Simulated AoA (in degrees)
-  // 0-90°: North-South, 90-180°: South-North
-  return random(0, 180);
+// TODO: Implement actual LoRa communication
+// This function should receive a LoRa packet and parse the MAC address
+String receiveLoRaPacket() {
+  // Simulate receiving a MAC address
+  return "24A160123456";
+}
+
+// TODO: Implement OTA update logic
+void checkForOTAUpdate() {
+  // Add your OTA update logic here
 }
 
 void setup() {
