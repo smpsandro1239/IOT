@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Controle de Barreiras com LoRa</title>
+    <title>Sistema de Controle de Barreiras IoT - LoRa</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://js.pusher.com/7.0.3/pusher.min.js"></script>
-    <script src="https://unpkg.com/laravel-echo@1.11.3/dist/echo.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://js.pusher.com/8.4.0-rc2/pusher.min.js"></script>
+    <script src="https://unpkg.com/laravel-echo@1.15.3/dist/echo.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.30.0/index.min.js"></script>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
     <style>
         .gate-animation {
             transition: all 0.5s ease;
@@ -355,17 +358,27 @@ AABBCCDDEEFF,XYZ5678
         </div>
     </div>
 
+    <script type="module" src="js/app.js"></script>
+    <script src="js/simulation.js"></script>
     <script>
-        // Check for auth token
-        if (!localStorage.getItem('auth_token')) {
-            window.location.href = 'login.html';
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('Service Worker registration failed:', error);
+                    });
+            });
         }
 
-        // Initialize Laravel Echo
+        // Initialize Echo
         const echo = new Echo({
             broadcaster: 'pusher',
             key: 'iot-key',
-            wsHost: '127.0.0.1',
+            wsHost: window.location.hostname,
             wsPort: 6001,
             forceTLS: false,
             disableStats: true,
@@ -373,18 +386,45 @@ AABBCCDDEEFF,XYZ5678
         });
 
         // Listen for TelemetriaUpdated events
-        echo.channel('telemetria')
+        echo.channel('telemetria').listen('TelemetriaUpdated', (e) => {
+            addLog(`Novo evento: MAC ${e.mac}, Direção ${e.direcao}, Status ${e.status}`);
+            vehiclePlate.textContent = e.placa || 'Desconhecida';
+            vehicleDirection.textContent = e.direcao === 'NS' ? 'Norte → Sul' : 'Sul → Norte';
+            vehicleDistance.textContent = e.distance ? `${e.distance} m` : '100 m';
+            signalStrengthBar.style.width = e.signal_strength ? `${e.signal_strength}%` : '80%';
+
+            if (e.status === 'AUTORIZADO') {
+                if (e.direcao === 'NS') {
+                    gateStates.north = 'open';
+                    gateStates.south = 'locked';
+                } else {
+                    gateStates.south = 'open';
+                    gateStates.north = 'locked';
+                }
+                updateGates();
+                resetGatesAfterTimeout();
+                // Update charts
+                createCharts();
+                if (document.getElementById('mac-input').value === e.mac) {
+                    createMacCharts(e.mac);
+                }
+            }
+        });
+
+        // Listen for gate control events
         echo.channel('gate-control').listen('GateControl', (e) => {
             gateStates[e.gate] = e.action ? 'open' : 'closed';
             updateGates();
             addLog(`Barreira ${e.gate === 'north' ? 'Norte-Sul' : 'Sul-Norte'} ${e.action ? 'aberta' : 'fechada'}`);
         });
 
+        // Handle WebSocket disconnection
         echo.connector.pusher.connection.bind('disconnected', () => {
             addLog('WebSocket desconectado. Tentando reconectar...');
             setTimeout(() => echo.connect(), 5000);
         });
 
+        // Reset gates after timeout
         function resetGatesAfterTimeout() {
             setTimeout(() => {
                 if (gateStates.north === 'locked') gateStates.north = 'closed';
@@ -393,31 +433,6 @@ AABBCCDDEEFF,XYZ5678
                 addLog('Barreiras desbloqueadas após 5 minutos');
             }, 5 * 60 * 1000);
         }
-
-            .listen('TelemetriaUpdated', (e) => {
-                addLog(`Novo evento: MAC ${e.mac}, Direção ${e.direcao}, Status ${e.status}`);
-                vehiclePlate.textContent = e.placa || 'Desconhecida';
-                vehicleDirection.textContent = e.direcao === 'NS' ? 'Norte → Sul' : 'Sul → Norte';
-            vehicleDistance.textContent = e.distance ? `${e.distance} m` : '100 m';
-            signalStrengthBar.style.width = e.signal_strength ? `${e.signal_strength}%` : '80%';
-
-                if (e.status === 'AUTORIZADO') {
-                    if (e.direcao === 'NS') {
-                        gateStates.north = 'open';
-                        gateStates.south = 'locked';
-                    } else {
-                        gateStates.south = 'open';
-                        gateStates.north = 'locked';
-                    }
-                    updateGates();
-                resetGatesAfterTimeout();
-                // Update charts
-                createCharts();
-                if (document.getElementById('mac-input').value === e.mac) {
-                    createMacCharts(e.mac);
-                }
-                }
-            });
 
         // System variables
         let simulationActive = false;
@@ -456,6 +471,121 @@ AABBCCDDEEFF,XYZ5678
         stopSim.addEventListener('click', stopSimulation);
         northToggle.addEventListener('click', () => toggleGate('north'));
         southToggle.addEventListener('click', () => toggleGate('south'));
+
+        // Simulation functions
+        function startSimulation() {
+            if (simulationActive) return;
+
+            simulationActive = true;
+            currentDirection = simDirection.value;
+            vehiclePlate.textContent = simPlate.value || 'ABC-1234';
+
+            // Show vehicle marker
+            vehicleMarker.style.display = 'flex';
+
+            // Position vehicle marker based on direction
+            if (currentDirection === 'north') {
+                vehicleMarker.style.left = '25%';
+                vehicleMarker.style.top = '10%';
+                directionIndicator.style.left = '30%';
+                directionIndicator.style.top = '15%';
+                directionIndicator.innerHTML = '<i class="fas fa-arrow-down direction-arrow text-green-500 text-2xl"></i>';
+                vehicleDirection.textContent = 'Norte → Sul';
+            } else {
+                vehicleMarker.style.left = '75%';
+                vehicleMarker.style.top = '90%';
+                directionIndicator.style.left = '80%';
+                directionIndicator.style.top = '85%';
+                directionIndicator.innerHTML = '<i class="fas fa-arrow-up direction-arrow text-green-500 text-2xl"></i>';
+                vehicleDirection.textContent = 'Sul → Norte';
+            }
+
+            // Show direction indicator
+            directionIndicator.style.display = 'block';
+
+            // Start vehicle movement
+            vehiclePosition = 500;
+
+            // Update UI
+            startSim.disabled = true;
+            stopSim.disabled = false;
+            systemStatus.className = 'w-3 h-3 rounded-full bg-yellow-500 mr-2';
+            statusText.textContent = 'Simulação em andamento';
+
+            // Log event
+            addLog('Simulação iniciada');
+
+            // Start animation
+            updateVehiclePosition();
+        }
+
+        function updateVehiclePosition() {
+            if (!simulationActive) return;
+
+            vehiclePosition -= 10;
+
+            if (vehiclePosition <= 0) {
+                vehiclePosition = 0;
+                stopSimulation();
+                return;
+            }
+
+            // Update vehicle marker position
+            if (currentDirection === 'north') {
+                vehicleMarker.style.top = `${10 + (1 - vehiclePosition / 500) * 80}%`;
+            } else {
+                vehicleMarker.style.top = `${90 - (1 - vehiclePosition / 500) * 80}%`;
+            }
+
+            // Update distance display
+            vehicleDistance.textContent = `${vehiclePosition} m`;
+
+            // Update signal strength
+            const strength = 100 - (vehiclePosition / 500) * 100;
+            signalStrengthBar.style.width = `${strength}%`;
+
+            // Check for gate opening distance (100m)
+            if (vehiclePosition <= 100) {
+                if (currentDirection === 'north' && gateStates.north !== 'open') {
+                    gateStates.north = 'open';
+                    gateStates.south = 'locked';
+                    updateGates();
+                    addLog(`Barreira Norte-Sul aberta para veículo ${vehiclePlate.textContent}`);
+                } else if (currentDirection === 'south' && gateStates.south !== 'open') {
+                    gateStates.south = 'open';
+                    gateStates.north = 'locked';
+                    updateGates();
+                    addLog(`Barreira Sul-Norte aberta para veículo ${vehiclePlate.textContent}`);
+                }
+            }
+
+            // Continue animation
+            setTimeout(updateVehiclePosition, 100);
+        }
+
+        function stopSimulation() {
+            if (!simulationActive) return;
+
+            simulationActive = false;
+
+            // Hide vehicle marker and direction indicator
+            vehicleMarker.style.display = 'none';
+            directionIndicator.style.display = 'none';
+
+            // Reset UI
+            vehicleDirection.textContent = 'Nenhuma';
+            vehicleDistance.textContent = '0 m';
+            signalStrengthBar.style.width = '0%';
+            systemStatus.className = 'w-3 h-3 rounded-full bg-green-500 mr-2';
+            statusText.textContent = 'Operacional';
+
+            // Update buttons
+            startSim.disabled = false;
+            stopSim.disabled = true;
+
+            // Log event
+            addLog('Simulação parada');
+        }
         addMac.addEventListener('click', addAuthorizedMac);
         document.getElementById('file-instructions').addEventListener('click', () => {
             document.getElementById('instructions-modal').classList.remove('hidden');
@@ -853,6 +983,20 @@ AABBCCDDEEFF,XYZ5678
 
             // Start vehicle movement
             vehiclePosition = 500;
+
+            // Show vehicle marker
+            vehicleMarker.style.display = 'flex';
+
+            // Position vehicle marker based on direction
+            if (currentDirection === 'north') {
+                vehicleMarker.style.left = '25%';
+                vehicleMarker.style.top = '10%';
+            } else {
+                vehicleMarker.style.left = '75%';
+                vehicleMarker.style.top = '90%';
+            }
+
+            // Start animation
             updateVehiclePosition();
 
             // Update UI

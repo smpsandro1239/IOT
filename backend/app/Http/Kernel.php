@@ -8,6 +8,7 @@ class Kernel extends HttpKernel
 {
   protected $middleware = [
     \App\Http\Middleware\TrustProxies::class,
+    \App\Http\Middleware\Cors::class,
     \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
     \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
     \App\Http\Middleware\TrimStrings::class,
@@ -41,5 +42,6 @@ class Kernel extends HttpKernel
     'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
     'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
     'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+    'auth.dev' => \App\Http\Middleware\DevAuthMiddleware::class,
   ];
 }

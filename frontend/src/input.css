@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos personalizados para o Sistema de Barreiras IoT */
+
+@layer components {
+  .gate-animation {
+    @apply transition-all duration-500 ease-in-out;
+  }
+
+  .signal-strength {
+    @apply animate-pulse-slow;
+  }
+
+  .vehicle-marker {
+    @apply transition-all duration-[2000ms] linear;
+  }
+
+  .direction-arrow {
+    @apply animate-bounce-slow;
+  }
+
+  .spinner {
+    @apply border-2 border-gray-300 border-t-blue-500 rounded-full w-4 h-4 animate-spin mx-auto;
+  }
+
+  .btn-primary {
+    @apply bg-barrier-blue hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+
+  .btn-success {
+    @apply bg-barrier-green hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+
+  .btn-danger {
+    @apply bg-barrier-red hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+
+  .btn-warning {
+    @apply bg-barrier-yellow hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+
+  .card {
+    @apply bg-white rounded-lg shadow-lg p-6;
+  }
+
+  .input-field {
+    @apply w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-barrier-blue focus:border-transparent;
+  }
+}
+
+@layer utilities {
+  .text-shadow {
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .glass-effect {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.1);
+  }
+}

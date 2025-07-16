@@ -1,16 +1,23 @@
 {
-  "name": "frontend",
+  "name": "barrier-control-frontend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Frontend para Sistema de Controle de Barreiras IoT",
   "main": "index.js",
   "scripts": {
+    "build-css": "tailwindcss -i src/input.css -o dist/output.css --minify",
+    "watch-css": "tailwindcss -i src/input.css -o dist/output.css --watch",
+    "dev": "php -S localhost:8080 router.php",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["iot", "barrier-control", "lora"],
+  "author": "Sistema de Barreiras IoT",
+  "license": "MIT",
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  },
   "dependencies": {
-    "laravel-echo": "^1.11.3",
-    "pusher-js": "^7.0.3"
+    "laravel-echo": "^1.15.3",
+    "pusher-js": "^7.6.0",
+    "chart.js": "^4.4.0"
   }
 }
