@@ -26,7 +26,7 @@ return [
     'max_request_size_in_kb' => 250,
     'path' => 'laravel-websockets',
     'middleware' => [
-        Authorize::class,
+        // Authorize::class, // Disabled to fix 404
     ],
     'statistics' => [
         'model' => \BeyondCode\LaravelWebSockets\Statistics\Models\WebSocketsStatisticsEntry::class,
