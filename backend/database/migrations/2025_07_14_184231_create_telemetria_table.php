@@ -16,18 +16,10 @@ class CreateTelemetriaTable extends Migration
             $table->string('status', 20); // AUTORIZADO, NEGADO, JSON INVÁLIDO
             $table->timestamps();
         });
-
-        Schema::create('macs_autorizados', function (Blueprint $table) {
-            $table->string('mac', 12)->primary();
-            $table->string('placa', 10)->nullable();
-            $table->timestamp('data_adicao')->useCurrent();
-            $table->timestamps();
-        });
     }
 
     public function down()
     {
         Schema::dropIfExists('telemetria');
-        Schema::dropIfExists('macs_autorizados');
     }
 }
