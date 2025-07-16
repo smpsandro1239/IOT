@@ -37,4 +37,37 @@ class MetricsController extends Controller
             'monthly' => $monthly,
         ]);
     }
+
+    public function getMacMetrics($mac)
+    {
+        $daily = Telemetria::where('mac', $mac)
+            ->select(DB::raw('DATE(datahora) as date'), DB::raw('count(*) as total'))
+            ->groupBy('date')
+            ->orderBy('date', 'desc')
+            ->take(7)
+            ->get()
+            ->pluck('total', 'date');
+
+        $weekly = Telemetria::where('mac', $mac)
+            ->select(DB::raw('YEARWEEK(datahora) as week'), DB::raw('count(*) as total'))
+            ->groupBy('week')
+            ->orderBy('week', 'desc')
+            ->take(4)
+            ->get()
+            ->pluck('total', 'week');
+
+        $monthly = Telemetria::where('mac', $mac)
+            ->select(DB::raw('MONTH(datahora) as month'), DB::raw('count(*) as total'))
+            ->groupBy('month')
+            ->orderBy('month', 'desc')
+            ->take(12)
+            ->get()
+            ->pluck('total', 'month');
+
+        return response()->json([
+            'daily' => $daily,
+            'weekly' => $weekly,
+            'monthly' => $monthly,
+        ]);
+    }
 }
