@@ -29,7 +29,7 @@ Route::post('/login', [AuthController::class, 'login'])->name('api.login');
 
 Route::prefix('v1')->group(function () {
     // Public endpoint for the dashboard to get the latest status
-    Route.::get('/status/latest', [AccessLogController::class, 'getLatest'])->name('api.status.latest');
+    Route::get('/status/latest', [AccessLogController::class, 'getLatest'])->name('api.status.latest');
 
     // Public endpoint for ESP32 to register access events
     Route::post('/access-logs', [AccessLogController::class, 'store'])->name('api.accesslogs.store');
@@ -42,7 +42,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/metrics', 'MetricsController@getMetrics')->name('api.metrics');
     Route::get('/metrics/{mac}', 'MetricsController@getMacMetrics')->name('api.metrics.mac');
 
-    Route::middleware('auth:sanctum')->group(function () {
+    // Usar middleware de desenvolvimento em vez de Sanctum para facilitar o desenvolvimento
+    Route::middleware('auth.dev')->group(function () {
         Route::post('/macs-autorizados', [MacsAutorizadosController::class, 'store'])->name('api.macs.store');
         Route::delete('/macs-autorizados/{mac}', [MacsAutorizadosController::class, 'destroy'])->name('api.macs.destroy');
         // Endpoint for ESP32 to validate vehicle authorization

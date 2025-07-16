@@ -1,144 +1,475 @@
-# Guia de Implementação: Do Repositório GitHub à Produção
+# Guia de Implantação - Sistema de Controle de Barreiras IoT
 
-Este tutorial assume um ambiente de servidor Linux típico (ex: Ubuntu) com Nginx, PHP (com extensões relevantes para Laravel como mbstring, xml, curl, etc.), Composer, e uma base de dados (ex: MySQL/PostgreSQL).
+Este guia fornece instruções detalhadas para implantar o Sistema de Controle de Barreiras IoT em um ambiente de produção.
 
-**1. Pré-requisitos do Servidor:**
-    *   Servidor web (Nginx recomendado)
-    *   PHP (versão compatível com o projeto Laravel, verificar `composer.json`)
-    *   Extensões PHP necessárias (listar as principais: `php-fpm`, `php-mysql`, `php-mbstring`, `php-xml`, `php-curl`, `php-zip`, `php-bcmath`, `php-tokenizer`, `php-gd` se houver manipulação de imagens)
-    *   Composer (gestor de dependências PHP)
-    *   Git
-    *   Base de dados (MySQL, PostgreSQL, etc.)
-    *   Node.js e npm/yarn (se o frontend usar assets que precisam ser compilados)
-    *   Acesso SSH ao servidor
+## 1. Requisitos de Servidor
 
-**2. Clonar o Repositório:**
-    *   Navegar para o diretório onde a aplicação será alojada (ex: `/var/www/`).
-    *   `git clone <URL_DO_REPOSITORIO_GITHUB> nome_do_projeto`
-    *   `cd nome_do_projeto`
+### 1.1. Servidor Web
 
-**3. Configuração Inicial do Laravel:**
-    *   **Instalar Dependências PHP:**
-        *   `composer install --optimize-autoloader --no-dev` (para produção, `--no-dev` é importante)
-    *   **Ficheiro de Ambiente (`.env`):**
-        *   Copiar o ficheiro de exemplo: `cp .env.example .env`
-        *   Gerar a chave da aplicação: `php artisan key:generate`
-        *   Editar o `.env` e configurar:
-            *   `APP_NAME`: Nome da sua aplicação.
-            *   `APP_ENV`: `production`
-            *   `APP_DEBUG`: `false` (MUITO IMPORTANTE para produção)
-            *   `APP_URL`: URL completo da sua aplicação (ex: `https://seusite.com`)
-            *   **Configurações da Base de Dados:**
-                *   `DB_CONNECTION`: `mysql` (ou `pgsql`, etc.)
-                *   `DB_HOST`: Endereço do servidor da base de dados (ex: `127.0.0.1`)
-                *   `DB_PORT`: Porta da base de dados (ex: `3306`)
-                *   `DB_DATABASE`: Nome da base de dados.
-                *   `DB_USERNAME`: Utilizador da base de dados.
-                *   `DB_PASSWORD`: Senha do utilizador da base de dados.
-            *   **Outras Configurações:**
-                *   `MAIL_MAILER`, `MAIL_HOST`, etc. (se for usar envio de emails)
-                *   Configurações de Cache, Sessão, Filas (se aplicável).
-    *   **Permissões de Diretório:**
-        *   Garantir que o servidor web tem permissão de escrita nos diretórios `storage` e `bootstrap/cache`.
-        *   `chown -R www-data:www-data storage bootstrap/cache` (ajustar `www-data` se o seu servidor web usar um utilizador diferente)
-        *   `chmod -R 775 storage bootstrap/cache` (ou 755 dependendo da configuração do servidor)
-    *   **Otimizações de Produção:**
-        *   `php artisan config:cache`
-        *   `php artisan route:cache`
-        *   `php artisan view:cache` (se aplicável)
-        *   `php artisan event:cache` (se usar eventos)
-    *   **Executar Migrations e Seeders:**
-        *   `php artisan migrate --force` (o `--force` é para produção, para não pedir confirmação)
-        *   `php artisan db:seed --class=DatabaseSeeder` (ou seeders específicos, se necessário)
-            *   Isto irá criar os papéis, permissões e o utilizador SuperAdmin inicial.
+- **Sistema Operacional:** Ubuntu 22.04 LTS ou superior
+- **CPU:** 2+ núcleos
+- **RAM:** 4GB+ (recomendado 8GB)
+- **Armazenamento:** 20GB+ SSD
+- **Largura de banda:** 10Mbps+ (para comunicação com dispositivos IoT)
 
-**4. Compilação de Assets Frontend (se aplicável):**
-    *   Se o projeto usar Laravel Mix/Vite para gerir CSS/JS:
-        *   `npm install` (ou `yarn install`)
-        *   `npm run build` (ou `yarn build`)
+### 1.2. Banco de Dados
 
-**5. Configuração do Servidor Web (Nginx Exemplo):**
-    *   Criar um ficheiro de configuração do Nginx para o seu site (ex: `/etc/nginx/sites-available/seusite.conf`):
-        ```nginx
-        server {
-            listen 80;
-            server_name seusite.com www.seusite.com; # Substituir pelo seu domínio
-            root /var/www/nome_do_projeto/public; # Caminho para o diretório public do Laravel
+- MySQL 8.0+ ou MariaDB 10.5+
+- Armazenamento: 10GB+ (dependendo do volume de logs esperado)
 
-            add_header X-Frame-Options "SAMEORIGIN";
-            add_header X-Content-Type-Options "nosniff";
+### 1.3. Requisitos de Software
 
-            index index.php index.html index.htm;
+- PHP 8.1+
+- Composer 2.0+
+- Node.js 16+ (para compilação de assets)
+- Nginx ou Apache
+- Supervisor (para gerenciar processos em segundo plano)
+- Redis (opcional, para cache e filas)
 
-            charset utf-8;
+## 2. Configuração do Servidor
 
-            location / {
-                try_files $uri $uri/ /index.php?$query_string;
-            }
+### 2.1. Instalação de Dependências
 
-            location = /favicon.ico { access_log off; log_not_found off; }
-            location = /robots.txt  { access_log off; log_not_found off; }
+```bash
+# Atualizar pacotes
+sudo apt update
+sudo apt upgrade -y
 
-            error_page 404 /index.php;
+# Instalar PHP e extensões necessárias
+sudo apt install -y php8.1-fpm php8.1-cli php8.1-mysql php8.1-mbstring php8.1-xml php8.1-curl php8.1-zip php8.1-gd php8.1-bcmath
 
-            location ~ \.php$ {
-                fastcgi_pass unix:/var/run/php/phpX.Y-fpm.sock; # Ajustar X.Y para a sua versão do PHP-FPM
-                fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
-                include fastcgi_params;
-            }
+# Instalar Nginx
+sudo apt install -y nginx
 
-            location ~ /\.(?!well-known).* {
-                deny all;
-            }
-        }
-        ```
-    *   Criar um link simbólico: `sudo ln -s /etc/nginx/sites-available/seusite.conf /etc/nginx/sites-enabled/`
-    *   Testar a configuração do Nginx: `sudo nginx -t`
-    *   Reiniciar o Nginx: `sudo systemctl restart nginx`
+# Instalar MySQL
+sudo apt install -y mysql-server
 
-**6. Configurar HTTPS (Certificado SSL - Recomendado):**
-    *   Usar Certbot com Let's Encrypt:
-        *   `sudo apt install certbot python3-certbot-nginx`
-        *   `sudo certbot --nginx -d seusite.com -d www.seusite.com` (seguir as instruções)
-    *   Certbot irá modificar a configuração do Nginx para HTTPS e configurar a renovação automática.
+# Instalar Composer
+curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer
+sudo chmod +x /usr/local/bin/composer
 
-**7. Tarefas Agendadas (Cron Jobs):**
-    *   Se o Laravel usar o Scheduler para tarefas (ex: `php artisan schedule:run`), configurar um cron job:
-        *   `crontab -e`
-        *   Adicionar a linha: `* * * * * cd /var/www/nome_do_projeto && php artisan schedule:run >> /dev/null 2>&1`
+# Instalar Node.js
+curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+sudo apt install -y nodejs
 
-**8. Configurar Filas (Queues) - Opcional:**
-    *   Se a aplicação usar filas para tarefas em background:
-        *   Configurar o driver da fila no `.env` (ex: `database`, `redis`, `sqs`).
-        *   Configurar um supervisor (como Supervisor) para manter os workers da fila a correr: `php artisan queue:work`.
-        *   Exemplo de configuração do Supervisor:
-            ```ini
-            [program:laravel-worker]
-            process_name=%(program_name)s_%(process_num)02d
-            command=php /var/www/nome_do_projeto/artisan queue:work <connection> --sleep=3 --tries=3 --max-time=3600
-            autostart=true
-            autorestart=true
-            user=www-data ; ou o seu user
-            numprocs=8   ; número de workers
-            redirect_stderr=true
-            stdout_logfile=/var/www/nome_do_projeto/storage/logs/worker.log
-            stopwaitsecs=3600
-            ```
+# Instalar Supervisor
+sudo apt install -y supervisor
 
-**9. Acesso Inicial e Verificações:**
-    *   Aceder ao URL da sua aplicação no browser.
-    *   Login com o utilizador SuperAdmin (as credenciais seriam definidas nos Seeders, ex: `superadmin@example.com` / `password`).
-    *   Verificar funcionalidades chave.
-    *   Verificar logs (`storage/logs/laravel.log`) para quaisquer erros.
+# Instalar Redis (opcional)
+sudo apt install -y redis-server
+```
 
-**10. Manutenção e Atualizações:**
-    *   Para atualizar a aplicação:
-        *   `cd /var/www/nome_do_projeto`
-        *   `git pull origin main` (ou o seu branch de produção)
-        *   `composer install --optimize-autoloader --no-dev`
-        *   `php artisan migrate --force` (se houver novas migrations)
-        *   `php artisan config:cache`
-        *   `php artisan route:cache`
-        *   `php artisan view:cache`
-        *   `npm run build` (se assets frontend mudaram)
-        *   (Opcional) `php artisan up` depois de `php artisan down` para modo de manutenção.
+### 2.2. Configuração do Banco de Dados
+
+```bash
+# Acessar MySQL
+sudo mysql
+
+# Criar banco de dados e usuário
+CREATE DATABASE laravel_barrier_control;
+CREATE USER 'barrier_user'@'localhost' IDENTIFIED BY 'senha_segura';
+GRANT ALL PRIVILEGES ON laravel_barrier_control.* TO 'barrier_user'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
+```
+
+### 2.3. Configuração do Nginx
+
+Crie um arquivo de configuração para o site:
+
+```bash
+sudo nano /etc/nginx/sites-available/barrier-control
+```
+
+Adicione a seguinte configuração:
+
+```nginx
+server {
+    listen 80;
+    server_name seu-dominio.com;
+    root /var/www/barrier-control/backend/public;
+
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+
+    index index.php;
+
+    charset utf-8;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    error_page 404 /index.php;
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}
+
+server {
+    listen 80;
+    server_name frontend.seu-dominio.com;
+    root /var/www/barrier-control/frontend;
+
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+
+    index index.html;
+
+    charset utf-8;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}
+```
+
+Ative a configuração:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/barrier-control /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl restart nginx
+```
+
+### 2.4. Configuração do SSL (Recomendado)
+
+```bash
+# Instalar Certbot
+sudo apt install -y certbot python3-certbot-nginx
+
+# Obter certificado SSL
+sudo certbot --nginx -d seu-dominio.com -d frontend.seu-dominio.com
+```
+
+## 3. Implantação do Código
+
+### 3.1. Clonar o Repositório
+
+```bash
+# Criar diretório para a aplicação
+sudo mkdir -p /var/www/barrier-control
+sudo chown -R $USER:$USER /var/www/barrier-control
+
+# Clonar o repositório
+git clone https://github.com/seu-usuario/controle-barreiras-iot.git /var/www/barrier-control
+cd /var/www/barrier-control
+```
+
+### 3.2. Configuração do Backend
+
+```bash
+cd /var/www/barrier-control/backend
+
+# Instalar dependências
+composer install --no-dev --optimize-autoloader
+
+# Configurar ambiente
+cp .env.example .env
+nano .env
+```
+
+Edite o arquivo `.env` com as configurações apropriadas:
+
+```
+APP_NAME="Sistema de Controle de Barreiras"
+APP_ENV=production
+APP_KEY=
+APP_DEBUG=false
+APP_URL=https://seu-dominio.com
+
+LOG_CHANNEL=stack
+LOG_LEVEL=warning
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=laravel_barrier_control
+DB_USERNAME=barrier_user
+DB_PASSWORD=senha_segura
+
+BROADCAST_DRIVER=pusher
+CACHE_DRIVER=file
+FILESYSTEM_DISK=local
+QUEUE_CONNECTION=redis
+SESSION_DRIVER=file
+SESSION_LIFETIME=120
+
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+
+PUSHER_APP_ID=iot-app
+PUSHER_APP_KEY=iot-key
+PUSHER_APP_SECRET=iot-secret-production
+PUSHER_HOST=127.0.0.1
+PUSHER_PORT=6001
+PUSHER_SCHEME=https
+PUSHER_APP_CLUSTER=mt1
+```
+
+Gere a chave da aplicação e execute as migrações:
+
+```bash
+php artisan key:generate
+php artisan migrate --seed
+php artisan storage:link
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+### 3.3. Configuração do Frontend
+
+```bash
+cd /var/www/barrier-control/frontend
+
+# Atualizar URLs da API no frontend
+nano js/api-client.js
+```
+
+Atualize a URL base da API para apontar para seu domínio:
+
+```javascript
+constructor(baseUrl = 'https://seu-dominio.com/api/v1') {
+```
+
+### 3.4. Configuração do Supervisor
+
+Crie um arquivo de configuração para o WebSocket:
+
+```bash
+sudo nano /etc/supervisor/conf.d/websockets.conf
+```
+
+Adicione a seguinte configuração:
+
+```ini
+[program:websockets]
+command=php /var/www/barrier-control/backend/artisan websockets:serve
+numprocs=1
+autostart=true
+autorestart=true
+user=www-data
+redirect_stderr=true
+stdout_logfile=/var/www/barrier-control/backend/storage/logs/websockets.log
+```
+
+Reinicie o Supervisor:
+
+```bash
+sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl start websockets
+```
+
+### 3.5. Configuração de Permissões
+
+```bash
+# Definir permissões corretas
+sudo chown -R www-data:www-data /var/www/barrier-control
+sudo find /var/www/barrier-control -type f -exec chmod 644 {} \;
+sudo find /var/www/barrier-control -type d -exec chmod 755 {} \;
+sudo chmod -R 775 /var/www/barrier-control/backend/storage
+sudo chmod -R 775 /var/www/barrier-control/backend/bootstrap/cache
+```
+
+## 4. Configuração de Firewall
+
+```bash
+# Permitir tráfego HTTP, HTTPS e WebSocket
+sudo ufw allow 'Nginx Full'
+sudo ufw allow 6001/tcp
+sudo ufw enable
+```
+
+## 5. Configuração de Cron
+
+Configure o cron do Laravel para executar tarefas agendadas:
+
+```bash
+sudo crontab -e
+```
+
+Adicione a seguinte linha:
+
+```
+* * * * * cd /var/www/barrier-control/backend && php artisan schedule:run >> /dev/null 2>&1
+```
+
+## 6. Monitoramento e Logs
+
+### 6.1. Configuração de Logs
+
+Os logs do Laravel estão disponíveis em:
+
+```
+/var/www/barrier-control/backend/storage/logs/laravel.log
+```
+
+Considere configurar a rotação de logs:
+
+```bash
+sudo nano /etc/logrotate.d/barrier-control
+```
+
+Adicione:
+
+```
+/var/www/barrier-control/backend/storage/logs/*.log {
+    daily
+    missingok
+    rotate 14
+    compress
+    delaycompress
+    notifempty
+    create 0640 www-data www-data
+}
+```
+
+### 6.2. Monitoramento
+
+Considere configurar ferramentas de monitoramento como:
+
+- Prometheus + Grafana
+- New Relic
+- Laravel Telescope (para ambiente de desenvolvimento)
+
+## 7. Backup
+
+Configure backups regulares do banco de dados e arquivos:
+
+```bash
+# Criar script de backup
+sudo nano /usr/local/bin/backup-barrier-control.sh
+```
+
+Adicione:
+
+```bash
+#!/bin/bash
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+BACKUP_DIR="/var/backups/barrier-control"
+
+# Criar diretório de backup
+mkdir -p $BACKUP_DIR
+
+# Backup do banco de dados
+mysqldump -u barrier_user -p'senha_segura' laravel_barrier_control > $BACKUP_DIR/db_$TIMESTAMP.sql
+
+# Backup dos arquivos
+tar -czf $BACKUP_DIR/files_$TIMESTAMP.tar.gz -C /var/www barrier-control
+
+# Remover backups antigos (manter últimos 7 dias)
+find $BACKUP_DIR -name "db_*.sql" -type f -mtime +7 -delete
+find $BACKUP_DIR -name "files_*.tar.gz" -type f -mtime +7 -delete
+```
+
+Torne o script executável e adicione ao cron:
+
+```bash
+sudo chmod +x /usr/local/bin/backup-barrier-control.sh
+sudo crontab -e
+```
+
+Adicione:
+
+```
+0 2 * * * /usr/local/bin/backup-barrier-control.sh
+```
+
+## 8. Atualizações
+
+Para atualizar o sistema:
+
+```bash
+cd /var/www/barrier-control
+
+# Puxar alterações do repositório
+git pull
+
+# Atualizar backend
+cd backend
+composer install --no-dev --optimize-autoloader
+php artisan migrate
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
+# Reiniciar WebSockets
+sudo supervisorctl restart websockets
+```
+
+## 9. Configuração dos Dispositivos ESP32
+
+Atualize o firmware dos dispositivos ESP32 com as novas URLs de produção:
+
+```cpp
+const char* serverUrl = "https://seu-dominio.com/api/v1/access-logs";
+const char* authUrl = "https://seu-dominio.com/api/v1/macs-autorizados/authorize";
+```
+
+## 10. Solução de Problemas
+
+### 10.1. Verificar Status dos Serviços
+
+```bash
+# Verificar status do Nginx
+sudo systemctl status nginx
+
+# Verificar status do PHP-FPM
+sudo systemctl status php8.1-fpm
+
+# Verificar status do MySQL
+sudo systemctl status mysql
+
+# Verificar status do WebSocket
+sudo supervisorctl status websockets
+```
+
+### 10.2. Verificar Logs
+
+```bash
+# Logs do Nginx
+sudo tail -f /var/log/nginx/error.log
+
+# Logs do Laravel
+sudo tail -f /var/www/barrier-control/backend/storage/logs/laravel.log
+
+# Logs do WebSocket
+sudo tail -f /var/www/barrier-control/backend/storage/logs/websockets.log
+```
+
+### 10.3. Problemas Comuns
+
+- **Erro 502 Bad Gateway**: Verifique se o PHP-FPM está em execução e configurado corretamente.
+- **WebSocket não conecta**: Verifique se a porta 6001 está aberta e se o Supervisor está executando o serviço.
+- **Erros de permissão**: Verifique as permissões dos diretórios `storage` e `bootstrap/cache`.
+
+## 11. Considerações de Segurança
+
+- Mantenha todos os pacotes atualizados regularmente
+- Configure um firewall adequado
+- Use HTTPS para todas as comunicações
+- Implemente limites de taxa para a API
+- Considere usar um WAF (Web Application Firewall)
+- Revise regularmente os logs em busca de atividades suspeitas
+- Implemente autenticação de dois fatores para contas administrativas
