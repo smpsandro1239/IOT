@@ -2,8 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Estilos personalizados para o Sistema de Barreiras IoT */
-
+/* Componentes personalizados para o sistema de barreiras */
 @layer components {
   .gate-animation {
     @apply transition-all duration-500 ease-in-out;
@@ -50,13 +49,68 @@
   }
 }
 
-@layer utilities {
-  .text-shadow {
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+/* Animações personalizadas */
+@keyframes pulse-custom {
+  0%, 100% {
+    opacity: 0.7;
   }
+  50% {
+    opacity: 1;
+  }
+}
 
-  .glass-effect {
-    backdrop-filter: blur(10px);
-    background: rgba(255, 255, 255, 0.1);
+@keyframes bounce-custom {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* Melhorias de acessibilidade */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Estados de foco melhorados */
+.focus-visible:focus {
+  @apply outline-none ring-2 ring-barrier-blue ring-offset-2;
+}
+
+/* Responsividade melhorada */
+@media (max-width: 640px) {
+  .mobile-stack {
+    @apply flex-col space-y-2 space-x-0;
+  }
+}
+
+/* Tema escuro (preparação futura) */
+@media (prefers-color-scheme: dark) {
+  .dark-mode {
+    @apply bg-gray-900 text-white;
   }
 }
