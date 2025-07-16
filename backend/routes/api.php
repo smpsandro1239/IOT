@@ -56,5 +56,8 @@ Route::prefix('v1')->group(function () {
         // Endpoints para carregar dados para formulários dinâmicos
         Route::get('companies/{company_ids_str}/sites', [\App\Http\Controllers\Api\DataController::class, 'getSitesForCompanies'])->name('api.v1.sites_for_companies');
         Route::get('sites/{site_ids_str}/barriers', [\App\Http\Controllers\Api\DataController::class, 'getBarriersForSites'])->name('api.v1.barriers_for_sites');
+
+        // Gate Control
+        Route::post('/gate/control', [\App\Http\Controllers\GateController::class, 'control'])->name('api.gate.control');
     });
 });
