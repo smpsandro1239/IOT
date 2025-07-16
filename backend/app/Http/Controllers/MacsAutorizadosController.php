@@ -64,10 +64,13 @@ class MacsAutorizadosController extends Controller
             ->header('Content-Disposition', 'attachment; filename="macs_autorizados.txt"');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $macs = MacsAutorizados::all();
-        return response()->json(['data' => $macs]);
+        $search = $request->query('search', '');
+        $macs = MacsAutorizados::where('mac', 'like', "%$search%")
+            ->orWhere('placa', 'like', "%$search%")
+            ->paginate(10);
+        return response()->json($macs);
     }
 
     public function checkAuthorization(Request $request)

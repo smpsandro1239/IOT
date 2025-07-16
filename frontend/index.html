@@ -31,6 +31,20 @@
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-5px); }
         }
+
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -41,11 +55,6 @@
                 <div class="mb-4 md:mb-0">
                     <h1 class="text-3xl font-bold"><i class="fas fa-traffic-light mr-2"></i>Sistema de Controle de Barreiras</h1>
                     <p class="text-blue-100">Detecção de direção com LoRa para abertura seletiva de barreiras</p>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <input type="text" id="username" class="p-2 border rounded-lg text-black" placeholder="Usuário">
-                    <input type="password" id="password" class="p-2 border rounded-lg text-black" placeholder="Senha">
-                    <button id="login-btn" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg">Login</button>
                 </div>
             </div>
         </header>
@@ -242,9 +251,14 @@ AABBCCDDEEFF,XYZ5678
                 <!-- Authorized MACs -->
                 <div class="mt-6">
                     <h3 class="font-semibold text-gray-700 mb-3">MACs Autorizados</h3>
-                    <div id="authorized-macs" class="bg-gray-50 p-3 rounded-lg h-40 overflow-y-auto text-sm font-mono">
-                        <!-- MACs will be listed here -->
+                    <div class="flex justify-between mb-2">
+                        <input type="text" id="mac-search" class="p-2 border rounded-lg" placeholder="Pesquisar MAC...">
+                        <div>
+                            <button id="prev-page" class="px-2 py-1 bg-blue-500 text-white rounded">Anterior</button>
+                            <button id="next-page" class="px-2 py-1 bg-blue-500 text-white rounded">Próximo</button>
+                        </div>
                     </div>
+                    <div id="authorized-macs" class="bg-gray-50 p-3 rounded-lg h-40 overflow-y-auto text-sm font-mono"></div>
                 </div>
             </div>
         </div>
@@ -342,6 +356,11 @@ AABBCCDDEEFF,XYZ5678
     </div>
 
     <script>
+        // Check for auth token
+        if (!localStorage.getItem('auth_token')) {
+            window.location.href = 'login.html';
+        }
+
         // Initialize Laravel Echo
         const echo = new Echo({
             broadcaster: 'pusher',
@@ -355,12 +374,32 @@ AABBCCDDEEFF,XYZ5678
 
         // Listen for TelemetriaUpdated events
         echo.channel('telemetria')
+        echo.channel('gate-control').listen('GateControl', (e) => {
+            gateStates[e.gate] = e.action ? 'open' : 'closed';
+            updateGates();
+            addLog(`Barreira ${e.gate === 'north' ? 'Norte-Sul' : 'Sul-Norte'} ${e.action ? 'aberta' : 'fechada'}`);
+        });
+
+        echo.connector.pusher.connection.bind('disconnected', () => {
+            addLog('WebSocket desconectado. Tentando reconectar...');
+            setTimeout(() => echo.connect(), 5000);
+        });
+
+        function resetGatesAfterTimeout() {
+            setTimeout(() => {
+                if (gateStates.north === 'locked') gateStates.north = 'closed';
+                if (gateStates.south === 'locked') gateStates.south = 'closed';
+                updateGates();
+                addLog('Barreiras desbloqueadas após 5 minutos');
+            }, 5 * 60 * 1000);
+        }
+
             .listen('TelemetriaUpdated', (e) => {
                 addLog(`Novo evento: MAC ${e.mac}, Direção ${e.direcao}, Status ${e.status}`);
                 vehiclePlate.textContent = e.placa || 'Desconhecida';
                 vehicleDirection.textContent = e.direcao === 'NS' ? 'Norte → Sul' : 'Sul → Norte';
-                vehicleDistance.textContent = '100 m'; // Simulated distance
-                signalStrengthBar.style.width = '80%'; // Simulated signal strength
+            vehicleDistance.textContent = e.distance ? `${e.distance} m` : '100 m';
+            signalStrengthBar.style.width = e.signal_strength ? `${e.signal_strength}%` : '80%';
 
                 if (e.status === 'AUTORIZADO') {
                     if (e.direcao === 'NS') {
@@ -371,6 +410,12 @@ AABBCCDDEEFF,XYZ5678
                         gateStates.north = 'locked';
                     }
                     updateGates();
+                resetGatesAfterTimeout();
+                // Update charts
+                createCharts();
+                if (document.getElementById('mac-input').value === e.mac) {
+                    createMacCharts(e.mac);
+                }
                 }
             });
 
@@ -422,6 +467,15 @@ AABBCCDDEEFF,XYZ5678
         document.getElementById('download-macs').addEventListener('click', downloadMacs);
 
         // Functions
+        function showLoading(elementId) {
+            document.getElementById(elementId).innerHTML += '<div class="spinner border-t-2 border-blue-500 rounded-full w-4 h-4 animate-spin"></div>';
+        }
+
+        function hideLoading(elementId) {
+            const spinner = document.getElementById(elementId).querySelector('.spinner');
+            if (spinner) spinner.remove();
+        }
+
         async function handleFileUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -503,9 +557,13 @@ AABBCCDDEEFF,XYZ5678
             }
         }
 
-        async function fetchAuthorizedMacs() {
+        let currentPage = 1;
+        const perPage = 10;
+
+        async function fetchAuthorizedMacs(page = 1, search = '') {
+            showLoading('authorized-macs');
             try {
-                const response = await fetch('http://127.0.0.1:8000/api/v1/macs-autorizados');
+                const response = await fetch(`http://127.0.0.1:8000/api/v1/macs-autorizados?page=${page}&search=${search}`);
                 if (!response.ok) throw new Error('Failed to fetch MACs');
                 const result = await response.json();
                 const macsList = document.getElementById('authorized-macs');
@@ -521,30 +579,43 @@ AABBCCDDEEFF,XYZ5678
                     `;
                     macsList.appendChild(macEntry);
                 });
-
-                // Add delete event listeners
-                document.querySelectorAll('.delete-mac').forEach(button => {
-                    button.addEventListener('click', async () => {
-                        const mac = button.dataset.mac;
-                        if (confirm(`Deseja remover o MAC ${mac}?`)) {
-                            try {
-                                const response = await fetch(`http://127.0.0.1:8000/api/v1/macs-autorizados/${mac}`, {
-                                    method: 'DELETE'
-                                });
-                                if (!response.ok) throw new Error('Failed to delete MAC');
-                                const result = await response.json();
-                                addLog(`MAC ${mac} removido: ${result.message}`);
-                                fetchAuthorizedMacs();
-                            } catch (error) {
-                                addLog(`Erro ao remover MAC: ${error.message}`);
-                            }
-                        }
-                    });
-                });
+                document.getElementById('prev-page').disabled = !result.prev_page_url;
+                document.getElementById('next-page').disabled = !result.next_page_url;
             } catch (error) {
                 addLog(`Erro ao buscar MACs autorizados: ${error.message}`);
+            } finally {
+                hideLoading('authorized-macs');
             }
         }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        document.getElementById('mac-search').addEventListener('input', debounce((e) => {
+            currentPage = 1;
+            fetchAuthorizedMacs(currentPage, e.target.value);
+        }, 500));
+
+        document.getElementById('prev-page').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                fetchAuthorizedMacs(currentPage, document.getElementById('mac-search').value);
+            }
+        });
+
+        document.getElementById('next-page').addEventListener('click', () => {
+            currentPage++;
+            fetchAuthorizedMacs(currentPage, document.getElementById('mac-search').value);
+        });
 
         // Fetch authorized MACs on page load
         fetchAuthorizedMacs();
@@ -867,21 +938,30 @@ AABBCCDDEEFF,XYZ5678
             setTimeout(updateVehiclePosition, 100);
         }
 
-        function toggleGate(gate) {
+        async function toggleGate(gate) {
             if (simulationActive) {
                 addLog('Não é possível alterar manualmente durante simulação');
                 return;
             }
 
-            if (gateStates[gate] === 'open' || gateStates[gate] === 'locked') {
-                gateStates[gate] = 'closed';
-                addLog(`Barreira ${gate === 'north' ? 'Norte-Sul' : 'Sul-Norte'} fechada manualmente`);
-            } else {
-                gateStates[gate] = 'open';
-                addLog(`Barreira ${gate === 'north' ? 'Norte-Sul' : 'Sul-Norte'} aberta manualmente`);
+            const token = localStorage.getItem('auth_token');
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/v1/gate/control', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        gate,
+                        action: gateStates[gate] === 'open' ? 'close' : 'open'
+                    })
+                });
+                const result = await response.json();
+                addLog(result.message);
+            } catch (error) {
+                addLog(`Erro ao controlar barreira: ${error.message}`);
             }
-
-            updateGates();
         }
 
         function updateGates() {

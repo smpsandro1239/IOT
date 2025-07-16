@@ -50,11 +50,31 @@ void setup() {
   Serial.println("LoRa initialized");
 }
 
+float detectAoA() {
+    // Implement actual LoRa AoA calculation (requires 3-antenna array)
+    // Placeholder: Use RSSI and phase difference
+    return random(0, 180); // Replace with real AoA
+}
+
+float detectDistance() {
+    // Estimate distance based on RSSI (simplified)
+    int rssi = LoRa.packetRssi();
+    return map(rssi, -120, -50, 500, 0); // Map RSSI to 0-500m
+}
+
+float detectSignalStrength() {
+    // Convert RSSI to percentage
+    int rssi = LoRa.packetRssi();
+    return map(rssi, -120, -50, 0, 100);
+}
+
 void loop() {
   // Simulate vehicle detection
-  String mac = "24A160123456"; // Replace with actual MAC from LoRa
+  String mac = receiveLoRaPacket(); // Replace with actual MAC from LoRa
   float aoa = detectAoA();
   String direcao = (aoa < 90) ? "NS" : "SN";
+    float distance = detectDistance();
+    float signalStrength = detectSignalStrength();
   String status = checkAuthorization(mac) ? "AUTORIZADO" : "NEGADO";
 
   if (status == "AUTORIZADO") {
@@ -63,7 +83,7 @@ void loop() {
   }
 
   // Send telemetry data
-  sendTelemetry(mac, direcao, status);
+  sendTelemetry(mac, direcao, status, distance, signalStrength);
 
   delay(5000); // Check every 5 seconds
 }
