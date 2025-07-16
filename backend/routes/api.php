@@ -33,6 +33,9 @@ Route::prefix('v1')->group(function () {
     // Public endpoint to add authorized MAC addresses
     Route::post('/macs-autorizados', [MacsAutorizadosController::class, 'store'])->name('api.macs.store');
 
+    // Public endpoint for the dashboard to get metrics
+    Route::get('/metrics', 'MetricsController@getMetrics')->name('api.metrics');
+
     Route::middleware('auth:sanctum')->group(function () {
         // Endpoint for ESP32 to validate vehicle authorization
         Route::get('/vehicles/authorize', [VehicleController::class, 'checkAuthorization'])->name('api.vehicles.authorize');
