@@ -212,6 +212,14 @@
                         <div class="text-gray-500">Sistema inicializado...</div>
                     </div>
                 </div>
+
+                <!-- Authorized MACs -->
+                <div class="mt-6">
+                    <h3 class="font-semibold text-gray-700 mb-3">MACs Autorizados</h3>
+                    <div id="authorized-macs" class="bg-gray-50 p-3 rounded-lg h-40 overflow-y-auto text-sm font-mono">
+                        <!-- MACs will be listed here -->
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -351,10 +359,30 @@
                 addLog(`MAC ${mac} adicionado com sucesso: ${result.message}`);
                 macAddress.value = '';
                 macPlate.value = '';
+                fetchAuthorizedMacs();
             } catch (error) {
                 addLog(`Erro ao adicionar MAC: ${error.message}`);
             }
         }
+
+        async function fetchAuthorizedMacs() {
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/v1/macs-autorizados');
+                const result = await response.json();
+                const macsList = document.getElementById('authorized-macs');
+                macsList.innerHTML = '';
+                result.data.forEach(mac => {
+                    const macEntry = document.createElement('div');
+                    macEntry.textContent = `${mac.mac} - ${mac.placa}`;
+                    macsList.appendChild(macEntry);
+                });
+            } catch (error) {
+                addLog(`Erro ao buscar MACs autorizados: ${error.message}`);
+            }
+        }
+
+        // Fetch authorized MACs on page load
+        fetchAuthorizedMacs();
 
         async function startSimulation() {
             if (simulationActive) return;
