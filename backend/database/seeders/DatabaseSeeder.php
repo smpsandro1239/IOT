@@ -64,6 +64,7 @@ class DatabaseSeeder extends Seeder
             BarrierSeeder::class,
             // Por último, as permissões que ligam veículos a entidades
             VehiclePermissionSeeder::class,
+            MacsAutorizadosSeeder::class,
             // Outros seeders podem ser adicionados aqui no futuro
             // Example: AccessLogSeeder::class, // Se quiser popular logs de acesso
         ]);

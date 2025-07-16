@@ -1,64 +1,138 @@
-# Sistema de Gestão de Acesso por Cancelas
+# IoT Barrier Control System
 
-Este projeto é um sistema de gestão de acesso baseado em Laravel, permitindo o controlo de cancelas através de identificação de veículos (ex: LoRa ID) e uma interface administrativa para gerir empresas, locais (sites), cancelas, veículos e permissões.
+This project is a complete IoT-based Barrier Control System using Laravel for the backend, a static HTML/JavaScript frontend with Tailwind CSS, and an ESP32 with LoRa for the base board.
 
-## Funcionalidades Principais
+## Features
 
-*   Gestão hierárquica: Empresas -> Locais (Sites) -> Cancelas (Barreiras).
-*   Registo de Veículos e atribuição flexível de permissões de acesso (nível de Empresa, Site ou Barreira individual).
-*   Controlo de Acesso Baseado em Papéis (RBAC) com três níveis iniciais:
-    *   **SuperAdmin:** Controlo total do sistema.
-    *   **CompanyAdmin:** Gestão de uma empresa específica, seus locais, cancelas, veículos e utilizadores (SiteManagers) dessa empresa.
-    *   **SiteManager:** Gestão de todos os locais e cancelas da sua empresa associada (funcionalidade simplificada, originalmente planeada para sites específicos).
-*   Interface administrativa para CRUD de todas as entidades.
-*   Endpoint de API para comunicação com dispositivos ESP32 para verificação de autorização de veículos.
-*   Logging de tentativas de acesso.
-*   Gestão de Firmwares para dispositivos.
-*   Gestão de Tokens de API.
+-   **Vehicle Detection:** Detects vehicles using LoRa and estimates the Angle of Arrival (AoA) to determine the direction of approach.
+-   **MAC-based Authorization:** Opens the barrier for authorized vehicles based on their MAC address.
+-   **Real-time Dashboard:** A web-based dashboard displays real-time barrier status, vehicle movements, and system logs.
+-   **API Endpoints:** A comprehensive set of API endpoints for managing the system, including adding authorized MAC addresses, logging telemetry data, and checking firmware updates.
+-   **Simulation Mode:** A simulation mode is included in the frontend for testing the system without physical hardware.
+-   **OTA Updates:** The system supports Over-the-Air (OTA) firmware updates for the ESP32.
 
-## Documentação
+## System Architecture
 
-*   **[Guia de Implementação (Do Clone à Produção)](DEPLOYMENT_GUIDE.md)**: Instruções detalhadas para configurar e implementar a aplicação num servidor de produção.
-*   **[Histórico de Desenvolvimento e Funcionalidades](DEVELOPMENT_HISTORY.md)**: Um resumo das principais fases de desenvolvimento e funcionalidades implementadas no sistema.
+The system is composed of three main components:
 
-## Setup Inicial (Desenvolvimento)
+1.  **Backend (Laravel):** A Laravel application that provides the API endpoints for the system.
+2.  **Frontend (HTML/JavaScript):** A static HTML/JavaScript application that provides the web-based dashboard.
+3.  **ESP32 Firmware:** An Arduino sketch that runs on the ESP32 and controls the barrier.
 
-1.  **Clone o repositório:**
-    ```bash
-    git clone <URL_DO_REPOSITORIO_GITHUB> nome_do_projeto
-    cd nome_do_projeto
+## Setup Instructions
+
+### Prerequisites
+
+-   [Laragon](https://laragon.org/download/) (or any other local development environment for PHP)
+-   [MySQL](https://www.mysql.com/downloads/)
+-   [Node.js](https://nodejs.org/en/download/)
+-   [Arduino IDE](https://www.arduino.cc/en/software)
+-   [ESP32 Board Support for Arduino IDE](https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html)
+-   Libraries for ESP32: `LoRa`, `WiFi`, `HTTPClient`
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/your-username/iot-barrier-control.git
+cd iot-barrier-control
+```
+
+### 2. Backend Setup
+
+```bash
+cd backend
+composer install
+cp .env.example .env
+```
+
+After copying the `.env.example` file, you need to update the `.env` file with your database credentials:
+
+```
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=laravel_barrier_control
+DB_USERNAME=root
+DB_PASSWORD=your_password
+```
+
+Then, run the following commands to generate the application key and run the database migrations:
+
+```bash
+php artisan key:generate
+php artisan migrate --seed
+```
+
+Finally, start the backend server and the WebSocket server:
+
+```bash
+php artisan serve
+php artisan websockets:serve
+```
+
+### 3. Frontend Setup
+
+```bash
+cd frontend
+npm install
+npm install http-server -g
+http-server
+```
+
+The frontend will be available at `http://127.0.0.1:8080`.
+
+### 4. ESP32 Setup
+
+1.  Open the `auto/src/BarrierControl.ino` file in the Arduino IDE.
+2.  Update the WiFi credentials and the server URL in the file:
+
+    ```c++
+    const char* ssid = "your_wifi_ssid";
+    const char* password = "your_wifi_password";
+    const char* serverUrl = "http://your-laravel-app-url/api/v1/access-logs";
+    const char* authUrl = "http://your-laravel-app-url/api/v1/macs-autorizados/authorize";
     ```
 
-2.  **Instale as dependências PHP:**
-    ```bash
-    composer install
-    ```
+3.  Flash the firmware to your ESP32 board.
 
-3.  **Configure o ambiente:**
-    *   Copie `.env.example` para `.env`: `cp .env.example .env`
-    *   Gere a chave da aplicação: `php artisan key:generate`
-    *   Configure as variáveis de ambiente no `.env` (APP_URL, DB_DATABASE, DB_USERNAME, DB_PASSWORD, etc.).
+### 5. Firewall
 
-4.  **Execute as migrations e seeders:**
-    *   `php artisan migrate`
-    *   `php artisan db:seed --class=DatabaseSeeder`
-        *   Isto irá criar os papéis, permissões e o utilizador SuperAdmin inicial (verifique `UserSeeder` ou `DatabaseSeeder` para as credenciais padrão, ex: `superadmin@example.com` / `password`).
+If you are using a firewall, you need to open port `6001` for WebSocket access:
 
-5.  **(Opcional) Instale dependências frontend e compile assets (se houver):**
-    ```bash
-    npm install
-    npm run dev # ou npm run build para produção
-    ```
+```bash
+netsh advfirewall firewall add rule name="WebSocket 6001" dir=in action=allow protocol=TCP localport=6001
+```
 
-6.  **Inicie o servidor de desenvolvimento (se usar o servidor embutido do PHP):**
-    ```bash
-    php artisan serve
-    ```
-    A aplicação estará geralmente disponível em `http://127.0.0.1:8000`.
-    A área administrativa geralmente está em `/admin`.
+## API Testing
 
-## Contribuições
-(Adicionar informações sobre como contribuir, se aplicável)
+You can use the following `curl` commands to test the API endpoints:
 
-## Licença
-(Adicionar informações sobre a licença do projeto, se aplicável)
+### Add a MAC address
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/macs-autorizados -H "Content-Type: application/json" -d '{"mac":"24A160123456","placa":"ABC123"}'
+```
+
+### Test telemetry
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/access-logs -H "Content-Type: application/json" -d '{"mac":"24A160123456","direcao":"NS","datahora":"2025-07-16 01:49:00","status":"AUTORIZADO"}'
+```
+
+### Get latest status
+
+```bash
+curl http://127.0.0.1:8000/api/v1/status/latest
+```
+
+### Get all authorized MAC addresses
+
+```bash
+curl http://127.0.0.1:8000/api/v1/macs-autorizados
+```
+
+### Check MAC authorization
+
+```bash
+curl http://127.0.0.1:8000/api/v1/macs-autorizados/authorize?mac=24A160123456
+```
