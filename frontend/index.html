@@ -43,18 +43,9 @@
                     <p class="text-blue-100">Detecção de direção com LoRa para abertura seletiva de barreiras</p>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <div class="bg-blue-700 p-3 rounded-lg">
-                        <i class="fas fa-satellite-dish text-2xl"></i>
-                        <span class="ml-2">LoRa</span>
-                    </div>
-                    <div class="bg-blue-700 p-3 rounded-lg">
-                        <i class="fas fa-wifi text-2xl"></i>
-                        <span class="ml-2">Wi-Fi</span>
-                    </div>
-                    <div class="bg-blue-700 p-3 rounded-lg">
-                        <i class="fas fa-bluetooth-b text-2xl"></i>
-                        <span class="ml-2">Bluetooth</span>
-                    </div>
+                    <input type="text" id="username" class="p-2 border rounded-lg text-black" placeholder="Usuário">
+                    <input type="password" id="password" class="p-2 border rounded-lg text-black" placeholder="Senha">
+                    <button id="login-btn" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg">Login</button>
                 </div>
             </div>
         </header>
@@ -433,9 +424,7 @@ AABBCCDDEEFF,XYZ5678
         // Functions
         async function handleFileUpload(event) {
             const file = event.target.files[0];
-            if (!file) {
-                return;
-            }
+            if (!file) return;
 
             const reader = new FileReader();
             reader.onload = async (e) => {
@@ -446,12 +435,24 @@ AABBCCDDEEFF,XYZ5678
                     return { mac: mac.trim(), placa: placa.trim() };
                 });
 
+                // Validate MACs
+                const validMacs = macs.filter(mac => {
+                    const macRegex = /^[0-9A-Fa-f]{12}$/;
+                    return macRegex.test(mac.mac) && mac.placa.length <= 10;
+                });
+
+                if (validMacs.length === 0) {
+                    addLog('Erro: Nenhum MAC válido encontrado no ficheiro');
+                    return;
+                }
+
                 try {
                     const response = await fetch('http://127.0.0.1:8000/api/v1/macs-autorizados/bulk', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ macs })
+                        body: JSON.stringify({ macs: validMacs })
                     });
+                    if (!response.ok) throw new Error('Failed to upload MACs');
                     const result = await response.json();
                     addLog(result.message);
                     fetchAuthorizedMacs();
@@ -505,13 +506,40 @@ AABBCCDDEEFF,XYZ5678
         async function fetchAuthorizedMacs() {
             try {
                 const response = await fetch('http://127.0.0.1:8000/api/v1/macs-autorizados');
+                if (!response.ok) throw new Error('Failed to fetch MACs');
                 const result = await response.json();
                 const macsList = document.getElementById('authorized-macs');
                 macsList.innerHTML = '';
                 result.data.forEach(mac => {
                     const macEntry = document.createElement('div');
-                    macEntry.textContent = `${mac.mac} - ${mac.placa}`;
+                    macEntry.className = 'flex justify-between items-center';
+                    macEntry.innerHTML = `
+                        <span>${mac.mac} - ${mac.placa}</span>
+                        <button class="delete-mac text-red-500 hover:text-red-700" data-mac="${mac.mac}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `;
                     macsList.appendChild(macEntry);
+                });
+
+                // Add delete event listeners
+                document.querySelectorAll('.delete-mac').forEach(button => {
+                    button.addEventListener('click', async () => {
+                        const mac = button.dataset.mac;
+                        if (confirm(`Deseja remover o MAC ${mac}?`)) {
+                            try {
+                                const response = await fetch(`http://127.0.0.1:8000/api/v1/macs-autorizados/${mac}`, {
+                                    method: 'DELETE'
+                                });
+                                if (!response.ok) throw new Error('Failed to delete MAC');
+                                const result = await response.json();
+                                addLog(`MAC ${mac} removido: ${result.message}`);
+                                fetchAuthorizedMacs();
+                            } catch (error) {
+                                addLog(`Erro ao remover MAC: ${error.message}`);
+                            }
+                        }
+                    });
                 });
             } catch (error) {
                 addLog(`Erro ao buscar MACs autorizados: ${error.message}`);
@@ -522,49 +550,69 @@ AABBCCDDEEFF,XYZ5678
         fetchAuthorizedMacs();
 
         // Charting functions
+        let dailyChart, weeklyChart, monthlyChart, macDailyChart, macWeeklyChart, macMonthlyChart;
+
         async function createCharts() {
             try {
                 const response = await fetch('http://127.0.0.1:8000/api/v1/metrics');
+                if (!response.ok) throw new Error('Failed to fetch metrics');
                 const metrics = await response.json();
 
+                // Destroy existing charts if they exist
+                if (dailyChart) dailyChart.destroy();
+                if (weeklyChart) weeklyChart.destroy();
+                if (monthlyChart) monthlyChart.destroy();
+
                 const dailyCtx = document.getElementById('daily-chart').getContext('2d');
-                new Chart(dailyCtx, {
+                dailyChart = new Chart(dailyCtx, {
                     type: 'bar',
                     data: {
-                        labels: Object.keys(metrics.daily),
+                        labels: Object.keys(metrics.daily || {}),
                         datasets: [{
                             label: 'Acessos Diários',
-                            data: Object.values(metrics.daily),
+                            data: Object.values(metrics.daily || {}),
                             backgroundColor: 'rgba(54, 162, 235, 0.5)',
                             borderColor: 'rgba(54, 162, 235, 1)',
                             borderWidth: 1
                         }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
                     }
                 });
 
                 const weeklyCtx = document.getElementById('weekly-chart').getContext('2d');
-                new Chart(weeklyCtx, {
+                weeklyChart = new Chart(weeklyCtx, {
                     type: 'line',
                     data: {
-                        labels: Object.keys(metrics.weekly),
+                        labels: Object.keys(metrics.weekly || {}),
                         datasets: [{
                             label: 'Acessos Semanais',
-                            data: Object.values(metrics.weekly),
+                            data: Object.values(metrics.weekly || {}),
                             backgroundColor: 'rgba(255, 99, 132, 0.5)',
                             borderColor: 'rgba(255, 99, 132, 1)',
                             borderWidth: 1
                         }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
                     }
                 });
 
                 const monthlyCtx = document.getElementById('monthly-chart').getContext('2d');
-                new Chart(monthlyCtx, {
+                monthlyChart = new Chart(monthlyCtx, {
                     type: 'pie',
                     data: {
-                        labels: Object.keys(metrics.monthly),
+                        labels: Object.keys(metrics.monthly || {}),
                         datasets: [{
                             label: 'Acessos Mensais',
-                            data: Object.values(metrics.monthly),
+                            data: Object.values(metrics.monthly || {}),
                             backgroundColor: [
                                 'rgba(255, 99, 132, 0.5)',
                                 'rgba(54, 162, 235, 0.5)',
@@ -583,10 +631,17 @@ AABBCCDDEEFF,XYZ5678
                             ],
                             borderWidth: 1
                         }]
+                    },
+                    options: {
+                        responsive: true
                     }
                 });
             } catch (error) {
                 addLog(`Erro ao criar gráficos: ${error.message}`);
+                // Display fallback message
+                document.getElementById('daily-chart').parentElement.innerHTML += '<p class="text-red-500">Dados não disponíveis</p>';
+                document.getElementById('weekly-chart').parentElement.innerHTML += '<p class="text-red-500">Dados não disponíveis</p>';
+                document.getElementById('monthly-chart').parentElement.innerHTML += '<p class="text-red-500">Dados não disponíveis</p>';
             }
         }
 

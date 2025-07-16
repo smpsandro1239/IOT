@@ -27,23 +27,28 @@ class MacsAutorizadosController extends Controller
     {
         $validated = $request->validate([
             'macs' => 'required|array',
-            'macs.*.mac' => 'required|string|size:12',
+            'macs.*.mac' => 'required|string|size:12|regex:/^[0-9A-Fa-f]{12}$/|unique:macs_autorizados,mac',
             'macs.*.placa' => 'required|string|max:10',
         ]);
 
-        $count = 0;
+        $inserted = 0;
         foreach ($validated['macs'] as $macData) {
-            MacsAutorizados::firstOrCreate(
-                ['mac' => $macData['mac']],
-                [
-                    'placa' => $macData['placa'],
-                    'data_adicao' => now(),
-                ]
-            );
-            $count++;
+            MacsAutorizados::create([
+                'mac' => $macData['mac'],
+                'placa' => $macData['placa'],
+                'data_adicao' => now(),
+            ]);
+            $inserted++;
         }
 
-        return response()->json(['message' => "$count MACs adicionados com sucesso"], 201);
+        return response()->json(['message' => "$inserted MACs autorizados adicionados com sucesso"], 201);
+    }
+
+    public function destroy($mac)
+    {
+        $macRecord = MacsAutorizados::where('mac', $mac)->firstOrFail();
+        $macRecord->delete();
+        return response()->json(['message' => 'MAC autorizado removido com sucesso']);
     }
 
     public function download()
