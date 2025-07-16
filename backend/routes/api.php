@@ -23,6 +23,10 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 // API for ESP32 Base Station
+use App\Http\Controllers\AuthController;
+
+Route::post('/login', [AuthController::class, 'login'])->name('api.login');
+
 Route::prefix('v1')->group(function () {
     // Public endpoint for the dashboard to get the latest status
     Route.::get('/status/latest', [AccessLogController::class, 'getLatest'])->name('api.status.latest');
@@ -31,7 +35,6 @@ Route::prefix('v1')->group(function () {
     Route::post('/access-logs', [AccessLogController::class, 'store'])->name('api.accesslogs.store');
 
     // Public endpoint to add authorized MAC addresses
-    Route::post('/macs-autorizados', [MacsAutorizadosController::class, 'store'])->name('api.macs.store');
     Route::post('/macs-autorizados/bulk', [MacsAutorizadosController::class, 'storeBulk'])->name('api.macs.store.bulk');
     Route::get('/macs-autorizados/download', [MacsAutorizadosController::class, 'download'])->name('api.macs.download');
 
@@ -40,8 +43,11 @@ Route::prefix('v1')->group(function () {
     Route::get('/metrics/{mac}', 'MetricsController@getMacMetrics')->name('api.metrics.mac');
 
     Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/macs-autorizados', [MacsAutorizadosController::class, 'store'])->name('api.macs.store');
+        Route::delete('/macs-autorizados/{mac}', [MacsAutorizadosController::class, 'destroy'])->name('api.macs.destroy');
         // Endpoint for ESP32 to validate vehicle authorization
         Route::get('/vehicles/authorize', [VehicleController::class, 'checkAuthorization'])->name('api.vehicles.authorize');
+        Route::post('/macs-autorizados/bulk', [MacsAutorizadosController::class, 'storeBulk'])->name('api.macs.store.bulk');
 
         // Endpoints for ESP32 OTA Firmware Updates
         Route::get('/firmware/check', [FirmwareController::class, 'checkForUpdate'])->name('api.firmware.check');
