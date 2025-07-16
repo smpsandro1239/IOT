@@ -285,8 +285,9 @@ AABBCCDDEEFF,XYZ5678
                 <i class="fas fa-chart-pie mr-2 text-blue-500"></i>Métricas por MAC
             </h2>
             <div class="flex items-center mb-4">
-                <label for="mac-select" class="mr-2">Selecionar MAC:</label>
-                <select id="mac-select" class="p-2 border rounded-lg"></select>
+                <label for="mac-input" class="mr-2">Selecionar MAC:</label>
+                <input type="text" id="mac-input" list="mac-list" class="p-2 border rounded-lg">
+                <datalist id="mac-list"></datalist>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
@@ -591,26 +592,25 @@ AABBCCDDEEFF,XYZ5678
 
         // Create charts on page load
         createCharts();
-        populateMacSelect();
+        populateMacDataList();
 
-        document.getElementById('mac-select').addEventListener('change', (event) => {
+        document.getElementById('mac-input').addEventListener('input', (event) => {
             const mac = event.target.value;
             if (mac) {
                 createMacCharts(mac);
             }
         });
 
-        async function populateMacSelect() {
+        async function populateMacDataList() {
             try {
                 const response = await fetch('http://127.0.0.1:8000/api/v1/macs-autorizados');
                 const result = await response.json();
-                const macSelect = document.getElementById('mac-select');
-                macSelect.innerHTML = '<option value="">Selecione um MAC</option>';
+                const macList = document.getElementById('mac-list');
+                macList.innerHTML = '';
                 result.data.forEach(mac => {
                     const option = document.createElement('option');
                     option.value = mac.mac;
-                    option.textContent = `${mac.mac} - ${mac.placa}`;
-                    macSelect.appendChild(option);
+                    macList.appendChild(option);
                 });
             } catch (error) {
                 addLog(`Erro ao popular MACs: ${error.message}`);
