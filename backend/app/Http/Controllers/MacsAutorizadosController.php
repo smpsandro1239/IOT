@@ -46,6 +46,19 @@ class MacsAutorizadosController extends Controller
         return response()->json(['message' => "$count MACs adicionados com sucesso"], 201);
     }
 
+    public function download()
+    {
+        $macs = MacsAutorizados::all();
+        $content = '';
+        foreach ($macs as $mac) {
+            $content .= "{$mac->mac},{$mac->placa}\n";
+        }
+
+        return response($content, 200)
+            ->header('Content-Type', 'text/plain')
+            ->header('Content-Disposition', 'attachment; filename="macs_autorizados.txt"');
+    }
+
     public function index()
     {
         $macs = MacsAutorizados::all();
