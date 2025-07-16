@@ -37,6 +37,7 @@ Route::prefix('v1')->group(function () {
 
     // Public endpoint for the dashboard to get metrics
     Route::get('/metrics', 'MetricsController@getMetrics')->name('api.metrics');
+    Route::get('/metrics/{mac}', 'MetricsController@getMacMetrics')->name('api.metrics.mac');
 
     Route::middleware('auth:sanctum')->group(function () {
         // Endpoint for ESP32 to validate vehicle authorization
