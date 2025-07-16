@@ -23,6 +23,29 @@ class MacsAutorizadosController extends Controller
         return response()->json(['message' => 'MAC autorizado adicionado com sucesso', 'data' => $mac], 201);
     }
 
+    public function storeBulk(Request $request)
+    {
+        $validated = $request->validate([
+            'macs' => 'required|array',
+            'macs.*.mac' => 'required|string|size:12',
+            'macs.*.placa' => 'required|string|max:10',
+        ]);
+
+        $count = 0;
+        foreach ($validated['macs'] as $macData) {
+            MacsAutorizados::firstOrCreate(
+                ['mac' => $macData['mac']],
+                [
+                    'placa' => $macData['placa'],
+                    'data_adicao' => now(),
+                ]
+            );
+            $count++;
+        }
+
+        return response()->json(['message' => "$count MACs adicionados com sucesso"], 201);
+    }
+
     public function index()
     {
         $macs = MacsAutorizados::all();
