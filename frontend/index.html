@@ -180,6 +180,37 @@
                             <i class="fas fa-plus mr-1"></i> Adicionar MAC
                         </button>
                     </div>
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Adicionar por Ficheiro</label>
+                        <input type="file" id="mac-file" class="w-full p-2 border rounded-lg">
+                        <button id="file-instructions" class="mt-2 text-sm text-blue-600 hover:underline">Como formatar o ficheiro?</button>
+                    </div>
+                </div>
+
+                <!-- Instructions Modal -->
+                <div id="instructions-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+                    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                        <div class="mt-3 text-center">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Como formatar o ficheiro</h3>
+                            <div class="mt-2 px-7 py-3">
+                                <p class="text-sm text-gray-500">
+                                    O ficheiro deve ser um ficheiro de texto (.txt) com um endereço MAC e uma placa por linha, separados por uma vírgula.
+                                </p>
+                                <p class="text-sm text-gray-500 mt-4">
+                                    Exemplo:
+                                </p>
+                                <pre class="bg-gray-100 p-2 rounded-md text-left text-sm mt-2">
+24A160123456,ABC1234
+AABBCCDDEEFF,XYZ5678
+                                </pre>
+                            </div>
+                            <div class="items-center px-4 py-3">
+                                <button id="close-modal" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                    Fechar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Simulation Controls -->
@@ -361,8 +392,46 @@
         northToggle.addEventListener('click', () => toggleGate('north'));
         southToggle.addEventListener('click', () => toggleGate('south'));
         addMac.addEventListener('click', addAuthorizedMac);
+        document.getElementById('file-instructions').addEventListener('click', () => {
+            document.getElementById('instructions-modal').classList.remove('hidden');
+        });
+        document.getElementById('close-modal').addEventListener('click', () => {
+            document.getElementById('instructions-modal').classList.add('hidden');
+        });
+        document.getElementById('mac-file').addEventListener('change', handleFileUpload);
 
         // Functions
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const content = e.target.result;
+                const lines = content.split('\n').filter(line => line.trim() !== '');
+                const macs = lines.map(line => {
+                    const [mac, placa] = line.split(',');
+                    return { mac: mac.trim(), placa: placa.trim() };
+                });
+
+                try {
+                    const response = await fetch('http://127.0.0.1:8000/api/v1/macs-autorizados/bulk', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ macs })
+                    });
+                    const result = await response.json();
+                    addLog(result.message);
+                    fetchAuthorizedMacs();
+                } catch (error) {
+                    addLog(`Erro ao adicionar MACs por ficheiro: ${error.message}`);
+                }
+            };
+            reader.readAsText(file);
+        }
+
         async function addAuthorizedMac() {
             const mac = macAddress.value;
             const placa = macPlate.value;
