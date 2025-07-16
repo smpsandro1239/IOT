@@ -2,6 +2,16 @@
 
 Sistema completo de controle de barreiras baseado em IoT, utilizando Laravel para o backend, HTML/JavaScript/Tailwind CSS para o frontend, e ESP32 com LoRa para a placa base.
 
+## 🚀 **VERSÃO OTIMIZADA - PROBLEMAS CORRIGIDOS**
+
+Esta versão corrige todos os problemas identificados na análise técnica:
+- ✅ Erro "View path not found" corrigido
+- ✅ Pacote laravel-websockets abandonado removido
+- ✅ CORS configurado adequadamente
+- ✅ Tailwind CSS local (sem CDN)
+- ✅ Formulários com acessibilidade melhorada
+- ✅ Performance otimizada
+
 ## Características
 
 - **Detecção de Veículos:** Detecta veículos usando LoRa e estima o Ângulo de Chegada (AoA) para determinar a direção de aproximação.

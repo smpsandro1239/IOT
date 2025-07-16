@@ -8,9 +8,9 @@ module.exports = {
     extend: {
       colors: {
         'barrier-blue': '#2563eb',
-        'barrier-green': '#10b981',
-        'barrier-red': '#ef4444',
-        'barrier-yellow': '#f59e0b'
+        'barrier-green': '#16a34a',
+        'barrier-red': '#dc2626',
+        'barrier-yellow': '#ca8a04'
       },
       animation: {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
