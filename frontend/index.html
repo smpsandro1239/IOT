@@ -1,32 +1,267 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IoT Dashboard</title>
+    <title>Sistema de Controle de Barreiras com LoRa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://js.pusher.com/7.0.3/pusher.min.js"></script>
+    <script src="https://unpkg.com/laravel-echo@1.11.3/dist/echo.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        #vehiclePlate, #vehicleDirection, #vehicleDistance { margin: 10px 0; }
-        #logs { max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; }
-        .log-entry { margin: 5px 0; }
-        .gate { margin: 10px 0; }
-        .open { color: green; }
-        .closed { color: red; }
-        .locked { color: gray; }
+        .gate-animation {
+            transition: all 0.5s ease;
+        }
+        .signal-strength {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+        .vehicle-marker {
+            transition: all 2s linear;
+        }
+        .direction-arrow {
+            animation: bounce 1.5s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
     </style>
 </head>
-<body>
-    <h1>IoT Dashboard</h1>
-    <div>Placa: <span id="vehiclePlate">Desconhecido</span></div>
-    <div>Direção: <span id="vehicleDirection">Desconhecido</span></div>
-    <div>Distância: <span id="vehicleDistance">0 m</span></div>
-    <div>Estado da Barreira Norte: <span id="gateNorth" class="locked">Fechada</span></div>
-    <div>Estado da Barreira Sul: <span id="gateSouth" class="locked">Fechada</span></div>
-    <div>Logs: <div id="logs"></div></div>
-    <script src="https://js.pusher.com/7.0/pusher.min.js?v=1"></script>
-    <script src="https://unpkg.com/laravel-echo@1.11.3/dist/echo.iife.js?v=1"></script>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="bg-blue-600 text-white rounded-lg shadow-lg p-6 mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <h1 class="text-3xl font-bold"><i class="fas fa-traffic-light mr-2"></i>Sistema de Controle de Barreiras</h1>
+                    <p class="text-blue-100">Detecção de direção com LoRa para abertura seletiva de barreiras</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="bg-blue-700 p-3 rounded-lg">
+                        <i class="fas fa-satellite-dish text-2xl"></i>
+                        <span class="ml-2">LoRa</span>
+                    </div>
+                    <div class="bg-blue-700 p-3 rounded-lg">
+                        <i class="fas fa-wifi text-2xl"></i>
+                        <span class="ml-2">Wi-Fi</span>
+                    </div>
+                    <div class="bg-blue-700 p-3 rounded-lg">
+                        <i class="fas fa-bluetooth-b text-2xl"></i>
+                        <span class="ml-2">Bluetooth</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Dashboard -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Panel - Vehicle Detection -->
+            <div class="bg-white rounded-lg shadow-lg p-6 lg:col-span-2">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2 flex items-center">
+                    <i class="fas fa-car-side mr-2 text-blue-500"></i>Monitoramento de Veículos
+                </h2>
+
+                <!-- Road Visualization -->
+                <div class="relative bg-gray-200 rounded-lg p-4 h-64 mb-6 overflow-hidden">
+                    <!-- North-South Road -->
+                    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-full bg-gray-400"></div>
+
+                    <!-- South-North Road -->
+                    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-full h-1/3 bg-gray-400 rotate-90"></div>
+
+                    <!-- Gates -->
+                    <div id="north-gate" class="gate-animation absolute top-0 left-1/2 transform -translate-x-1/2 w-16 h-8 bg-red-600 rounded-t-lg flex justify-center items-center text-white font-bold">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div id="south-gate" class="gate-animation absolute bottom-0 left-1/2 transform -translate-x-1/2 w-16 h-8 bg-red-600 rounded-b-lg flex justify-center items-center text-white font-bold">
+                        <i class="fas fa-lock"></i>
+                    </div>
+
+                    <!-- Vehicle Markers -->
+                    <div id="vehicle-marker" class="vehicle-marker absolute w-12 h-6 bg-blue-600 rounded-lg flex justify-center items-center text-white">
+                        <i class="fas fa-car"></i>
+                    </div>
+
+                    <!-- Direction Indicators -->
+                    <div id="direction-indicator" class="absolute hidden">
+                        <i class="fas fa-arrow-up direction-arrow text-green-500 text-2xl"></i>
+                    </div>
+
+                    <!-- Base Station -->
+                    <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-gray-800 rounded-full flex flex-col justify-center items-center text-white">
+                        <i class="fas fa-broadcast-tower"></i>
+                        <span class="text-xs mt-1">Estação Base</span>
+                    </div>
+                </div>
+
+                <!-- Vehicle Info -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <h3 class="font-semibold text-blue-800 mb-2">Placa do Veículo</h3>
+                        <div class="bg-white p-2 rounded text-center font-mono font-bold" id="vehicle-plate">ABC-1234</div>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <h3 class="font-semibold text-blue-800 mb-2">Direção</h3>
+                        <div class="bg-white p-2 rounded text-center font-bold" id="vehicle-direction">Nenhuma</div>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <h3 class="font-semibold text-blue-800 mb-2">Distância</h3>
+                        <div class="bg-white p-2 rounded text-center font-bold" id="vehicle-distance">0 m</div>
+                    </div>
+                </div>
+
+                <!-- Signal Strength -->
+                <div class="mt-6">
+                    <h3 class="font-semibold text-gray-700 mb-2">Força do Sinal LoRa</h3>
+                    <div class="h-4 bg-gray-200 rounded-full overflow-hidden">
+                        <div id="signal-strength" class="h-full bg-green-500 signal-strength" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>0m</span>
+                        <span>250m</span>
+                        <span>500m</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - System Controls -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2 flex items-center">
+                    <i class="fas fa-cogs mr-2 text-blue-500"></i>Controles do Sistema
+                </h2>
+
+                <!-- System Status -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-gray-700 mb-2">Status do Sistema</h3>
+                    <div class="flex items-center">
+                        <div id="system-status" class="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                        <span id="status-text" class="font-medium">Operacional</span>
+                    </div>
+                </div>
+
+                <!-- Gate Controls -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-gray-700 mb-3">Controle de Barreiras</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-gray-100 p-3 rounded-lg">
+                            <h4 class="text-sm font-medium text-gray-600 mb-2">Norte-Sul</h4>
+                            <button id="north-toggle" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition">
+                                <i class="fas fa-lock mr-1"></i> Fechada
+                            </button>
+                        </div>
+                        <div class="bg-gray-100 p-3 rounded-lg">
+                            <h4 class="text-sm font-medium text-gray-600 mb-2">Sul-Norte</h4>
+                            <button id="south-toggle" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition">
+                                <i class="fas fa-lock mr-1"></i> Fechada
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MAC Authorization -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-gray-700 mb-3">Adicionar MAC Autorizado</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Endereço MAC</label>
+                            <input type="text" id="mac-address" class="w-full p-2 border rounded-lg" placeholder="24A160123456">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Placa do Veículo</label>
+                            <input type="text" id="mac-plate" class="w-full p-2 border rounded-lg" placeholder="ABC123">
+                        </div>
+                        <button id="add-mac" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition">
+                            <i class="fas fa-plus mr-1"></i> Adicionar MAC
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Simulation Controls -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-gray-700 mb-3">Simulação de Veículo</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Placa do Veículo</label>
+                            <input type="text" id="sim-plate" class="w-full p-2 border rounded-lg" value="ABC-1234">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Direção</label>
+                            <select id="sim-direction" class="w-full p-2 border rounded-lg">
+                                <option value="north">Norte-Sul</option>
+                                <option value="south">Sul-Norte</option>
+                            </select>
+                        </div>
+                        <button id="start-sim" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition">
+                            <i class="fas fa-play mr-1"></i> Iniciar Simulação
+                        </button>
+                        <button id="stop-sim" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition">
+                            <i class="fas fa-stop mr-1"></i> Parar Simulação
+                        </button>
+                    </div>
+                </div>
+
+                <!-- System Log -->
+                <div>
+                    <h3 class="font-semibold text-gray-700 mb-2">Registro do Sistema</h3>
+                    <div class="bg-gray-50 p-3 rounded-lg h-40 overflow-y-auto text-sm font-mono" id="system-log">
+                        <div class="text-gray-500">Sistema inicializado...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technical Info -->
+        <div class="mt-8 bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2 flex items-center">
+                <i class="fas fa-info-circle mr-2 text-blue-500"></i>Informações Técnicas
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Detecção de Direção com LoRa</h3>
+                    <p class="text-gray-600 mb-4">
+                        O sistema utiliza tecnologia LoRa para estimar o Ângulo de Chegada (AoA) com precisão de 4-14 graus,
+                        permitindo determinar a direção de aproximação do veículo (Norte-Sul ou Sul-Norte).
+                    </p>
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h4 class="font-medium text-blue-800 mb-2">Especificações:</h4>
+                        <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                            <li>Alcance de detecção: até 500m</li>
+                            <li>Frequência: 868 MHz (EU)</li>
+                            <li>Consumo energético: ~45mA durante transmissão</li>
+                            <li>Array de 3 antenas para detecção AoA</li>
+                            <li>Protocolo seguro com autenticação</li>
+                        </ul>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Lógica de Controle</h3>
+                    <p class="text-gray-600 mb-4">
+                        Quando um veículo é detectado se aproximando em uma direção específica, a barreira correspondente
+                        é liberada enquanto a oposta é bloqueada temporariamente para evitar abertura simultânea.
+                    </p>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <h4 class="font-medium text-green-800 mb-2">Fluxo de Operação:</h4>
+                        <ol class="list-decimal list-inside text-sm text-gray-700 space-y-1">
+                            <li>Detecção do veículo a 500m</li>
+                            <li>Determinação da direção (AoA)</li>
+                            <li>Verificação de permissões</li>
+                            <li>Abertura da barreira correspondente</li>
+                            <li>Bloqueio da barreira oposta (5 minutos)</li>
+                            <li>Registro no sistema</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        window.Pusher = Pusher;
+        // Initialize Laravel Echo
         const echo = new Echo({
             broadcaster: 'pusher',
             key: 'iot-key',
@@ -34,34 +269,283 @@
             wsPort: 6001,
             forceTLS: false,
             disableStats: true,
-            cluster: 'mt1' // Added to match PUSHER_APP_CLUSTER
+            cluster: 'mt1'
         });
 
-        const gateStates = { north: 'locked', south: 'locked' };
-        const gateNorth = document.getElementById('gateNorth');
-        const gateSouth = document.getElementById('gateSouth');
-
-        function updateGates() {
-            gateNorth.textContent = gateStates.north === 'open' ? 'Aberta' : gateStates.north === 'closed' ? 'Fechada' : 'Trancada';
-            gateSouth.textContent = gateStates.south === 'open' ? 'Aberta' : gateStates.south === 'closed' ? 'Fechada' : 'Trancada';
-            gateNorth.className = gateStates.north;
-            gateSouth.className = gateStates.south;
-        }
-
+        // Listen for TelemetriaUpdated events
         echo.channel('telemetria')
             .listen('TelemetriaUpdated', (e) => {
-                document.getElementById('vehiclePlate').textContent = e.mac || 'Desconhecido';
-                document.getElementById('vehicleDirection').textContent = e.direcao === 'NS' ? 'Norte → Sul' : 'Sul → Norte';
-                document.getElementById('vehicleDistance').textContent = '100 m'; // Adjust with real data
-                gateStates[e.direcao === 'NS' ? 'north' : 'south'] = e.status === 'AUTORIZADO' ? 'open' : 'closed';
-                gateStates[e.direcao === 'NS' ? 'south' : 'north'] = 'locked';
-                updateGates();
-                const logs = document.getElementById('logs');
-                const logEntry = document.createElement('div');
-                logEntry.className = 'log-entry';
-                logEntry.textContent = `[${e.datahora}] Veículo ${e.mac} - ${e.status}`;
-                logs.prepend(logEntry);
+                addLog(`Novo evento: MAC ${e.mac}, Direção ${e.direcao}, Status ${e.status}`);
+                vehiclePlate.textContent = e.placa || 'Desconhecida';
+                vehicleDirection.textContent = e.direcao === 'NS' ? 'Norte → Sul' : 'Sul → Norte';
+                vehicleDistance.textContent = '100 m'; // Simulated distance
+                signalStrengthBar.style.width = '80%'; // Simulated signal strength
+
+                if (e.status === 'AUTORIZADO') {
+                    if (e.direcao === 'NS') {
+                        gateStates.north = 'open';
+                        gateStates.south = 'locked';
+                    } else {
+                        gateStates.south = 'open';
+                        gateStates.north = 'locked';
+                    }
+                    updateGates();
+                }
             });
+
+        // System variables
+        let simulationActive = false;
+        let vehiclePosition = 0;
+        let currentDirection = 'north';
+        let gateStates = { north: 'closed', south: 'closed' };
+        let signalStrength = 0;
+
+        // DOM Elements
+        const vehicleMarker = document.getElementById('vehicle-marker');
+        const directionIndicator = document.getElementById('direction-indicator');
+        const northGate = document.getElementById('north-gate');
+        const southGate = document.getElementById('south-gate');
+        const vehiclePlate = document.getElementById('vehicle-plate');
+        const vehicleDirection = document.getElementById('vehicle-direction');
+        const vehicleDistance = document.getElementById('vehicle-distance');
+        const signalStrengthBar = document.getElementById('signal-strength');
+        const systemStatus = document.getElementById('system-status');
+        const statusText = document.getElementById('status-text');
+        const systemLog = document.getElementById('system-log');
+        const northToggle = document.getElementById('north-toggle');
+        const southToggle = document.getElementById('south-toggle');
+        const simPlate = document.getElementById('sim-plate');
+        const simDirection = document.getElementById('sim-direction');
+        const startSim = document.getElementById('start-sim');
+        const stopSim = document.getElementById('stop-sim');
+        const addMac = document.getElementById('add-mac');
+        const macAddress = document.getElementById('mac-address');
+        const macPlate = document.getElementById('mac-plate');
+
+        // Initialize
+        updateGates();
+
+        // Event Listeners
+        startSim.addEventListener('click', startSimulation);
+        stopSim.addEventListener('click', stopSimulation);
+        northToggle.addEventListener('click', () => toggleGate('north'));
+        southToggle.addEventListener('click', () => toggleGate('south'));
+        addMac.addEventListener('click', addAuthorizedMac);
+
+        // Functions
+        async function addAuthorizedMac() {
+            const mac = macAddress.value;
+            const placa = macPlate.value;
+            if (!mac || !placa) {
+                addLog('Erro: MAC e placa são obrigatórios');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/v1/macs-autorizados', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mac, placa })
+                });
+                const result = await response.json();
+                addLog(`MAC ${mac} adicionado com sucesso: ${result.message}`);
+                macAddress.value = '';
+                macPlate.value = '';
+            } catch (error) {
+                addLog(`Erro ao adicionar MAC: ${error.message}`);
+            }
+        }
+
+        async function startSimulation() {
+            if (simulationActive) return;
+
+            simulationActive = true;
+            currentDirection = simDirection.value;
+            vehiclePlate.textContent = simPlate.value || 'ABC-1234';
+            const mac = simPlate.value.replace('-', '');
+
+            // Simulate sending data to backend
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/v1/access-logs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        mac,
+                        direcao: currentDirection === 'north' ? 'NS' : 'SN',
+                        datahora: new Date().toISOString(),
+                        status: 'AUTORIZADO'
+                    })
+                });
+                const result = await response.json();
+                addLog(`Simulação: ${result.message}`);
+            } catch (error) {
+                addLog(`Erro na simulação: ${error.message}`);
+            }
+
+            // Show direction indicator
+            directionIndicator.className = 'absolute';
+            if (currentDirection === 'north') {
+                directionIndicator.style.left = '25%';
+                directionIndicator.style.top = '10%';
+                directionIndicator.innerHTML = '<i class="fas fa-arrow-down direction-arrow text-green-500 text-2xl"></i>';
+                vehicleDirection.textContent = 'Norte → Sul';
+            } else {
+                directionIndicator.style.left = '75%';
+                directionIndicator.style.top = '10%';
+                directionIndicator.innerHTML = '<i class="fas fa-arrow-up direction-arrow text-green-500 text-2xl"></i>';
+                vehicleDirection.textContent = 'Sul → Norte';
+            }
+
+            // Start vehicle movement
+            vehiclePosition = 500;
+            updateVehiclePosition();
+
+            // Update UI
+            startSim.disabled = true;
+            stopSim.disabled = false;
+            systemStatus.className = 'w-3 h-3 rounded-full bg-yellow-500 mr-2';
+            statusText.textContent = 'Simulação em andamento';
+        }
+
+        function stopSimulation() {
+            if (!simulationActive) return;
+
+            simulationActive = false;
+            vehiclePosition = 0;
+            updateVehiclePosition();
+
+            // Hide direction indicator
+            directionIndicator.className = 'absolute hidden';
+
+            // Reset vehicle info
+            vehicleDirection.textContent = 'Nenhuma';
+            vehicleDistance.textContent = '0 m';
+            signalStrengthBar.style.width = '0%';
+
+            // Close all gates
+            gateStates.north = 'closed';
+            gateStates.south = 'closed';
+            updateGates();
+
+            // Log event
+            addLog('Simulação parada');
+
+            // Update UI
+            startSim.disabled = false;
+            stopSim.disabled = true;
+            systemStatus.className = 'w-3 h-3 rounded-full bg-green-500 mr-2';
+            statusText.textContent = 'Operacional';
+        }
+
+        function updateVehiclePosition() {
+            if (!simulationActive) return;
+
+            vehiclePosition -= 10;
+
+            if (vehiclePosition <= 0) {
+                vehiclePosition = 0;
+                stopSimulation();
+                return;
+            }
+
+            // Update vehicle marker position
+            if (currentDirection === 'north') {
+                vehicleMarker.style.left = '25%';
+                vehicleMarker.style.top = `${10 + (vehiclePosition / 500) * 40}%`;
+            } else {
+                vehicleMarker.style.left = '75%';
+                vehicleMarker.style.top = `${90 - (vehiclePosition / 500) * 40}%`;
+            }
+
+            // Update distance display
+            vehicleDistance.textContent = `${vehiclePosition} m`;
+
+            // Update signal strength
+            const strength = 100 - (vehiclePosition / 500) * 100;
+            signalStrengthBar.style.width = `${strength}%`;
+
+            // Check for gate opening distance (100m)
+            if (vehiclePosition <= 100) {
+                if (currentDirection === 'north' && gateStates.north !== 'open') {
+                    gateStates.north = 'open';
+                    gateStates.south = 'locked';
+                    updateGates();
+                    addLog(`Barreira Norte-Sul aberta para veículo ${vehiclePlate.textContent}`);
+                } else if (currentDirection === 'south' && gateStates.south !== 'open') {
+                    gateStates.south = 'open';
+                    gateStates.north = 'locked';
+                    updateGates();
+                    addLog(`Barreira Sul-Norte aberta para veículo ${vehiclePlate.textContent}`);
+                }
+            }
+
+            // Continue animation
+            setTimeout(updateVehiclePosition, 100);
+        }
+
+        function toggleGate(gate) {
+            if (simulationActive) {
+                addLog('Não é possível alterar manualmente durante simulação');
+                return;
+            }
+
+            if (gateStates[gate] === 'open' || gateStates[gate] === 'locked') {
+                gateStates[gate] = 'closed';
+                addLog(`Barreira ${gate === 'north' ? 'Norte-Sul' : 'Sul-Norte'} fechada manualmente`);
+            } else {
+                gateStates[gate] = 'open';
+                addLog(`Barreira ${gate === 'north' ? 'Norte-Sul' : 'Sul-Norte'} aberta manualmente`);
+            }
+
+            updateGates();
+        }
+
+        function updateGates() {
+            // North gate
+            if (gateStates.north === 'open') {
+                northGate.className = 'gate-animation absolute top-0 left-1/2 transform -translate-x-1/2 w-16 h-8 bg-green-500 rounded-t-lg flex justify-center items-center text-white font-bold';
+                northGate.innerHTML = '<i class="fas fa-lock-open"></i>';
+                northToggle.className = 'w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition';
+                northToggle.innerHTML = '<i class="fas fa-lock-open mr-1"></i> Aberta';
+            } else if (gateStates.north === 'locked') {
+                northGate.className = 'gate-animation absolute top-0 left-1/2 transform -translate-x-1/2 w-16 h-8 bg-yellow-500 rounded-t-lg flex justify-center items-center text-white font-bold';
+                northGate.innerHTML = '<i class="fas fa-lock"></i>';
+                northToggle.className = 'w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded-lg transition';
+                northToggle.innerHTML = '<i class="fas fa-lock mr-1"></i> Bloqueada';
+            } else {
+                northGate.className = 'gate-animation absolute top-0 left-1/2 transform -translate-x-1/2 w-16 h-8 bg-red-500 rounded-t-lg flex justify-center items-center text-white font-bold';
+                northGate.innerHTML = '<i class="fas fa-lock"></i>';
+                northToggle.className = 'w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition';
+                northToggle.innerHTML = '<i class="fas fa-lock mr-1"></i> Fechada';
+            }
+
+            // South gate
+            if (gateStates.south === 'open') {
+                southGate.className = 'gate-animation absolute bottom-0 left-1/2 transform -translate-x-1/2 w-16 h-8 bg-green-500 rounded-b-lg flex justify-center items-center text-white font-bold';
+                southGate.innerHTML = '<i class="fas fa-lock-open"></i>';
+                southToggle.className = 'w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition';
+                southToggle.innerHTML = '<i class="fas fa-lock-open mr-1"></i> Aberta';
+            } else if (gateStates.south === 'locked') {
+                southGate.className = 'gate-animation absolute bottom-0 left-1/2 transform -translate-x-1/2 w-16 h-8 bg-yellow-500 rounded-b-lg flex justify-center items-center text-white font-bold';
+                southGate.innerHTML = '<i class="fas fa-lock"></i>';
+                southToggle.className = 'w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded-lg transition';
+                southToggle.innerHTML = '<i class="fas fa-lock mr-1"></i> Bloqueada';
+            } else {
+                southGate.className = 'gate-animation absolute bottom-0 left-1/2 transform -translate-x-1/2 w-16 h-8 bg-red-500 rounded-b-lg flex justify-center items-center text-white font-bold';
+                southGate.innerHTML = '<i class="fas fa-lock"></i>';
+                southToggle.className = 'w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition';
+                southToggle.innerHTML = '<i class="fas fa-lock mr-1"></i> Fechada';
+            }
+        }
+
+        function addLog(message) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `[${timeString}] ${message}`;
+            systemLog.appendChild(logEntry);
+            systemLog.scrollTop = systemLog.scrollHeight;
+        }
     </script>
 </body>
 </html>
