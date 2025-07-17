@@ -95,9 +95,11 @@ self.addEventListener('sync', event => {
 async function syncAccessLogs() {
   try {
     const db = await openDB();
-    const offlineLogs = await db.getAll('offlineAccessLogs');
+    const transaction = db.transaction('offlineAccessLogs', 'readonly');
+    const store = transaction.objectStore('offlineAccessLogs');
+    const offlineLogs = await store.getAll ? store.getAll() : getAllFromStore(store);
 
-    if (offlineLogs.length === 0) return;
+    if (!offlineLogs || offlineLogs.length === 0) return;
 
     for (const log of offlineLogs) {
       try {
@@ -111,7 +113,9 @@ async function syncAccessLogs() {
         });
 
         if (response.ok) {
-          await db.delete('offlineAccessLogs', log.id);
+          const deleteTransaction = db.transaction('offlineAccessLogs', 'readwrite');
+          const deleteStore = deleteTransaction.objectStore('offlineAccessLogs');
+          await deleteStore.delete(log.id);
         }
       } catch (error) {
         console.error('Failed to sync log:', error);
@@ -122,13 +126,37 @@ async function syncAccessLogs() {
   }
 }
 
+// Helper function to get all items from a store that doesn't support getAll
+function getAllFromStore(store) {
+  return new Promise((resolve, reject) => {
+    const items = [];
+    const request = store.openCursor();
+
+    request.onsuccess = function(event) {
+      const cursor = event.target.result;
+      if (cursor) {
+        items.push(cursor.value);
+        cursor.continue();
+      } else {
+        resolve(items);
+      }
+    };
+
+    request.onerror = function(event) {
+      reject(event.target.error);
+    };
+  });
+}
+
 // Function to sync MAC authorizations when back online
 async function syncMacAuth() {
   try {
     const db = await openDB();
-    const offlineMacs = await db.getAll('offlineMacAuth');
+    const transaction = db.transaction('offlineMacAuth', 'readonly');
+    const store = transaction.objectStore('offlineMacAuth');
+    const offlineMacs = await store.getAll ? store.getAll() : getAllFromStore(store);
 
-    if (offlineMacs.length === 0) return;
+    if (!offlineMacs || offlineMacs.length === 0) return;
 
     for (const mac of offlineMacs) {
       try {
@@ -142,7 +170,9 @@ async function syncMacAuth() {
         });
 
         if (response.ok) {
-          await db.delete('offlineMacAuth', mac.id);
+          const deleteTransaction = db.transaction('offlineMacAuth', 'readwrite');
+          const deleteStore = deleteTransaction.objectStore('offlineMacAuth');
+          await deleteStore.delete(mac.id);
         }
       } catch (error) {
         console.error('Failed to sync MAC:', error);
