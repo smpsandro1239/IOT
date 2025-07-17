@@ -454,7 +454,25 @@ class UIComponents {
   static formatDate(date, format = 'dd/MM/yyyy HH:mm') {
     if (!date) return '';
     try {
-      return window.dateFns.format(new Date(date), format);
+      // Implementação simples de formatação de data sem depender de dateFns
+      const d = new Date(date);
+      const pad = (num) => num.toString().padStart(2, '0');
+
+      const formatMap = {
+        'dd': pad(d.getDate()),
+        'MM': pad(d.getMonth() + 1),
+        'yyyy': d.getFullYear(),
+        'HH': pad(d.getHours()),
+        'mm': pad(d.getMinutes()),
+        'ss': pad(d.getSeconds())
+      };
+
+      let result = format;
+      for (const [key, value] of Object.entries(formatMap)) {
+        result = result.replace(key, value);
+      }
+
+      return result;
     } catch (error) {
       console.error('Error formatting date:', error);
       return String(date);
