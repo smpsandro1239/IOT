@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Login - Sistema de Barreiras IoT</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #2563eb;
+        }
+        .card {
+            background-color: #f9fafb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #1d4ed8;
+        }
+        pre {
+            background-color: #f1f5f9;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .success {
+            color: #10b981;
+            font-weight: bold;
+        }
+        .error {
+            color: #ef4444;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Teste de Login - Sistema de Barreiras IoT</h1>
+
+    <div class="card">
+        <h2>Teste de Login Direto</h2>
+        <p>Este teste verifica se o login funciona diretamente com as credenciais padrão.</p>
+        <button id="test-direct-login">Executar Teste</button>
+        <div id="direct-login-result"></div>
+    </div>
+
+    <div class="card">
+        <h2>Teste de API de Login</h2>
+        <p>Este teste verifica se a API de login simulada está funcionando corretamente.</p>
+        <button id="test-api-login">Executar Teste</button>
+        <div id="api-login-result"></div>
+    </div>
+
+    <div class="card">
+        <h2>Verificação de Ambiente</h2>
+        <p>Este teste verifica se o ambiente está configurado corretamente.</p>
+        <button id="test-environment">Executar Teste</button>
+        <div id="environment-result"></div>
+    </div>
+
+    <script>
+        // Teste de login direto
+        document.getElementById('test-direct-login').addEventListener('click', function() {
+            const resultDiv = document.getElementById('direct-login-result');
+            resultDiv.innerHTML = '<p>Testando login direto...</p>';
+
+            try {
+                // Simular login direto
+                const email = 'admin@example.com';
+                const password = 'password';
+
+                if (email === 'admin@example.com' && password === 'password') {
+                    const token = 'dev_token_' + Math.random().toString(36).substring(2, 15);
+                    localStorage.setItem('test_auth_token', token);
+
+                    resultDiv.innerHTML += `
+                        <p class="success">✅ Login direto bem-sucedido!</p>
+                        <pre>Token: ${token}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML += `
+                        <p class="error">❌ Login direto falhou!</p>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML += `
+                    <p class="error">❌ Erro no teste de login direto:</p>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        });
+
+        // Teste de API de login
+        document.getElementById('test-api-login').addEventListener('click', async function() {
+            const resultDiv = document.getElementById('api-login-result');
+            resultDiv.innerHTML = '<p>Testando API de login...</p>';
+
+            try {
+                const response = await fetch('/api/login/index.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@example.com',
+                        password: 'password'
+                    })
+                });
+
+                const responseText = await response.text();
+                resultDiv.innerHTML += `
+                    <p>Status: ${response.status}</p>
+                    <p>Resposta bruta:</p>
+                    <pre>${responseText}</pre>
+                `;
+
+                try {
+                    const data = JSON.parse(responseText);
+                    if (response.ok && data.token) {
+                        resultDiv.innerHTML += `
+                            <p class="success">✅ API de login funcionando corretamente!</p>
+                        `;
+                    } else {
+                        resultDiv.innerHTML += `
+                            <p class="error">❌ API de login retornou erro!</p>
+                        `;
+                    }
+                } catch (e) {
+                    resultDiv.innerHTML += `
+                        <p class="error">❌ Erro ao analisar resposta JSON:</p>
+                        <pre>${e.message}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML += `
+                    <p class="error">❌ Erro ao acessar API de login:</p>
+                    <pre>${error.message}</pre>
+                    <p>Isso pode indicar que o servidor não está rodando ou que há um problema de CORS.</p>
+                `;
+            }
+        });
+
+        // Teste de ambiente
+        document.getElementById('test-environment').addEventListener('click', function() {
+            const resultDiv = document.getElementById('environment-result');
+            resultDiv.innerHTML = '<p>Verificando ambiente...</p>';
+
+            const tests = [
+                { name: 'localStorage disponível', result: !!window.localStorage },
+                { name: 'fetch API disponível', result: !!window.fetch },
+                { name: 'Service Worker API disponível', result: !!navigator.serviceWorker },
+                { name: 'JSON.parse/stringify disponível', result: !!window.JSON }
+            ];
+
+            let html = '<ul>';
+            let allPassed = true;
+
+            for (const test of tests) {
+                const status = test.result ? '✅' : '❌';
+                const className = test.result ? 'success' : 'error';
+                html += `<li><span class="${className}">${status} ${test.name}</span></li>`;
+                if (!test.result) allPassed = false;
+            }
+
+            html += '</ul>';
+
+            if (allPassed) {
+                html += '<p class="success">✅ Todos os testes de ambiente passaram!</p>';
+            } else {
+                html += '<p class="error">❌ Alguns testes de ambiente falharam!</p>';
+            }
+
+            resultDiv.innerHTML += html;
+        });
+    </script>
+</body>
+</html>

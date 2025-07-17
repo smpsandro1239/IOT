@@ -408,16 +408,55 @@ class ApiClient {
    * Login user
    */
   async login(email, password) {
-    const response = await this.request('/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password })
-    });
+    try {
+      console.log('Login attempt with:', email);
 
-    if (response.ok && response.data.token) {
-      localStorage.setItem('auth_token', response.data.token);
+      // Use the simulated login endpoint directly
+      const response = await fetch('/api/login/index.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      console.log('Login response status:', response.status);
+
+      // Try to parse the response as JSON
+      let data;
+      try {
+        const text = await response.text();
+        console.log('Raw response:', text);
+        data = JSON.parse(text);
+      } catch (e) {
+        console.error('Failed to parse JSON response:', e);
+        return {
+          ok: false,
+          error: 'Invalid server response'
+        };
+      }
+
+      console.log('Parsed response data:', data);
+
+      if (response.ok && data.token) {
+        console.log('Login successful, storing token');
+        localStorage.setItem('auth_token', data.token);
+        return {
+          ok: true,
+          data: data
+        };
+      } else {
+        console.log('Login failed:', data.message || 'Unknown error');
+        return {
+          ok: false,
+          error: data.message || 'Login failed'
+        };
+      }
+    } catch (error) {
+      console.error('Login exception:', error);
+      return this.handleApiError(error, '/login');
     }
-
-    return response;
   }
 
   /**
