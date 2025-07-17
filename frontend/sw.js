@@ -1,15 +1,15 @@
 // Service Worker for IoT Barrier Control System
 const CACHE_NAME = 'barrier-control-v1';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/login.html',
-  '/manifest.json',
-  '/css/tailwind-local.css',
-  '/js/app.js',
-  '/js/simulation.js',
-  '/js/api-client.js',
-  '/js/ui-components.js'
+  './',
+  '../index.html',
+  '../login.html',
+  '../manifest.json',
+  '../css/tailwind-local.css',
+  '../js/app.js',
+  '../js/simulation.js',
+  '../js/api-client.js',
+  '../js/ui-components.js'
 ];
 
 // Install event - cache assets
@@ -103,7 +103,7 @@ async function syncAccessLogs() {
 
     for (const log of offlineLogs) {
       try {
-        const response = await fetch('/api/v1/access-logs', {
+        const response = await fetch('./api/v1/access-logs', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -160,7 +160,7 @@ async function syncMacAuth() {
 
     for (const mac of offlineMacs) {
       try {
-        const response = await fetch('/api/v1/macs-autorizados', {
+        const response = await fetch('./api/v1/macs-autorizados', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

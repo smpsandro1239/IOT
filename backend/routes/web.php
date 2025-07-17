@@ -19,7 +19,17 @@ Route::get('/laravel-websockets/auth', '\BeyondCode\LaravelWebSockets\Dashboard\
     ->middleware('\BeyondCode\LaravelWebSockets\Dashboard\Http\Middleware\Authorize');
 
 Route::get('/', function () {
-    return view('welcome'); // Assume a 'welcome' view will exist or be created later
+    try {
+        return view('welcome');
+    } catch (\Exception $e) {
+        // Fallback response if view rendering fails
+        return response()->json([
+            'status' => 'API Running',
+            'message' => 'Welcome to the IoT Barrier Control System API',
+            'frontend_url' => 'http://localhost:8080',
+            'api_docs' => 'http://localhost:8000/api/documentation'
+        ]);
+    }
 });
 
 Route::get('/dashboard', function () {
