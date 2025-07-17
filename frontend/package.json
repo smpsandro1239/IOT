@@ -1,24 +1,21 @@
 {
-  "name": "iot-barrier-control-frontend",
+  "name": "barrier-control-frontend",
   "version": "1.0.0",
-  "description": "Frontend para Sistema de Controle de Barreiras IoT",
-  "main": "index.html",
+  "description": "Frontend para o Sistema de Controle de Barreiras IoT",
+  "main": "index.js",
   "scripts": {
-    "build-css": "tailwindcss -i src/input.css -o dist/output.css --minify",
-    "watch-css": "tailwindcss -i src/input.css -o dist/output.css --watch",
-    "dev": "php -S localhost:8080 router.php",
-    "build": "npm run build-css",
-    "start": "npm run build-css && npm run dev"
+    "build:css": "tailwindcss -i ./src/input.css -o ./css/tailwind-local.css --minify",
+    "watch:css": "tailwindcss -i ./src/input.css -o ./css/tailwind-local.css --watch"
   },
-  "keywords": ["iot", "barrier-control", "lora", "esp32"],
-  "author": "Sistema de Barreiras IoT",
-  "license": "MIT",
+  "keywords": [
+    "iot",
+    "barrier",
+    "control",
+    "lora"
+  ],
+  "author": "",
+  "license": "ISC",
   "devDependencies": {
-    "tailwindcss": "^3.4.0"
-  },
-  "dependencies": {
-    "laravel-echo": "^1.15.3",
-    "pusher-js": "^8.4.0",
-    "chart.js": "^4.4.0"
+    "tailwindcss": "^3.3.0"
   }
 }

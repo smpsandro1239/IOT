@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gerador de Ícones</title>
+</head>
+<body>
+    <canvas id="canvas" style="display: none;"></canvas>
+
+    <script>
+        // Função para criar ícone em diferentes tamanhos
+        function createIcon(size) {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = size;
+            canvas.height = size;
+
+            // Fundo azul
+            ctx.fillStyle = '#2563eb';
+            ctx.fillRect(0, 0, size, size);
+
+            // Desenhar semáforo simplificado
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const radius = size * 0.3;
+
+            // Corpo do semáforo (retângulo)
+            ctx.fillStyle = '#1f2937';
+            ctx.fillRect(centerX - radius/3, centerY - radius, radius*2/3, radius*2);
+
+            // Luzes do semáforo
+            const lightRadius = radius / 6;
+
+            // Luz vermelha (topo)
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY - radius/2, lightRadius, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // Luz amarela (meio)
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, lightRadius, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // Luz verde (baixo)
+            ctx.fillStyle = '#10b981';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY + radius/2, lightRadius, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // Converter para blob e fazer download
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `icon-${size}x${size}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        }
+
+        // Gerar todos os tamanhos
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+
+        let index = 0;
+        function generateNext() {
+            if (index < sizes.length) {
+                createIcon(sizes[index]);
+                index++;
+                setTimeout(generateNext, 100); // Pequeno delay entre gerações
+            }
+        }
+
+        // Iniciar geração após carregamento da página
+        window.onload = function() {
+            setTimeout(generateNext, 500);
+        };
+    </script>
+
+    <h1>Gerador de Ícones</h1>
+    <p>Os ícones serão baixados automaticamente. Mova-os para a pasta icons/</p>
+</body>
+</html>

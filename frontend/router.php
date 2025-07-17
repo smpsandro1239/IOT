@@ -1,6 +1,17 @@
 <?php
 // Arquivo de roteamento para o servidor PHP embutido
 
+// Adicionar cabeçalhos CORS para todas as respostas
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-CSRF-TOKEN');
+header('Access-Control-Allow-Credentials: true');
+
+// Responder imediatamente às solicitações OPTIONS (preflight)
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+  exit(0);
+}
+
 // Se a solicitação for para a API, usar o proxy
 if (strpos($_SERVER['REQUEST_URI'], '/api/') === 0) {
   include 'proxy.php';
