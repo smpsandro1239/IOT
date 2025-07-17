@@ -25,9 +25,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 // API for ESP32 Base Station
 use App\Http\Controllers\AuthController;
 
-Route::post('/login', [AuthController::class, 'login'])->name('api.login');
+Route::post('/login', [AuthController::class, 'login'])->name('api.login')->middleware('cors');
 
-Route::prefix('v1')->group(function () {
+Route::prefix('v1')->middleware('cors')->group(function () {
     // Public endpoint for the dashboard to get the latest status
     Route::get('/status/latest', [AccessLogController::class, 'getLatest'])->name('api.status.latest');
 

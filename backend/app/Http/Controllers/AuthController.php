@@ -28,6 +28,10 @@ class AuthController extends Controller
             // Gerar um token simples para desenvolvimento
             $token = 'dev_token_' . Str::random(40);
 
+            // Armazenar o token para uso posterior
+            $user->remember_token = $token;
+            $user->save();
+
             return response()->json([
                 'message' => 'Login successful',
                 'user' => $user,
