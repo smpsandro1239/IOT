@@ -3,8 +3,9 @@
  * Handles all API communication with error handling and offline support
  */
 
+// API Client class
 class ApiClient {
-  constructor(baseUrl = 'http://127.0.0.1:8000/api/v1') {
+  constructor(baseUrl = 'http://localhost:8000/api/v1') {
     this.baseUrl = baseUrl;
     this.offlineMode = false;
     this.checkConnection();
@@ -32,7 +33,9 @@ class ApiClient {
     try {
       const response = await fetch(this.baseUrl + '/status/latest', {
         method: 'HEAD',
-        cache: 'no-store'
+        cache: 'no-store',
+        mode: 'cors',
+        credentials: 'include'
       });
       const wasOffline = this.offlineMode;
       this.offlineMode = !response.ok;
@@ -44,6 +47,7 @@ class ApiClient {
         this.notifyConnectionChange(false);
       }
     } catch (error) {
+      console.warn('Connection check failed:', error);
       this.offlineMode = true;
       this.notifyConnectionChange(false);
     }
@@ -239,6 +243,10 @@ class ApiClient {
         }
       }
 
+      // Add CORS options
+      options.mode = 'cors';
+      options.credentials = 'include';
+
       const response = await fetch(url, options);
 
       // Parse response
@@ -420,6 +428,5 @@ class ApiClient {
   }
 }
 
-// Create and export singleton instance
-const apiClient = new ApiClient();
-export default apiClient;
+// Create global instance
+window.apiClient = new ApiClient();

@@ -5,10 +5,11 @@ const urlsToCache = [
   '/index.html',
   '/login.html',
   '/manifest.json',
-  'https://cdn.tailwindcss.com',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css',
-  'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js',
-  'https://cdn.jsdelivr.net/npm/date-fns@2.30.0/index.min.js'
+  '/css/tailwind-local.css',
+  '/js/app.js',
+  '/js/simulation.js',
+  '/js/api-client.js',
+  '/js/ui-components.js'
 ];
 
 // Install event - cache assets

@@ -3,6 +3,7 @@
  * Provides reusable UI components and utilities
  */
 
+// UI Components class
 class UIComponents {
   /**
    * Show a toast notification
@@ -452,7 +453,12 @@ class UIComponents {
    */
   static formatDate(date, format = 'dd/MM/yyyy HH:mm') {
     if (!date) return '';
-    return dateFns.format(new Date(date), format);
+    try {
+      return window.dateFns.format(new Date(date), format);
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return String(date);
+    }
   }
 
   /**
@@ -468,5 +474,5 @@ class UIComponents {
   }
 }
 
-// Export
-export default UIComponents;
+// Make it globally available
+window.UIComponents = UIComponents;

@@ -3,9 +3,7 @@
  * Handles all application logic and UI interactions
  */
 
-import apiClient from './api-client.js';
-import UIComponents from './ui-components.js';
-
+// Main application class
 class BarrierControlApp {
   constructor() {
     // Application state
@@ -104,6 +102,12 @@ class BarrierControlApp {
    */
   initializeEcho() {
     try {
+      if (typeof Echo === 'undefined') {
+        console.error('Echo is not defined. Make sure Laravel Echo is loaded.');
+        this.addSystemLog('Erro: Laravel Echo não está disponível');
+        return;
+      }
+
       this.echo = new Echo({
         broadcaster: 'pusher',
         key: 'iot-key',
@@ -165,104 +169,114 @@ class BarrierControlApp {
    * Initialize charts
    */
   initializeCharts() {
-    // Daily access chart
-    this.charts.daily = UIComponents.createChart('daily-chart', 'bar', {
-      labels: [],
-      datasets: [{
-        label: 'Acessos',
-        data: [],
-        backgroundColor: 'rgba(59, 130, 246, 0.5)',
-        borderColor: 'rgb(59, 130, 246)',
-        borderWidth: 1
-      }]
-    });
+    try {
+      // Daily access chart
+      this.charts.daily = UIComponents.createChart('daily-chart', 'bar', {
+        labels: [],
+        datasets: [{
+          label: 'Acessos',
+          data: [],
+          backgroundColor: 'rgba(59, 130, 246, 0.5)',
+          borderColor: 'rgb(59, 130, 246)',
+          borderWidth: 1
+        }]
+      });
 
-    // Weekly access chart
-    this.charts.weekly = UIComponents.createChart('weekly-chart', 'line', {
-      labels: [],
-      datasets: [{
-        label: 'Acessos',
-        data: [],
-        backgroundColor: 'rgba(16, 185, 129, 0.2)',
-        borderColor: 'rgb(16, 185, 129)',
-        borderWidth: 2,
-        tension: 0.3,
-        fill: true
-      }]
-    });
+      // Weekly access chart
+      this.charts.weekly = UIComponents.createChart('weekly-chart', 'line', {
+        labels: [],
+        datasets: [{
+          label: 'Acessos',
+          data: [],
+          backgroundColor: 'rgba(16, 185, 129, 0.2)',
+          borderColor: 'rgb(16, 185, 129)',
+          borderWidth: 2,
+          tension: 0.3,
+          fill: true
+        }]
+      });
 
-    // Monthly access chart
-    this.charts.monthly = UIComponents.createChart('monthly-chart', 'bar', {
-      labels: [],
-      datasets: [{
-        label: 'Acessos',
-        data: [],
-        backgroundColor: 'rgba(139, 92, 246, 0.5)',
-        borderColor: 'rgb(139, 92, 246)',
-        borderWidth: 1
-      }]
-    });
+      // Monthly access chart
+      this.charts.monthly = UIComponents.createChart('monthly-chart', 'bar', {
+        labels: [],
+        datasets: [{
+          label: 'Acessos',
+          data: [],
+          backgroundColor: 'rgba(139, 92, 246, 0.5)',
+          borderColor: 'rgb(139, 92, 246)',
+          borderWidth: 1
+        }]
+      });
 
-    // MAC-specific charts
-    this.charts.macDaily = UIComponents.createChart('mac-daily-chart', 'bar', {
-      labels: [],
-      datasets: [{
-        label: 'Acessos',
-        data: [],
-        backgroundColor: 'rgba(245, 158, 11, 0.5)',
-        borderColor: 'rgb(245, 158, 11)',
-        borderWidth: 1
-      }]
-    });
+      // MAC-specific charts
+      this.charts.macDaily = UIComponents.createChart('mac-daily-chart', 'bar', {
+        labels: [],
+        datasets: [{
+          label: 'Acessos',
+          data: [],
+          backgroundColor: 'rgba(245, 158, 11, 0.5)',
+          borderColor: 'rgb(245, 158, 11)',
+          borderWidth: 1
+        }]
+      });
 
-    this.charts.macWeekly = UIComponents.createChart('mac-weekly-chart', 'line', {
-      labels: [],
-      datasets: [{
-        label: 'Acessos',
-        data: [],
-        backgroundColor: 'rgba(239, 68, 68, 0.2)',
-        borderColor: 'rgb(239, 68, 68)',
-        borderWidth: 2,
-        tension: 0.3,
-        fill: true
-      }]
-    });
+      this.charts.macWeekly = UIComponents.createChart('mac-weekly-chart', 'line', {
+        labels: [],
+        datasets: [{
+          label: 'Acessos',
+          data: [],
+          backgroundColor: 'rgba(239, 68, 68, 0.2)',
+          borderColor: 'rgb(239, 68, 68)',
+          borderWidth: 2,
+          tension: 0.3,
+          fill: true
+        }]
+      });
 
-    this.charts.macMonthly = UIComponents.createChart('mac-monthly-chart', 'bar', {
-      labels: [],
-      datasets: [{
-        label: 'Acessos',
-        data: [],
-        backgroundColor: 'rgba(6, 182, 212, 0.5)',
-        borderColor: 'rgb(6, 182, 212)',
-        borderWidth: 1
-      }]
-    });
+      this.charts.macMonthly = UIComponents.createChart('mac-monthly-chart', 'bar', {
+        labels: [],
+        datasets: [{
+          label: 'Acessos',
+          data: [],
+          backgroundColor: 'rgba(6, 182, 212, 0.5)',
+          borderColor: 'rgb(6, 182, 212)',
+          borderWidth: 1
+        }]
+      });
+    } catch (error) {
+      console.error('Error initializing charts:', error);
+      this.addSystemLog('Erro ao inicializar gráficos: ' + error.message);
+    }
   }
 
   /**
    * Initialize data tables
    */
   initializeTables() {
-    // Authorized MACs table
-    this.tables.authorizedMacs = UIComponents.createDataTable('authorized-macs', [
-      { field: 'mac', title: 'MAC' },
-      { field: 'placa', title: 'Placa' },
-      {
-        field: 'data_adicao',
-        title: 'Data Adição',
-        render: (value) => UIComponents.formatDate(value)
-      }
-    ], [], {
-      rowActions: [
+    try {
+      // Authorized MACs table
+      this.tables.authorizedMacs = UIComponents.createDataTable('authorized-macs', [
+        { field: 'mac', title: 'MAC' },
+        { field: 'placa', title: 'Placa' },
         {
-          title: 'Excluir',
-          icon: '<i class="fas fa-trash text-red-500"></i>',
-          className: 'text-red-500 hover:text-red-700',
-          onClick: (item) => this.deleteMac(item.mac)
+          field: 'data_adicao',
+          title: 'Data Adição',
+          render: (value) => UIComponents.formatDate(value)
         }
-      ]
-    });
+      ], [], {
+        rowActions: [
+          {
+            title: 'Excluir',
+            icon: '<i class="fas fa-trash text-red-500"></i>',
+            className: 'text-red-500 hover:text-red-700',
+            onClick: (item) => this.deleteMac(item.mac)
+          }
+        ]
+      });
+    } catch (error) {
+      console.error('Error initializing tables:', error);
+      this.addSystemLog('Erro ao inicializar tabelas: ' + error.message);
+    }
   }
 
   /**
@@ -271,13 +285,17 @@ class BarrierControlApp {
   initializeVehicleVisualization() {
     // Set initial position for vehicle marker (hidden)
     const vehicleMarker = document.getElementById('vehicle-marker');
-    vehicleMarker.style.display = 'none';
-    vehicleMarker.style.left = '50%';
-    vehicleMarker.style.top = '50%';
+    if (vehicleMarker) {
+      vehicleMarker.style.display = 'none';
+      vehicleMarker.style.left = '50%';
+      vehicleMarker.style.top = '50%';
+    }
 
     // Set initial position for direction indicator (hidden)
     const directionIndicator = document.getElementById('direction-indicator');
-    directionIndicator.style.display = 'none';
+    if (directionIndicator) {
+      directionIndicator.style.display = 'none';
+    }
   }
 
   /**
@@ -286,8 +304,13 @@ class BarrierControlApp {
   async loadInitialData() {
     try {
       // Show loading state
-      document.getElementById('system-status').classList.add('bg-yellow-500');
-      document.getElementById('status-text').textContent = 'Carregando...';
+      const systemStatus = document.getElementById('system-status');
+      const statusText = document.getElementById('status-text');
+
+      if (systemStatus && statusText) {
+        systemStatus.classList.add('bg-yellow-500');
+        statusText.textContent = 'Carregando...';
+      }
 
       // Get latest status
       const statusResponse = await apiClient.getLatestStatus();
@@ -302,17 +325,26 @@ class BarrierControlApp {
       await this.fetchMetrics();
 
       // Update UI
-      document.getElementById('system-status').classList.remove('bg-yellow-500');
-      document.getElementById('system-status').classList.add('bg-green-500');
-      document.getElementById('status-text').textContent = 'Operacional';
+      if (systemStatus && statusText) {
+        systemStatus.classList.remove('bg-yellow-500');
+        systemStatus.classList.add('bg-green-500');
+        statusText.textContent = 'Operacional';
+      }
 
       // Add log
       this.addSystemLog('Sistema inicializado com sucesso');
     } catch (error) {
       console.error('Failed to load initial data:', error);
-      document.getElementById('system-status').classList.remove('bg-yellow-500');
-      document.getElementById('system-status').classList.add('bg-red-500');
-      document.getElementById('status-text').textContent = 'Erro';
+
+      const systemStatus = document.getElementById('system-status');
+      const statusText = document.getElementById('status-text');
+
+      if (systemStatus && statusText) {
+        systemStatus.classList.remove('bg-yellow-500');
+        systemStatus.classList.add('bg-red-500');
+        statusText.textContent = 'Erro';
+      }
+
       this.addSystemLog('Erro ao carregar dados iniciais: ' + error.message);
     }
   }
@@ -322,71 +354,124 @@ class BarrierControlApp {
    */
   addEventListeners() {
     // Gate control buttons
-    document.getElementById('north-toggle').addEventListener('click', () => this.toggleGate('north'));
-    document.getElementById('south-toggle').addEventListener('click', () => this.toggleGate('south'));
+    const northToggle = document.getElementById('north-toggle');
+    const southToggle = document.getElementById('south-toggle');
+
+    if (northToggle) {
+      northToggle.addEventListener('click', () => this.toggleGate('north'));
+    }
+
+    if (southToggle) {
+      southToggle.addEventListener('click', () => this.toggleGate('south'));
+    }
 
     // MAC authorization form
-    document.getElementById('add-mac').addEventListener('click', this.addAuthorizedMac.bind(this));
+    const addMac = document.getElementById('add-mac');
+    if (addMac) {
+      addMac.addEventListener('click', this.addAuthorizedMac.bind(this));
+    }
 
     // MAC file upload
-    document.getElementById('mac-file').addEventListener('change', this.handleFileUpload.bind(this));
+    const macFile = document.getElementById('mac-file');
+    if (macFile) {
+      macFile.addEventListener('change', this.handleFileUpload.bind(this));
+    }
 
     // MAC download
-    document.getElementById('download-macs').addEventListener('click', this.downloadMacs.bind(this));
+    const downloadMacs = document.getElementById('download-macs');
+    if (downloadMacs) {
+      downloadMacs.addEventListener('click', this.downloadMacs.bind(this));
+    }
 
     // File instructions modal
-    document.getElementById('file-instructions').addEventListener('click', () => {
-      document.getElementById('instructions-modal').classList.remove('hidden');
-    });
+    const fileInstructions = document.getElementById('file-instructions');
+    const closeModal = document.getElementById('close-modal');
+    const instructionsModal = document.getElementById('instructions-modal');
 
-    document.getElementById('close-modal').addEventListener('click', () => {
-      document.getElementById('instructions-modal').classList.add('hidden');
-    });
+    if (fileInstructions && instructionsModal) {
+      fileInstructions.addEventListener('click', () => {
+        instructionsModal.classList.remove('hidden');
+      });
+    }
+
+    if (closeModal && instructionsModal) {
+      closeModal.addEventListener('click', () => {
+        instructionsModal.classList.add('hidden');
+      });
+    }
 
     // Simulation controls
-    document.getElementById('start-sim').addEventListener('click', this.startSimulation.bind(this));
-    document.getElementById('stop-sim').addEventListener('click', this.stopSimulation.bind(this));
+    const startSim = document.getElementById('start-sim');
+    const stopSim = document.getElementById('stop-sim');
+
+    if (startSim) {
+      startSim.addEventListener('click', this.startSimulation.bind(this));
+    }
+
+    if (stopSim) {
+      stopSim.addEventListener('click', this.stopSimulation.bind(this));
+    }
 
     // MAC search
-    document.getElementById('mac-search').addEventListener('input', (e) => {
-      this.state.searchTerm = e.target.value;
-      this.fetchAuthorizedMacs();
-    });
+    const macSearch = document.getElementById('mac-search');
+    if (macSearch) {
+      macSearch.addEventListener('input', (e) => {
+        this.state.searchTerm = e.target.value;
+        this.fetchAuthorizedMacs();
+      });
+    }
 
     // Pagination
-    document.getElementById('prev-page').addEventListener('click', () => {
-      if (this.state.currentPage > 1) {
-        this.state.currentPage--;
-        this.fetchAuthorizedMacs();
-      }
-    });
+    const prevPage = document.getElementById('prev-page');
+    const nextPage = document.getElementById('next-page');
 
-    document.getElementById('next-page').addEventListener('click', () => {
-      this.state.currentPage++;
-      this.fetchAuthorizedMacs();
-    });
+    if (prevPage) {
+      prevPage.addEventListener('click', () => {
+        if (this.state.currentPage > 1) {
+          this.state.currentPage--;
+          this.fetchAuthorizedMacs();
+        }
+      });
+    }
+
+    if (nextPage) {
+      nextPage.addEventListener('click', () => {
+        this.state.currentPage++;
+        this.fetchAuthorizedMacs();
+      });
+    }
 
     // MAC metrics
-    document.getElementById('mac-input').addEventListener('change', (e) => {
-      const mac = e.target.value;
-      if (mac) {
-        this.fetchMacMetrics(mac);
-      }
-    });
+    const macInput = document.getElementById('mac-input');
+    if (macInput) {
+      macInput.addEventListener('change', (e) => {
+        const mac = e.target.value;
+        if (mac) {
+          this.fetchMacMetrics(mac);
+        }
+      });
+    }
 
     // Connection change events
     window.addEventListener('connectionChange', (e) => {
       this.state.offlineMode = !e.detail.online;
 
+      const systemStatus = document.getElementById('system-status');
+      const statusText = document.getElementById('status-text');
+
       if (e.detail.online) {
-        document.getElementById('system-status').classList.remove('bg-red-500');
-        document.getElementById('system-status').classList.add('bg-green-500');
-        document.getElementById('status-text').textContent = 'Operacional';
+        if (systemStatus && statusText) {
+          systemStatus.classList.remove('bg-red-500');
+          systemStatus.classList.add('bg-green-500');
+          statusText.textContent = 'Operacional';
+        }
         this.addSystemLog('Conexão com o servidor restaurada');
       } else {
-        document.getElementById('system-status').classList.remove('bg-green-500');
-        document.getElementById('system-status').classList.add('bg-red-500');
-        document.getElementById('status-text').textContent = 'Offline';
+        if (systemStatus && statusText) {
+          systemStatus.classList.remove('bg-green-500');
+          systemStatus.classList.add('bg-red-500');
+          statusText.textContent = 'Offline';
+        }
         this.addSystemLog('Conexão com o servidor perdida. Modo offline ativado');
       }
     });
@@ -396,6 +481,12 @@ class BarrierControlApp {
       this.addSystemLog(`Erro na API (${e.detail.endpoint}): ${e.detail.message}`);
       UIComponents.showToast(`Erro: ${e.detail.message}`, 'error');
     });
+
+    // Logout button
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', this.logout.bind(this));
+    }
   }
 
   /**
@@ -421,7 +512,7 @@ class BarrierControlApp {
 
         // Update MAC-specific metrics if a MAC is selected
         const macInput = document.getElementById('mac-input');
-        if (macInput.value) {
+        if (macInput && macInput.value) {
           await this.fetchMacMetrics(macInput.value);
         }
       } catch (error) {
@@ -437,13 +528,26 @@ class BarrierControlApp {
     this.addSystemLog(`Novo evento: MAC ${e.mac}, Direção ${e.direcao}, Status ${e.status}`);
 
     // Update vehicle info
-    document.getElementById('vehicle-plate').textContent = e.placa || 'Desconhecida';
-    document.getElementById('vehicle-direction').textContent = e.direcao === 'NS' ? 'Norte → Sul' : 'Sul → Norte';
-    document.getElementById('vehicle-distance').textContent = e.distance ? `${e.distance} m` : '100 m';
-
-    // Update signal strength
+    const vehiclePlate = document.getElementById('vehicle-plate');
+    const vehicleDirection = document.getElementById('vehicle-direction');
+    const vehicleDistance = document.getElementById('vehicle-distance');
     const signalStrengthBar = document.getElementById('signal-strength');
-    signalStrengthBar.style.width = e.signal_strength ? `${e.signal_strength}%` : '80%';
+
+    if (vehiclePlate) {
+      vehiclePlate.textContent = e.placa || 'Desconhecida';
+    }
+
+    if (vehicleDirection) {
+      vehicleDirection.textContent = e.direcao === 'NS' ? 'Norte → Sul' : 'Sul → Norte';
+    }
+
+    if (vehicleDistance) {
+      vehicleDistance.textContent = e.distance ? `${e.distance} m` : '100 m';
+    }
+
+    if (signalStrengthBar) {
+      signalStrengthBar.style.width = e.signal_strength ? `${e.signal_strength}%` : '80%';
+    }
 
     // Update vehicle visualization
     this.updateVehicleVisualization(e.direcao, e.status);
@@ -453,7 +557,7 @@ class BarrierControlApp {
 
     // Update MAC-specific charts if this MAC is selected
     const macInput = document.getElementById('mac-input');
-    if (macInput.value === e.mac) {
+    if (macInput && macInput.value === e.mac) {
       this.fetchMacMetrics(e.mac);
     }
   }
@@ -495,25 +599,35 @@ class BarrierControlApp {
     const systemStatusEl = document.getElementById('system-status');
     const statusTextEl = document.getElementById('status-text');
 
-    if (data.system_status === 'operational') {
-      systemStatusEl.classList.remove('bg-red-500', 'bg-yellow-500');
-      systemStatusEl.classList.add('bg-green-500');
-      statusTextEl.textContent = 'Operacional';
-    } else if (data.system_status === 'warning') {
-      systemStatusEl.classList.remove('bg-red-500', 'bg-green-500');
-      systemStatusEl.classList.add('bg-yellow-500');
-      statusTextEl.textContent = 'Atenção';
-    } else {
-      systemStatusEl.classList.remove('bg-green-500', 'bg-yellow-500');
-      systemStatusEl.classList.add('bg-red-500');
-      statusTextEl.textContent = 'Erro';
+    if (systemStatusEl && statusTextEl) {
+      if (data.system_status === 'operational') {
+        systemStatusEl.classList.remove('bg-red-500', 'bg-yellow-500');
+        systemStatusEl.classList.add('bg-green-500');
+        statusTextEl.textContent = 'Operacional';
+      } else if (data.system_status === 'warning') {
+        systemStatusEl.classList.remove('bg-red-500', 'bg-green-500');
+        systemStatusEl.classList.add('bg-yellow-500');
+        statusTextEl.textContent = 'Atenção';
+      } else {
+        systemStatusEl.classList.remove('bg-green-500', 'bg-yellow-500');
+        systemStatusEl.classList.add('bg-red-500');
+        statusTextEl.textContent = 'Erro';
+      }
     }
 
     // Update latest log if available
     if (data.latest_log) {
       const log = data.latest_log;
-      document.getElementById('vehicle-plate').textContent = log.placa || 'Desconhecida';
-      document.getElementById('vehicle-direction').textContent = log.direcao === 'NS' ? 'Norte → Sul' : 'Sul → Norte';
+      const vehiclePlate = document.getElementById('vehicle-plate');
+      const vehicleDirection = document.getElementById('vehicle-direction');
+
+      if (vehiclePlate) {
+        vehiclePlate.textContent = log.placa || 'Desconhecida';
+      }
+
+      if (vehicleDirection) {
+        vehicleDirection.textContent = log.direcao === 'NS' ? 'Norte → Sul' : 'Sul → Norte';
+      }
     }
   }
 
@@ -523,6 +637,9 @@ class BarrierControlApp {
   updateGateUI(gate) {
     const gateEl = document.getElementById(`${gate}-gate`);
     const toggleBtn = document.getElementById(`${gate}-toggle`);
+
+    if (!gateEl || !toggleBtn) return;
+
     const state = this.state.barrierStatus[gate].state;
 
     if (state === 'open') {
@@ -550,6 +667,8 @@ class BarrierControlApp {
   updateVehicleVisualization(direction, status) {
     const vehicleMarker = document.getElementById('vehicle-marker');
     const directionIndicator = document.getElementById('direction-indicator');
+
+    if (!vehicleMarker || !directionIndicator) return;
 
     // Show vehicle marker
     vehicleMarker.style.display = 'flex';
@@ -641,8 +760,13 @@ class BarrierControlApp {
    * Add authorized MAC
    */
   async addAuthorizedMac() {
-    const mac = document.getElementById('mac-address').value;
-    const placa = document.getElementById('mac-plate').value;
+    const macAddress = document.getElementById('mac-address');
+    const macPlate = document.getElementById('mac-plate');
+
+    if (!macAddress || !macPlate) return;
+
+    const mac = macAddress.value;
+    const placa = macPlate.value;
 
     if (!mac || !placa) {
       UIComponents.showToast('Erro: MAC e placa são obrigatórios', 'error');
@@ -671,8 +795,8 @@ class BarrierControlApp {
         }
 
         // Clear form
-        document.getElementById('mac-address').value = '';
-        document.getElementById('mac-plate').value = '';
+        macAddress.value = '';
+        macPlate.value = '';
 
         // Refresh list
         await this.fetchAuthorizedMacs();
@@ -805,17 +929,21 @@ class BarrierControlApp {
         this.state.authorizedMacs = response.data.data;
 
         // Update table
-        this.tables.authorizedMacs.refresh(response.data.data);
+        if (this.tables.authorizedMacs) {
+          this.tables.authorizedMacs.refresh(response.data.data);
+        }
 
         // Update MAC datalist for metrics
         const macList = document.getElementById('mac-list');
-        macList.innerHTML = '';
-        response.data.data.forEach(mac => {
-          const option = document.createElement('option');
-          option.value = mac.mac;
-          option.textContent = `${mac.mac} (${mac.placa})`;
-          macList.appendChild(option);
-        });
+        if (macList) {
+          macList.innerHTML = '';
+          response.data.data.forEach(mac => {
+            const option = document.createElement('option');
+            option.value = mac.mac;
+            option.textContent = `${mac.mac} (${mac.placa})`;
+            macList.appendChild(option);
+          });
+        }
       } else {
         UIComponents.showToast(`Erro ao carregar MACs: ${response.error}`, 'error');
         this.addSystemLog(`Erro ao carregar MACs: ${response.error}`);
@@ -834,7 +962,7 @@ class BarrierControlApp {
     try {
       const response = await apiClient.getMetrics();
 
-      if (response.ok) {
+      if (response.ok && this.charts.daily && this.charts.weekly && this.charts.monthly) {
         // Update daily chart
         this.charts.daily.data.labels = response.data.daily.labels;
         this.charts.daily.data.datasets[0].data = response.data.daily.data;
@@ -864,7 +992,7 @@ class BarrierControlApp {
     try {
       const response = await apiClient.getMacMetrics(mac);
 
-      if (response.ok) {
+      if (response.ok && this.charts.macDaily && this.charts.macWeekly && this.charts.macMonthly) {
         // Update daily chart
         this.charts.macDaily.data.labels = response.data.daily.labels;
         this.charts.macDaily.data.datasets[0].data = response.data.daily.data;
@@ -896,19 +1024,32 @@ class BarrierControlApp {
       return;
     }
 
-    const plate = document.getElementById('sim-plate').value || 'ABC-1234';
-    const direction = document.getElementById('sim-direction').value;
+    const simPlate = document.getElementById('sim-plate');
+    const simDirection = document.getElementById('sim-direction');
+    const startSim = document.getElementById('start-sim');
+    const stopSim = document.getElementById('stop-sim');
+    const vehiclePlate = document.getElementById('vehicle-plate');
+    const vehicleDirection = document.getElementById('vehicle-direction');
+    const signalStrengthBar = document.getElementById('signal-strength');
+    const vehicleDistance = document.getElementById('vehicle-distance');
+
+    if (!simPlate || !simDirection || !startSim || !stopSim || !vehiclePlate || !vehicleDirection || !signalStrengthBar || !vehicleDistance) {
+      return;
+    }
+
+    const plate = simPlate.value || 'ABC-1234';
+    const direction = simDirection.value;
 
     this.state.simulationActive = true;
     this.addSystemLog(`Iniciando simulação: Placa ${plate}, Direção ${direction === 'north' ? 'Norte-Sul' : 'Sul-Norte'}`);
 
     // Update UI
-    document.getElementById('start-sim').disabled = true;
-    document.getElementById('stop-sim').disabled = false;
+    startSim.disabled = true;
+    stopSim.disabled = false;
 
     // Set vehicle info
-    document.getElementById('vehicle-plate').textContent = plate;
-    document.getElementById('vehicle-direction').textContent = direction === 'north' ? 'Norte → Sul' : 'Sul → Norte';
+    vehiclePlate.textContent = plate;
+    vehicleDirection.textContent = direction === 'north' ? 'Norte → Sul' : 'Sul → Norte';
 
     // Update vehicle visualization
     this.updateVehicleVisualization(
@@ -918,11 +1059,9 @@ class BarrierControlApp {
 
     // Simulate signal strength
     let signalStrength = 0;
-    const signalStrengthBar = document.getElementById('signal-strength');
 
     // Simulate distance
     let distance = 500;
-    const vehicleDistance = document.getElementById('vehicle-distance');
 
     // Create simulation interval
     this.state.currentSimulation = setInterval(() => {
@@ -934,25 +1073,24 @@ class BarrierControlApp {
       distance = Math.max(0, distance - 25);
       vehicleDistance.textContent = `${distance} m`;
 
-      // When vehicle is close enough, open the gate
-      if (distance <= 50 && distance > 0) {
-        const gate = direction === 'north' ? 'north' : 'south';
-
-        // Only open if not already open
-        if (this.state.barrierStatus[gate].state === 'closed') {
-          this.toggleGate(gate);
+      // When vehicle is close enough, open gate
+      if (distance <= 100) {
+        if (direction === 'north') {
+          this.state.barrierStatus.north = { state: 'open', lastUpdated: new Date() };
+          this.state.barrierStatus.south = { state: 'locked', lastUpdated: new Date() };
+        } else {
+          this.state.barrierStatus.south = { state: 'open', lastUpdated: new Date() };
+          this.state.barrierStatus.north = { state: 'locked', lastUpdated: new Date() };
         }
+        this.updateGateUI('north');
+        this.updateGateUI('south');
       }
 
-      // End simulation when vehicle has passed
+      // End simulation when vehicle reaches destination
       if (distance === 0) {
-        setTimeout(() => {
-          if (this.state.simulationActive) {
-            this.stopSimulation();
-          }
-        }, 2000);
+        this.stopSimulation();
       }
-    }, 500);
+    }, 200);
   }
 
   /**
@@ -967,26 +1105,37 @@ class BarrierControlApp {
       this.state.currentSimulation = null;
     }
 
-    // Update state
     this.state.simulationActive = false;
+    this.addSystemLog('Simulação finalizada');
 
     // Update UI
-    document.getElementById('start-sim').disabled = false;
-    document.getElementById('stop-sim').disabled = true;
-
-    // Reset vehicle visualization
+    const startSim = document.getElementById('start-sim');
+    const stopSim = document.getElementById('stop-sim');
     const vehicleMarker = document.getElementById('vehicle-marker');
     const directionIndicator = document.getElementById('direction-indicator');
-    vehicleMarker.style.display = 'none';
-    directionIndicator.style.display = 'none';
+    const vehicleDirection = document.getElementById('vehicle-direction');
+    const vehicleDistance = document.getElementById('vehicle-distance');
+    const signalStrengthBar = document.getElementById('signal-strength');
 
-    // Reset signal strength
-    document.getElementById('signal-strength').style.width = '0%';
+    if (startSim) startSim.disabled = false;
+    if (stopSim) stopSim.disabled = true;
 
-    // Reset distance
-    document.getElementById('vehicle-distance').textContent = '0 m';
+    // Hide vehicle marker and direction indicator
+    if (vehicleMarker) vehicleMarker.style.display = 'none';
+    if (directionIndicator) directionIndicator.style.display = 'none';
 
-    this.addSystemLog('Simulação encerrada');
+    // Reset vehicle info
+    if (vehicleDirection) vehicleDirection.textContent = 'Nenhuma';
+    if (vehicleDistance) vehicleDistance.textContent = '0 m';
+    if (signalStrengthBar) signalStrengthBar.style.width = '0%';
+
+    // Reset gates after 5 seconds
+    setTimeout(() => {
+      this.state.barrierStatus.north = { state: 'closed', lastUpdated: new Date() };
+      this.state.barrierStatus.south = { state: 'closed', lastUpdated: new Date() };
+      this.updateGateUI('north');
+      this.updateGateUI('south');
+    }, 5000);
   }
 
   /**
@@ -994,20 +1143,14 @@ class BarrierControlApp {
    */
   addSystemLog(message) {
     const systemLog = document.getElementById('system-log');
+    if (!systemLog) return;
+
+    const timestamp = UIComponents.formatDate(new Date(), 'HH:mm:ss');
     const logEntry = document.createElement('div');
-
-    // Format timestamp
-    const now = new Date();
-    const timestamp = UIComponents.formatDate(now, 'HH:mm:ss');
-
-    // Create log entry
     logEntry.className = 'text-gray-700';
     logEntry.innerHTML = `<span class="text-gray-500">[${timestamp}]</span> ${message}`;
 
-    // Add to log
     systemLog.appendChild(logEntry);
-
-    // Scroll to bottom
     systemLog.scrollTop = systemLog.scrollHeight;
 
     // Limit log entries
@@ -1017,7 +1160,7 @@ class BarrierControlApp {
   }
 }
 
-// Initialize application when DOM is ready
+// Initialize application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   window.app = new BarrierControlApp();
 });

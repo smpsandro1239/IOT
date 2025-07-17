@@ -1,0 +1,28 @@
+<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fundo azul -->
+  <rect width="512" height="512" fill="#2563eb"/>
+
+  <!-- Corpo do semáforo -->
+  <rect x="206" y="106" width="100" height="300" rx="20" fill="#1f2937"/>
+
+  <!-- Poste -->
+  <rect x="246" y="406" width="20" height="80" fill="#374151"/>
+
+  <!-- Base -->
+  <rect x="226" y="486" width="60" height="20" rx="10" fill="#374151"/>
+
+  <!-- Luz vermelha -->
+  <circle cx="256" cy="156" r="25" fill="#ef4444"/>
+  <circle cx="256" cy="156" r="20" fill="#fca5a5" opacity="0.8"/>
+
+  <!-- Luz amarela -->
+  <circle cx="256" cy="256" r="25" fill="#f59e0b"/>
+  <circle cx="256" cy="256" r="20" fill="#fcd34d" opacity="0.8"/>
+
+  <!-- Luz verde -->
+  <circle cx="256" cy="356" r="25" fill="#10b981"/>
+  <circle cx="256" cy="356" r="20" fill="#6ee7b7" opacity="0.8"/>
+
+  <!-- Brilho no corpo -->
+  <rect x="216" y="116" width="10" height="280" rx="5" fill="#ffffff" opacity="0.2"/>
+</svg>

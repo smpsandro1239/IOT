@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Criar Ícone</title>
+</head>
+<body>
+    <canvas id="canvas" width="144" height="144"></canvas>
+    <br>
+    <button onclick="downloadIcon()">Download Icon</button>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Desenhar ícone
+        function drawIcon() {
+            // Fundo azul
+            ctx.fillStyle = '#2563eb';
+            ctx.fillRect(0, 0, 144, 144);
+
+            // Semáforo
+            ctx.fillStyle = '#1f2937';
+            ctx.fillRect(52, 20, 40, 100);
+
+            // Luzes
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.arc(72, 40, 12, 0, 2 * Math.PI);
+            ctx.fill();
+
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.arc(72, 72, 12, 0, 2 * Math.PI);
+            ctx.fill();
+
+            ctx.fillStyle = '#10b981';
+            ctx.beginPath();
+            ctx.arc(72, 104, 12, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        function downloadIcon() {
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'icon-144x144.png';
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+        }
+
+        drawIcon();
+    </script>
+</body>
+</html>
