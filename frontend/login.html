@@ -134,33 +134,55 @@
                     // Mostrar no console os dados que estão sendo enviados
                     console.log('Enviando dados de login:', { email, password });
 
-                    // Usar URL absoluta para o backend
-                    const response = await fetch('http://localhost:8000/api/login', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({ email, password }),
-                        mode: 'cors'
-                    });
+                    // Fazer login diretamente usando XMLHttpRequest para evitar problemas com CORS e JSON
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', '/api/login/index.php', true);
+                    xhr.setRequestHeader('Content-Type', 'application/json');
+                    xhr.setRequestHeader('Accept', 'application/json');
 
-                    const data = await response.json();
+                    xhr.onload = function() {
+                        try {
+                            const data = JSON.parse(xhr.responseText);
+                            const response = { ok: xhr.status >= 200 && xhr.status < 300, status: xhr.status };
 
-                    if (response.ok) {
-                        // Store token
-                        localStorage.setItem('auth_token', data.token);
+                            if (response.ok) {
+                                // Store token
+                                localStorage.setItem('auth_token', data.token);
 
-                        // Store user info if remember is checked
-                        if (remember) {
-                            localStorage.setItem('user_email', email);
-                        } else {
-                            localStorage.removeItem('user_email');
+                                // Store user info if remember is checked
+                                if (remember) {
+                                    localStorage.setItem('user_email', email);
+                                } else {
+                                    localStorage.removeItem('user_email');
+                                }
+
+                                // Redirect to dashboard
+                                window.location.href = 'index.html';
+                            } else {
+                                // Show error message
+                                errorMessage.classList.remove('hidden');
+
+                                // Reset form state
+                                loginText.classList.remove('hidden');
+                                loginSpinner.classList.add('hidden');
+                                loginButton.disabled = false;
+                            }
+                        } catch (error) {
+                            console.error('Login error:', error);
+
+                            // Show error message
+                            errorMessage.classList.remove('hidden');
+
+                            // Reset form state
+                            loginText.classList.remove('hidden');
+                            loginSpinner.classList.add('hidden');
+                            loginButton.disabled = false;
                         }
+                    };
 
-                        // Redirect to dashboard
-                        window.location.href = 'index.html';
-                    } else {
+                    xhr.onerror = function() {
+                        console.error('Login error: Network error');
+
                         // Show error message
                         errorMessage.classList.remove('hidden');
 
@@ -168,7 +190,12 @@
                         loginText.classList.remove('hidden');
                         loginSpinner.classList.add('hidden');
                         loginButton.disabled = false;
-                    }
+                    };
+
+                    xhr.send(JSON.stringify({ email, password }));
+
+                    // Return early since we're handling the response in the callbacks
+                    return;
                 } catch (error) {
                     console.error('Login error:', error);
 

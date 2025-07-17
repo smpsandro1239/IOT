@@ -5,7 +5,7 @@
 
 // API Client class
 class ApiClient {
-  constructor(baseUrl = 'http://localhost:8000/api/v1') {
+  constructor(baseUrl = '/api/v1') {
     this.baseUrl = baseUrl;
     this.offlineMode = false;
     this.checkConnection();

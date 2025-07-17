@@ -31,6 +31,16 @@ class DevAuthMiddleware
       }
     }
 
+    // Para desenvolvimento, também aceitar qualquer token
+    if ($token) {
+      // Autenticar o primeiro usuário para desenvolvimento
+      $user = User::first();
+      if ($user) {
+        Auth::login($user);
+        return $next($request);
+      }
+    }
+
     // Se não houver token ou o token não for válido, retornar erro 401
     return response()->json(['message' => 'Unauthorized'], 401);
   }
