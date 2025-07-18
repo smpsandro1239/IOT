@@ -417,32 +417,90 @@ class UIComponents {
    * @returns {Object} - Chart instance
    */
   static createChart(canvasId, type, data, options = {}) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) return null;
+    console.log('Tentando criar gráfico:', canvasId);
 
-    // Default options based on chart type
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) {
+      console.error('Canvas não encontrado:', canvasId);
+      return null;
+    }
+
+    // Verificar se Chart.js está disponível
+    if (typeof Chart === 'undefined') {
+      console.error('Chart.js não está disponível');
+      return null;
+    }
+
+    // Default options para gráficos responsivos e contidos
     const defaultOptions = {
       responsive: true,
-      maintainAspectRatio: false,
+      maintainAspectRatio: false, // Permite que o gráfico se ajuste ao container
+      interaction: {
+        intersect: false,
+        mode: 'index'
+      },
       plugins: {
         legend: {
           position: 'top',
+          labels: {
+            boxWidth: 12,
+            padding: 15
+          }
         },
         tooltip: {
           mode: 'index',
           intersect: false,
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          titleColor: 'white',
+          bodyColor: 'white',
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+          borderWidth: 1
         }
+      },
+      scales: {
+        x: {
+          display: true,
+          grid: {
+            display: true,
+            color: 'rgba(0, 0, 0, 0.1)'
+          },
+          ticks: {
+            maxRotation: 45,
+            minRotation: 0
+          }
+        },
+        y: {
+          display: true,
+          beginAtZero: true,
+          grid: {
+            display: true,
+            color: 'rgba(0, 0, 0, 0.1)'
+          },
+          ticks: {
+            precision: 0 // Mostrar apenas números inteiros
+          }
+        }
+      },
+      animation: {
+        duration: 750,
+        easing: 'easeInOutQuart'
       }
     };
 
-    // Create chart
-    const chart = new Chart(canvas, {
-      type,
-      data,
-      options: { ...defaultOptions, ...options }
-    });
+    try {
+      // Create chart
+      const chart = new Chart(canvas, {
+        type,
+        data,
+        options: { ...defaultOptions, ...options }
+      });
 
-    return chart;
+      console.log('Gráfico criado com sucesso:', canvasId);
+      return chart;
+    } catch (error) {
+      console.error('Erro ao criar gráfico:', canvasId, error);
+      return null;
+    }
   }
 
   /**

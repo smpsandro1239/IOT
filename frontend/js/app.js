@@ -188,13 +188,23 @@ class BarrierControlApp {
    * Initialize charts
    */
   initializeCharts() {
+    console.log('Inicializando gráficos...');
+
+    // Verificar se Chart.js está disponível
+    if (typeof Chart === 'undefined') {
+      console.error('Chart.js não está disponível. Tentando novamente em 1 segundo...');
+      setTimeout(() => this.initializeCharts(), 1000);
+      return;
+    }
+
     try {
       // Daily access chart
+      console.log('Criando gráfico diário...');
       this.charts.daily = UIComponents.createChart('daily-chart', 'bar', {
-        labels: [],
+        labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
         datasets: [{
           label: 'Acessos',
-          data: [],
+          data: [2, 1, 4, 8, 6, 3],
           backgroundColor: 'rgba(59, 130, 246, 0.5)',
           borderColor: 'rgb(59, 130, 246)',
           borderWidth: 1
@@ -202,11 +212,12 @@ class BarrierControlApp {
       });
 
       // Weekly access chart
+      console.log('Criando gráfico semanal...');
       this.charts.weekly = UIComponents.createChart('weekly-chart', 'line', {
-        labels: [],
+        labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
         datasets: [{
           label: 'Acessos',
-          data: [],
+          data: [12, 19, 15, 25, 22, 8, 5],
           backgroundColor: 'rgba(16, 185, 129, 0.2)',
           borderColor: 'rgb(16, 185, 129)',
           borderWidth: 2,
@@ -216,11 +227,12 @@ class BarrierControlApp {
       });
 
       // Monthly access chart
+      console.log('Criando gráfico mensal...');
       this.charts.monthly = UIComponents.createChart('monthly-chart', 'bar', {
-        labels: [],
+        labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
         datasets: [{
           label: 'Acessos',
-          data: [],
+          data: [65, 59, 80, 81, 56, 72],
           backgroundColor: 'rgba(139, 92, 246, 0.5)',
           borderColor: 'rgb(139, 92, 246)',
           borderWidth: 1
@@ -509,6 +521,17 @@ class BarrierControlApp {
   }
 
   /**
+   * Logout user
+   */
+  logout() {
+    // Clear authentication token
+    localStorage.removeItem('auth_token');
+
+    // Redirect to login page
+    window.location.href = 'login.html';
+  }
+
+  /**
    * Set up periodic updates
    */
   setupPeriodicUpdates() {
@@ -524,15 +547,26 @@ class BarrierControlApp {
       }
     }, 30000);
 
-    // Update metrics every 5 minutes
+    // Controle para evitar atualizações excessivas dos gráficos
+    let lastMetricsUpdate = 0;
+    const METRICS_UPDATE_INTERVAL = 300000; // 5 minutos em milissegundos
+
+    // Update metrics every 5 minutes (controlled)
     setInterval(async () => {
       try {
-        await this.fetchMetrics();
+        const now = Date.now();
 
-        // Update MAC-specific metrics if a MAC is selected
-        const macInput = document.getElementById('mac-input');
-        if (macInput && macInput.value) {
-          await this.fetchMacMetrics(macInput.value);
+        // Só atualizar se já se passaram pelo menos 5 minutos desde a última atualização
+        if (now - lastMetricsUpdate >= METRICS_UPDATE_INTERVAL) {
+          console.log('Atualizando métricas...');
+          await this.fetchMetrics();
+          lastMetricsUpdate = now;
+
+          // Update MAC-specific metrics if a MAC is selected
+          const macInput = document.getElementById('mac-input');
+          if (macInput && macInput.value) {
+            await this.fetchMacMetrics(macInput.value);
+          }
         }
       } catch (error) {
         console.error('Failed to update metrics:', error);
@@ -978,24 +1012,43 @@ class BarrierControlApp {
    * Fetch metrics
    */
   async fetchMetrics() {
+    // Controle para evitar atualizacoes excessivas
+    const now = Date.now();
+    if (this._lastMetricsUpdate && (now - this._lastMetricsUpdate) < 60000) {
+      console.log("Ignorando atualizacao de metricas (muito frequente)");
+      return;
+    }
+    this._lastMetricsUpdate = now;
+    console.log("Atualizando métricas...");
     try {
       const response = await apiClient.getMetrics();
 
-      if (response.ok && this.charts.daily && this.charts.weekly && this.charts.monthly) {
-        // Update daily chart
-        this.charts.daily.data.labels = response.data.daily.labels;
-        this.charts.daily.data.datasets[0].data = response.data.daily.data;
-        this.charts.daily.update();
+      if (response.ok) {
+        console.log("Dados de métricas recebidos:", response.data);
 
-        // Update weekly chart
-        this.charts.weekly.data.labels = response.data.weekly.labels;
-        this.charts.weekly.data.datasets[0].data = response.data.weekly.data;
-        this.charts.weekly.update();
+        // Verificar se os gráficos existem, se não, criá-los
+        if (!this.charts.daily || !this.charts.weekly || !this.charts.monthly) {
+          this.initializeCharts();
+        }
 
-        // Update monthly chart
-        this.charts.monthly.data.labels = response.data.monthly.labels;
-        this.charts.monthly.data.datasets[0].data = response.data.monthly.data;
-        this.charts.monthly.update();
+        // Atualizar os dados dos gráficos existentes
+        if (this.charts.daily && response.data.daily) {
+          this.charts.daily.data.labels = response.data.daily.labels;
+          this.charts.daily.data.datasets[0].data = response.data.daily.data;
+          this.charts.daily.update('none'); // Atualizar sem animação para melhor performance
+        }
+
+        if (this.charts.weekly && response.data.weekly) {
+          this.charts.weekly.data.labels = response.data.weekly.labels;
+          this.charts.weekly.data.datasets[0].data = response.data.weekly.data;
+          this.charts.weekly.update('none'); // Atualizar sem animação para melhor performance
+        }
+
+        if (this.charts.monthly && response.data.monthly) {
+          this.charts.monthly.data.labels = response.data.monthly.labels;
+          this.charts.monthly.data.datasets[0].data = response.data.monthly.data;
+          this.charts.monthly.update('none'); // Atualizar sem animação para melhor performance
+        }
       } else {
         console.error('Failed to fetch metrics:', response.error);
       }

@@ -2,14 +2,14 @@
 const CACHE_NAME = 'barrier-control-v1';
 const urlsToCache = [
   './',
-  '../index.html',
-  '../login.html',
-  '../manifest.json',
-  '../css/tailwind-local.css',
-  '../js/app.js',
-  '../js/simulation.js',
-  '../js/api-client.js',
-  '../js/ui-components.js'
+  '.../index.html',
+  '.../login.html',
+  '.../manifest.json',
+  '.../css/tailwind-local.css',
+  '.../js/app.js',
+  '.../js/simulation.js',
+  '.../js/api-client.js',
+  '.../js/ui-components.js'
 ];
 
 // Install event - cache assets

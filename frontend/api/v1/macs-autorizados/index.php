@@ -31,6 +31,18 @@ $macs = [
     'mac' => '778899AABBCC',
     'placa' => 'GHI9012',
     'data_adicao' => '2025-07-17 09:15:00'
+  ],
+  [
+    'id' => 4,
+    'mac' => 'FFEEDDCCBBAA',
+    'placa' => 'JKL3456',
+    'data_adicao' => '2025-07-17 14:20:00'
+  ],
+  [
+    'id' => 5,
+    'mac' => '665544332211',
+    'placa' => 'MNO7890',
+    'data_adicao' => '2025-07-17 16:45:00'
   ]
 ];
 
@@ -53,13 +65,17 @@ switch ($_SERVER['REQUEST_METHOD']) {
     // Simular paginação
     $perPage = 10;
     $total = count($filteredMacs);
-    $lastPage = ceil($total / $perPage);
+    $lastPage = max(1, ceil($total / $perPage));
     $from = ($page - 1) * $perPage + 1;
     $to = min($from + $perPage - 1, $total);
 
+    if ($total === 0) {
+      $from = 0;
+    }
+
     // Retornar resposta paginada
     echo json_encode([
-      'data' => $filteredMacs,
+      'data' => array_values($filteredMacs),
       'meta' => [
         'current_page' => $page,
         'from' => $from,

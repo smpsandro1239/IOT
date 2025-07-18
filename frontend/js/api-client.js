@@ -5,7 +5,7 @@
 
 // API Client class
 class ApiClient {
-  constructor(baseUrl = '/api/v1') {
+  constructor(baseUrl = './api/v1') {
     this.baseUrl = baseUrl;
     this.offlineMode = false;
     this.checkConnection();
@@ -412,7 +412,7 @@ class ApiClient {
       console.log('Login attempt with:', email);
 
       // Use the simulated login endpoint directly
-      const response = await fetch('/api/login/index.php', {
+      const response = await fetch('./api/login/index.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

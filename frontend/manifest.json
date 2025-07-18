@@ -2,7 +2,7 @@
   "name": "Sistema de Controle de Barreiras IoT",
   "short_name": "Barreiras IoT",
   "description": "Sistema de controle de barreiras com detecção de direção LoRa",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",

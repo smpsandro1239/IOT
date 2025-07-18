@@ -27,3 +27,7 @@ composer.lock
 # NPM/Yarn
 package-lock.json
 yarn.lock
+# Laravel logs
+/storage/logs/*.log
+# Arquivos temporários Laravel
+/storage/framework/views/*.php
