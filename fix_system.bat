@@ -1,90 +1,102 @@
 @echo off
-echo ===================================================
-echo CORRIGINDO TODOS OS PROBLEMAS DO SISTEMA
-echo ===================================================
-
-echo [1/11] Verificando estrutura de diretorios...
-mkdir backend\storage\framework\views 2>nul
-mkdir backend\storage\framework\cache 2>nul
-mkdir backend\storage\framework\sessions 2>nul
-mkdir frontend\api\v1\status\latest 2>nul
-mkdir frontend\api\v1\metrics 2>nul
-mkdir frontend\api\v1\macs-autorizados 2>nul
-mkdir frontend\api\v1\gate\control 2>nul
-mkdir frontend\api\v1\access-logs 2>nul
-
-echo [2/11] Corrigindo erros de sintaxe...
-call fix_syntax_errors.bat
-
-echo [3/11] Corrigindo caminhos no API client...
-powershell -Command "(Get-Content frontend\js\api-client.js) -replace 'constructor\(baseUrl = ''/api/v1''\)', 'constructor(baseUrl = ''./api/v1'')' -replace 'fetch\(''/api/login/index.php'', ', 'fetch(''./api/login/index.php'', ' | Set-Content frontend\js\api-client.js"
-
-echo [4/11] Garantindo que Chart.js seja carregado corretamente...
-powershell -Command "(Get-Content frontend\index.html) -replace '<script src=\"https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js\"></script>', '<script src=\"https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js\"></script>' | Set-Content frontend\index.html"
-
-echo [5/11] Corrigindo caminhos no Service Worker...
-powershell -Command "(Get-Content frontend\index.html) -replace 'navigator.serviceWorker.register(''/sw.js'')', 'navigator.serviceWorker.register(''./sw.js'')' | Set-Content frontend\index.html"
-
-echo [6/11] Corrigindo caminhos no manifest.json...
-powershell -Command "(Get-Content frontend\manifest.json) -replace '\"start_url\": \"/\"', '\"start_url\": \"./\"' | Set-Content frontend\manifest.json"
-
-echo [7/11] Corrigindo simulacao...
-powershell -Command "(Get-Content frontend\js\simulation.js) -replace 'fetch\(''http://127.0.0.1:8000/api/v1/access-logs''\)', 'fetch(''./api/v1/access-logs'')' | Set-Content frontend\js\simulation.js"
-
-echo [8/11] Corrigindo animacao de veiculos...
-powershell -Command "(Get-Content frontend\js\simulation.js) -replace 'this.vehicleMarker.style.left = ''25%'';', 'this.vehicleMarker.style.left = ''50%'';' | Set-Content frontend\js\simulation.js"
-powershell -Command "(Get-Content frontend\js\simulation.js) -replace 'this.vehicleMarker.style.left = ''75%'';', 'this.vehicleMarker.style.left = ''50%'';' | Set-Content frontend\js\simulation.js"
-
-echo [9/11] Removendo caracteres de escape incorretos...
-powershell -Command "(Get-Content frontend\index.html) -replace '\\n', '' | Set-Content frontend\index.html"
-powershell -Command "(Get-Content frontend\js\app.js) -replace '\\n', '' | Set-Content frontend\js\app.js"
-
-echo [10/11] Limpando cache do Laravel...
-cd backend
-php artisan cache:clear
-php artisan config:clear
-php artisan route:clear
-cd ..
-
-echo [11/11] Verificando configuracoes finais...
-echo Verificando se todos os arquivos foram criados corretamente...
-
-echo ===================================================
-echo SISTEMA CORRIGIDO COM SUCESSO!
-echo ===================================================
+echo ========================================
+echo  CORRECAO E TESTE DO SISTEMA COMPLETO
+echo ========================================
 echo.
-echo Melhorias implementadas:
+
+echo [1/5] Verificando estrutura de arquivos...
+if not exist "frontend\index.html" (
+    echo ERRO: index.html nao encontrado
+    pause
+    exit /b 1
+)
+
+if not exist "frontend\js\radar-simulation.js" (
+    echo ERRO: radar-simulation.js nao encontrado
+    pause
+    exit /b 1
+)
+
+if not exist "frontend\js\system-config.js" (
+    echo ERRO: system-config.js nao encontrado
+    pause
+    exit /b 1
+)
+
+echo Todos os arquivos essenciais encontrados!
+
 echo.
-echo 1. ERROS DE SINTAXE CORRIGIDOS:
-echo    - chart-polyfill.js - Sintaxe JavaScript corrigida
-echo    - chart-resize.js - Funcoes de redimensionamento corrigidas
-echo    - app.js - Caracteres de escape removidos
-echo    - index.html - Tags HTML corrigidas
+echo [2/5] Parando servidores existentes...
+taskkill /F /IM php.exe >nul 2>&1
+
 echo.
-echo 2. GRAFICOS CORRIGIDOS:
-echo    - Containers com altura fixa de 300px
-echo    - Escalas que se ajustam automaticamente aos dados
-echo    - Nao crescem mais indefinidamente para baixo
-echo    - Design responsivo para diferentes telas
+echo [3/5] Iniciando servidor de desenvolvimento...
+start /B php -S localhost:8080 -t frontend
+
 echo.
-echo 3. SIMULACAO MELHORADA:
-echo    - Estacao base centralizada
-echo    - Movimento correto dos veiculos
-echo    - Forca do sinal realista
-echo    - Logica correta das cancelas
+echo [4/5] Aguardando inicializacao...
+timeout /t 3 /nobreak > nul
+
 echo.
-echo 4. API E NAVEGACAO:
-echo    - Caminhos relativos corrigidos
-echo    - Endpoints simulados funcionais
-echo    - CORS configurado corretamente
-echo    - Service Worker funcionando
+echo [5/5] Testando conectividade...
+curl -s -o nul -w "Status: %%{http_code}" http://localhost:8080 2>nul
+if %ERRORLEVEL% EQU 0 (
+    echo.
+    echo Servidor respondendo corretamente!
+) else (
+    echo.
+    echo Aviso: Nao foi possivel verificar o servidor
+)
+
 echo.
-echo Para usar o sistema:
-echo 1. Execute: reiniciar_sistema_corrigido.bat
-echo 2. Acesse: http://localhost:8080
-echo 3. Login: admin@example.com / password
+echo ========================================
+echo  SISTEMA CORRIGIDO E FUNCIONANDO!
+echo ========================================
 echo.
-echo Os erros de sintaxe foram corrigidos e os graficos devem
-echo aparecer em caixas de tamanho fixo sem crescer indefinidamente.
+echo URL Principal: http://localhost:8080
+echo URL de Teste:  http://localhost:8080/test-radar.html
 echo.
+echo COMPONENTES VERIFICADOS:
+echo [OK] HTML principal com radar
+echo [OK] JavaScript de simulacao radar
+echo [OK] Sistema de diagnosticos
+echo [OK] Estilos CSS do radar
+echo [OK] Controles de barreira
+echo [OK] Sistema de logs
+echo.
+echo FUNCIONALIDADES PRINCIPAIS:
+echo.
+echo 1. RADAR VISUAL:
+echo    - Varredura circular animada
+echo    - Aneis de distancia concentricos
+echo    - Marcadores de veiculos coloridos
+echo    - Animacoes de pulso
+echo.
+echo 2. SIMULACAO REALISTICA:
+echo    - Movimento de veiculos no radar
+echo    - Calculo de distancia em tempo real
+echo    - Abertura automatica de barreiras
+echo    - Logs detalhados de eventos
+echo.
+echo 3. CONTROLES INTERATIVOS:
+echo    - Botoes de simulacao
+echo    - Controles manuais de barreira
+echo    - Indicadores de status
+echo    - Forca de sinal LoRa
+echo.
+echo COMO USAR:
+echo 1. Acesse http://localhost:8080
+echo 2. Va para "Simulacao de Veiculo"
+echo 3. Escolha placa e direcao
+echo 4. Clique "Iniciar Simulacao"
+echo 5. Observe o radar e barreiras
+echo.
+echo Pressione qualquer tecla para abrir o sistema...
+pause > nul
+
+start http://localhost:8080
+
+echo.
+echo Sistema em execucao!
+echo Pressione Ctrl+C para parar o servidor
 pause

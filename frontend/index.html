@@ -110,6 +110,111 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Radar Visualization Styles */
+        .radar-scan {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            background: radial-gradient(circle, rgba(34,197,94,0.1) 0%, rgba(21,128,61,0.3) 100%);
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid #10B981;
+        }
+
+        .radar-center {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #10B981;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            box-shadow: 0 0 10px rgba(16,185,129,0.8);
+        }
+
+        .radar-line {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 50%;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(16,185,129,0) 0%, rgba(16,185,129,0.8) 90%);
+            transform-origin: left center;
+            animation: radar-scan 4s linear infinite;
+            z-index: 5;
+        }
+
+        .radar-vehicle {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #EF4444;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 8;
+            animation: pulse 2s infinite;
+        }
+
+        .radar-vehicle.authorized {
+            background: #10B981;
+        }
+
+        .radar-rings {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+        }
+
+        .radar-ring {
+            border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .radar-ring:nth-child(1) { width: 60px; height: 60px; }
+        .radar-ring:nth-child(2) { width: 120px; height: 120px; }
+        .radar-ring:nth-child(3) { width: 180px; height: 180px; }
+        .radar-ring:nth-child(4) { width: 240px; height: 240px; }
+        .radar-ring:nth-child(5) { width: 300px; height: 300px; }
+
+        @keyframes radar-scan {
+            0% { transform: translate(0, -50%) rotate(0deg); }
+            100% { transform: translate(0, -50%) rotate(360deg); }
+        }
+
+        .signal-strength-indicator {
+            position: relative;
+            width: 30px;
+            height: 20px;
+        }
+
+        .signal-bar {
+            position: absolute;
+            bottom: 0;
+            width: 4px;
+            background: #10B981;
+            border-radius: 2px;
+        }
+
+        .signal-bar-1 { height: 20%; left: 0; }
+        .signal-bar-2 { height: 40%; left: 6px; }
+        .signal-bar-3 { height: 60%; left: 12px; }
+        .signal-bar-4 { height: 80%; left: 18px; }
+        .signal-bar-5 { height: 100%; left: 24px; }
+
+        .active-signal .signal-bar {
+            background: #EF4444;
+        }
+
+
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -137,57 +242,48 @@
                     <i class="fas fa-car-side mr-2 text-blue-500"></i>Monitoramento de Veículos
                 </h2>
 
-                <!-- Road Visualization -->
-                <div class="relative bg-gray-200 rounded-lg p-4 h-64 mb-6 overflow-hidden">
-                    <!-- North-South Road -->
-                    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-full bg-gray-400"></div>
-
-                    <!-- South-North Road -->
-                    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-full h-1/3 bg-gray-400 rotate-90"></div>
-
-                    <!-- Gates -->
-                    <div id="north-gate" class="gate-animation absolute top-0 left-1/2 transform -translate-x-1/2 w-16 h-8 bg-red-600 rounded-t-lg flex justify-center items-center text-white font-bold">
-                        <i class="fas fa-lock"></i>
-                    </div>
-                    <div id="south-gate" class="gate-animation absolute bottom-0 left-1/2 transform -translate-x-1/2 w-16 h-8 bg-red-600 rounded-b-lg flex justify-center items-center text-white font-bold">
-                        <i class="fas fa-lock"></i>
-                    </div>
-
-                    <!-- Vehicle Markers -->
-                    <div id="vehicle-marker" class="vehicle-marker absolute w-12 h-6 bg-blue-600 rounded-lg flex justify-center items-center text-white">
-                        <i class="fas fa-car"></i>
-                    </div>
-
-                    <!-- Direction Indicators -->
-                    <div id="direction-indicator" class="absolute hidden">
-                        <i class="fas fa-arrow-up direction-arrow text-green-500 text-2xl"></i>
-                    </div>
-
-                    <!-- Base Station -->
-                    <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-gray-800 rounded-full flex flex-col justify-center items-center text-white">
-                        <i class="fas fa-broadcast-tower"></i>
-                        <span class="text-xs mt-1">Estação Base</span>
+                <!-- Radar Visualization -->
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-sm text-gray-600">Detecção LoRa 868MHz</span>
+                    <div class="signal-strength-indicator">
+                        <div class="signal-bar signal-bar-1"></div>
+                        <div class="signal-bar signal-bar-2"></div>
+                        <div class="signal-bar signal-bar-3"></div>
+                        <div class="signal-bar signal-bar-4"></div>
+                        <div class="signal-bar signal-bar-5"></div>
                     </div>
                 </div>
 
-                <!-- Vehicle Info -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <h3 class="font-semibold text-blue-800 mb-2">Placa do Veículo</h3>
-                        <div class="bg-white p-2 rounded text-center font-mono font-bold" id="vehicle-plate">ABC-1234</div>
+                <div class="radar-scan">
+                    <div class="radar-rings">
+                        <div class="radar-ring"></div>
+                        <div class="radar-ring"></div>
+                        <div class="radar-ring"></div>
+                        <div class="radar-ring"></div>
+                        <div class="radar-ring"></div>
                     </div>
-                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <h3 class="font-semibold text-blue-800 mb-2">Direção</h3>
-                        <div class="bg-white p-2 rounded text-center font-bold" id="vehicle-direction">Nenhuma</div>
+                    <div class="radar-center"></div>
+                    <div class="radar-line"></div>
+                    <!-- Vehicle markers will be added here by JavaScript -->
+                </div>
+
+                <div class="mt-4 grid grid-cols-2 gap-4">
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-gray-500">Veículos detectados</span>
+                            <span id="vehicle-count-display" class="text-xl font-bold text-green-600">0</span>
+                        </div>
                     </div>
-                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <h3 class="font-semibold text-blue-800 mb-2">Distância</h3>
-                        <div class="bg-white p-2 rounded text-center font-bold" id="vehicle-distance">0 m</div>
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-gray-500">Alcance máximo</span>
+                            <span class="text-xl font-bold text-blue-600">500m</span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Signal Strength -->
-                <div class="mt-6">
+                <div class="mb-4">
                     <h3 class="font-semibold text-gray-700 mb-2">Força do Sinal LoRa</h3>
                     <div class="h-4 bg-gray-200 rounded-full overflow-hidden">
                         <div id="signal-strength" class="h-full bg-green-500 signal-strength" style="width: 0%"></div>
@@ -196,6 +292,26 @@
                         <span>0m</span>
                         <span>250m</span>
                         <span>500m</span>
+                    </div>
+                </div>
+
+                <!-- Vehicle Info -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                        <h4 class="text-sm font-semibold text-blue-800 mb-1">Placa</h4>
+                        <div class="bg-white p-2 rounded text-center font-mono text-sm font-bold" id="vehicle-plate">---</div>
+                    </div>
+                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                        <h4 class="text-sm font-semibold text-blue-800 mb-1">MAC</h4>
+                        <div class="bg-white p-2 rounded text-center font-mono text-xs font-bold" id="vehicle-mac">---</div>
+                    </div>
+                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                        <h4 class="text-sm font-semibold text-blue-800 mb-1">Direção</h4>
+                        <div class="bg-white p-2 rounded text-center text-sm font-bold" id="vehicle-direction">---</div>
+                    </div>
+                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                        <h4 class="text-sm font-semibold text-blue-800 mb-1">Distância</h4>
+                        <div class="bg-white p-2 rounded text-center text-sm font-bold" id="vehicle-distance">0 m</div>
                     </div>
                 </div>
             </div>
@@ -209,27 +325,72 @@
                 <!-- System Status -->
                 <div class="mb-6">
                     <h3 class="font-semibold text-gray-700 mb-2">Status do Sistema</h3>
-                    <div class="flex items-center">
+                    <div class="flex items-center mb-2">
                         <div id="system-status" class="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
                         <span id="status-text" class="font-medium">Operacional</span>
+                    </div>
+
+                    <!-- Vehicle Info Display -->
+                    <div id="active-vehicle-info" class="hidden bg-blue-50 p-3 rounded-lg border border-blue-200">
+                        <h4 class="text-sm font-semibold text-blue-800 mb-2">Veículo Ativo:</h4>
+                        <div class="grid grid-cols-1 gap-2">
+                            <div class="flex justify-between">
+                                <span class="text-xs text-gray-600">Matrícula:</span>
+                                <span id="active-vehicle-plate" class="text-xs font-mono font-bold">---</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-xs text-gray-600">MAC:</span>
+                                <span id="active-vehicle-mac" class="text-xs font-mono font-bold">---</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-xs text-gray-600">Barreira:</span>
+                                <span id="active-vehicle-gate" class="text-xs font-bold">---</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Gate Controls -->
                 <div class="mb-6">
                     <h3 class="font-semibold text-gray-700 mb-3">Controle de Barreiras</h3>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 gap-4">
                         <div class="bg-gray-100 p-3 rounded-lg">
-                            <h4 class="text-sm font-medium text-gray-600 mb-2">Norte-Sul</h4>
-                            <button id="north-toggle" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition">
-                                <i class="fas fa-lock mr-1"></i> Fechada
-                            </button>
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="text-sm font-medium text-gray-600">Oeste → Leste</h4>
+                                <span id="west-status" class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Fechada</span>
+                            </div>
+                            <div class="text-center mb-3 p-2 bg-white rounded border">
+                                <div class="text-xs text-gray-500 mb-1">Último Acesso:</div>
+                                <div id="west-last-plate" class="font-mono text-sm font-bold text-gray-700">---</div>
+                                <div id="west-last-mac" class="font-mono text-xs text-gray-500">---</div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button id="west-open" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded-lg text-sm transition">
+                                    <i class="fas fa-unlock mr-1"></i>Abrir
+                                </button>
+                                <button id="west-close" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded-lg text-sm transition">
+                                    <i class="fas fa-lock mr-1"></i>Fechar
+                                </button>
+                            </div>
                         </div>
                         <div class="bg-gray-100 p-3 rounded-lg">
-                            <h4 class="text-sm font-medium text-gray-600 mb-2">Sul-Norte</h4>
-                            <button id="south-toggle" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition">
-                                <i class="fas fa-lock mr-1"></i> Fechada
-                            </button>
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="text-sm font-medium text-gray-600">Leste → Oeste</h4>
+                                <span id="east-status" class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Fechada</span>
+                            </div>
+                            <div class="text-center mb-3 p-2 bg-white rounded border">
+                                <div class="text-xs text-gray-500 mb-1">Último Acesso:</div>
+                                <div id="east-last-plate" class="font-mono text-sm font-bold text-gray-700">---</div>
+                                <div id="east-last-mac" class="font-mono text-xs text-gray-500">---</div>
+                            </div>
+     <div class="flex gap-2">
+                                <button id="east-open" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded-lg text-sm transition">
+                                    <i class="fas fa-unlock mr-1"></i>Abrir
+                                </button>
+                                <button id="east-close" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded-lg text-sm transition">
+                                    <i class="fas fa-lock mr-1"></i>Fechar
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -297,8 +458,8 @@ AABBCCDDEEFF,XYZ5678
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Direção</label>
                             <select id="sim-direction" class="w-full p-2 border rounded-lg">
-                                <option value="north">Norte-Sul</option>
-                                <option value="south">Sul-Norte</option>
+                                <option value="north">Oeste → Leste</option>
+                                <option value="south">Leste → Oeste</option>
                             </select>
                         </div>
                         <button id="start-sim" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition">
@@ -321,14 +482,20 @@ AABBCCDDEEFF,XYZ5678
                 <!-- Authorized MACs -->
                 <div class="mt-6">
                     <h3 class="font-semibold text-gray-700 mb-3">MACs Autorizados</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
+                        <input type="text" id="mac-search" class="p-2 border rounded-lg" placeholder="Pesquisar por MAC...">
+                        <input type="text" id="plate-search" class="p-2 border rounded-lg" placeholder="Pesquisar por Matrícula...">
+                    </div>
                     <div class="flex justify-between mb-2">
-                        <input type="text" id="mac-search" class="p-2 border rounded-lg" placeholder="Pesquisar MAC...">
+                        <div class="text-sm text-gray-500">
+                            <span id="search-results-count">0</span> resultados encontrados
+                        </div>
                         <div>
-                            <button id="prev-page" class="px-2 py-1 bg-blue-500 text-white rounded">Anterior</button>
-                            <button id="next-page" class="px-2 py-1 bg-blue-500 text-white rounded">Próximo</button>
+                            <button id="prev-page" class="px-2 py-1 bg-blue-500 text-white rounded text-sm">Anterior</button>
+                            <button id="next-page" class="px-2 py-1 bg-blue-500 text-white rounded text-sm">Próximo</button>
                         </div>
                     </div>
-                    <div id="authorized-macs" class="bg-gray-50 p-3 rounded-lg h-40 overflow-y-auto text-sm font-mono"></div>
+                    <div id="authorized-macs" class="bg-gray-50 p-3 rounded-lg h-40 overflow-y-auto text-sm"></div>
                 </div>
             </div>
         </div>
@@ -365,10 +532,17 @@ AABBCCDDEEFF,XYZ5678
             <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2 flex items-center">
                 <i class="fas fa-chart-pie mr-2 text-blue-500"></i>Métricas por MAC
             </h2>
-            <div class="flex items-center mb-4">
-                <label for="mac-input" class="mr-2">Selecionar MAC:</label>
-                <input type="text" id="mac-input" list="mac-list" class="p-2 border rounded-lg">
-                <datalist id="mac-list"></datalist>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label for="mac-input" class="block text-sm font-medium text-gray-700 mb-1">Selecionar por MAC:</label>
+                    <input type="text" id="mac-input" list="mac-list" class="w-full p-2 border rounded-lg" placeholder="Digite ou selecione um MAC">
+                    <datalist id="mac-list"></datalist>
+                </div>
+                <div>
+                    <label for="plate-input" class="block text-sm font-medium text-gray-700 mb-1">Selecionar por Matrícula:</label>
+                    <input type="text" id="plate-input" list="plate-list" class="w-full p-2 border rounded-lg" placeholder="Digite ou selecione uma matrícula">
+                    <datalist id="plate-list"></datalist>
+                </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
@@ -389,6 +563,137 @@ AABBCCDDEEFF,XYZ5678
                         <canvas id="mac-monthly-chart"></canvas>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- System Configuration -->
+        <div class="mt-8 bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2 flex items-center">
+                <i class="fas fa-cogs mr-2 text-blue-500"></i>Configuração do Sistema
+            </h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- LoRa Configuration -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Configurações LoRa</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Frequência</label>
+                            <select id="lora-frequency" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="868">868 MHz (Europa)</option>
+                                <option value="915">915 MHz (Américas)</option>
+                                <option value="433">433 MHz (Ásia)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Potência de Transmissão</label>
+                            <div class="space-y-2">
+                                <input type="range" id="lora-power" min="5" max="20" value="14" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                <div class="flex justify-between text-xs text-gray-500">
+                                    <span>5 dBm</span>
+                                    <span id="power-value" class="font-medium text-blue-600">14 dBm</span>
+                                    <span>20 dBm</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Spreading Factor</label>
+                            <select id="lora-sf" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="7">SF7 (Rápido, menor alcance)</option>
+                                <option value="8">SF8</option>
+                                <option value="9">SF9</option>
+                                <option value="10" selected>SF10 (Balanceado)</option>
+                                <option value="11">SF11</option>
+                                <option value="12">SF12 (Lento, maior alcance)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Bandwidth</label>
+                            <select id="lora-bw" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="7.8">7.8 kHz</option>
+                                <option value="10.4">10.4 kHz</option>
+                                <option value="15.6">15.6 kHz</option>
+                                <option value="20.8">20.8 kHz</option>
+                                <option value="31.25">31.25 kHz</option>
+                                <option value="41.7">41.7 kHz</option>
+                                <option value="62.5">62.5 kHz</option>
+                                <option value="125" selected>125 kHz</option>
+                                <option value="250">250 kHz</option>
+                                <option value="500">500 kHz</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Configuration -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Configurações de Segurança</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tempo de Bloqueio</label>
+                            <select id="block-time" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="1">1 minuto</option>
+                                <option value="3">3 minutos</option>
+                                <option value="5" selected>5 minutos</option>
+                                <option value="10">10 minutos</option>
+                                <option value="15">15 minutos</option>
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">Tempo que a barreira oposta permanece bloqueada</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Distância de Ativação</label>
+                            <div class="space-y-2">
+                                <input type="number" id="activation-distance" value="100" min="50" max="500" step="10" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <p class="text-xs text-gray-500">Distância em metros para abertura automática da barreira</p>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Alcance Máximo de Detecção</label>
+                            <div class="space-y-2">
+                                <input type="number" id="max-range" value="500" min="100" max="1000" step="50" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <p class="text-xs text-gray-500">Alcance máximo do radar em metros</p>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" id="auto-close" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                <span class="text-sm font-medium text-gray-700">Fechamento automático das barreiras</span>
+                            </label>
+                            <p class="text-xs text-gray-500 ml-6">Fechar automaticamente após passagem do veículo</p>
+                        </div>
+                        <div>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" id="emergency-mode" class="rounded border-gray-300 text-red-600 focus:ring-red-500">
+                                <span class="text-sm font-medium text-gray-700">Modo de Emergência</span>
+                            </label>
+                            <p class="text-xs text-gray-500 ml-6">Manter todas as barreiras abertas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configuration Actions -->
+            <div class="mt-8 pt-6 border-t border-gray-200">
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button id="save-config" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition duration-200 flex items-center justify-center">
+                        <i class="fas fa-save mr-2"></i>Salvar Configurações
+                    </button>
+                    <button id="reset-config" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 px-6 rounded-lg font-medium transition duration-200 flex items-center justify-center">
+                        <i class="fas fa-undo mr-2"></i>Restaurar Padrões
+                    </button>
+                    <button id="export-config" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-medium transition duration-200 flex items-center justify-center">
+                        <i class="fas fa-download mr-2"></i>Exportar Config
+                    </button>
+                </div>
+            </div>
+
+            <!-- Configuration Status -->
+            <div id="config-status" class="mt-4 p-4 rounded-lg bg-blue-50 border border-blue-200 hidden">
+                <div class="flex items-center">
+                    <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                    <span class="text-blue-800 font-medium">Status da Configuração</span>
+                </div>
+                <p id="config-message" class="text-blue-700 mt-1"></p>
             </div>
         </div>
 
@@ -456,7 +761,8 @@ AABBCCDDEEFF,XYZ5678
         }
     </script>
     <script src="js/app.js"></script>
-    <script src="js/simulation.js"></script>
+    <script src="js/radar-simulation.js"></script>
+    <script src="js/search-functionality.js"></script>
     <script src="js/chart-resize.js"></script>
     <script>
         // Register service worker
