@@ -68,18 +68,20 @@ class VehicleSimulation {
         this.vehicleMarker.style.display = 'flex';
 
         // Position vehicle marker based on direction
-        if (this.direction === 'north') {
+        // Norte → Sul: Veículo começa no norte (topo) e vai para o sul (baixo)
+        // Sul → Norte: Veículo começa no sul (baixo) e vai para o norte (topo)
+        if (this.direction === 'north') { // Norte → Sul
             this.vehicleMarker.style.left = '25%';
-            this.vehicleMarker.style.top = '10%';
+            this.vehicleMarker.style.top = '5%'; // Começa no topo (norte)
             this.directionIndicator.style.left = '25%';
-            this.directionIndicator.style.top = '5%';
-            this.directionIndicator.innerHTML = '<i class="fas fa-arrow-down direction-arrow text-green-500 text-2xl"></i>';
-        } else {
+            this.directionIndicator.style.top = '15%';
+            this.directionIndicator.innerHTML = '<i class="fas fa-arrow-down direction-arrow text-green-500 text-2xl"></i>'; // Seta para baixo
+        } else { // Sul → Norte
             this.vehicleMarker.style.left = '75%';
-            this.vehicleMarker.style.top = '90%';
+            this.vehicleMarker.style.top = '95%'; // Começa embaixo (sul)
             this.directionIndicator.style.left = '75%';
             this.directionIndicator.style.top = '85%';
-            this.directionIndicator.innerHTML = '<i class="fas fa-arrow-up direction-arrow text-green-500 text-2xl"></i>';
+            this.directionIndicator.innerHTML = '<i class="fas fa-arrow-up direction-arrow text-green-500 text-2xl"></i>'; // Seta para cima
         }
 
         // Show direction indicator
@@ -95,7 +97,7 @@ class VehicleSimulation {
         // Simulate sending data to backend
         try {
             const mac = this.simPlate.value.replace(/[^a-zA-Z0-9]/g, '');
-            const response = await fetch('http://127.0.0.1:8000/api/v1/access-logs', {
+            const response = await fetch('./api/v1/access-logs', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -175,10 +177,14 @@ class VehicleSimulation {
             }
 
             // Update vehicle marker position
-            if (this.direction === 'north') {
-                this.vehicleMarker.style.top = `${10 + (1 - this.position / 500) * 80}%`;
-            } else {
-                this.vehicleMarker.style.top = `${90 - (1 - this.position / 500) * 80}%`;
+            if (this.direction === 'north') { // Norte → Sul: movimento de cima para baixo
+                // Começa em 5% (topo) e vai até 85% (baixo) à medida que a distância diminui
+                const progress = 1 - (this.position / 500); // 0 no início, 1 no final
+                this.vehicleMarker.style.top = `${5 + progress * 80}%`;
+            } else { // Sul → Norte: movimento de baixo para cima
+                // Começa em 95% (baixo) e vai até 15% (topo) à medida que a distância diminui
+                const progress = 1 - (this.position / 500); // 0 no início, 1 no final
+                this.vehicleMarker.style.top = `${95 - progress * 80}%`;
             }
 
             // Update distance display
@@ -190,16 +196,21 @@ class VehicleSimulation {
 
             // Check for gate opening distance (100m)
             if (this.position <= 100 && window.gateStates) {
-                if (this.direction === 'north' && window.gateStates.north !== 'open') {
-                    window.gateStates.north = 'open';
-                    window.gateStates.south = 'locked';
-                    window.updateGates();
-                    this.addLog(`Barreira Norte-Sul aberta para veículo ${this.vehiclePlate.textContent}`);
-                } else if (this.direction === 'south' && window.gateStates.south !== 'open') {
+                // Corrigindo a lógica das barreiras:
+                // - Se a direção é 'north' (Norte → Sul), devemos abrir a barreira sul
+                // - Se a direção é 'south' (Sul → Norte), devemos abrir a barreira norte
+                if (this.direction === 'north' && window.gateStates.south !== 'open') {
+                    // Veículo indo de Norte para Sul, então abrimos a barreira sul
                     window.gateStates.south = 'open';
                     window.gateStates.north = 'locked';
                     window.updateGates();
-                    this.addLog(`Barreira Sul-Norte aberta para veículo ${this.vehiclePlate.textContent}`);
+                    this.addLog(`Barreira Sul aberta para veículo ${this.vehiclePlate.textContent} (direção Norte → Sul)`);
+                } else if (this.direction === 'south' && window.gateStates.north !== 'open') {
+                    // Veículo indo de Sul para Norte, então abrimos a barreira norte
+                    window.gateStates.north = 'open';
+                    window.gateStates.south = 'locked';
+                    window.updateGates();
+                    this.addLog(`Barreira Norte aberta para veículo ${this.vehiclePlate.textContent} (direção Sul → Norte)`);
                 }
             }
         }, 100);

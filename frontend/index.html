@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Controle de Barreiras IoT - LoRa</title>
     <link rel="stylesheet" href="css/tailwind-local.css">
+    <link rel="stylesheet" href="css/chart-styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="js/chart-polyfill.js"></script>
     <script>
         // Definir dateFns globalmente
         window.dateFns = {
@@ -338,15 +341,21 @@ AABBCCDDEEFF,XYZ5678
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                     <h3 class="text-lg font-semibold text-gray-800 mb-2">Acessos Diários</h3>
-                    <canvas id="daily-chart"></canvas>
+                    <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="daily-chart"></canvas>
+                    </div>
                 </div>
-                <div>
+                <div class="bg-gray-50 p-4 rounded-lg">
                     <h3 class="text-lg font-semibold text-gray-800 mb-2">Acessos Semanais</h3>
-                    <canvas id="weekly-chart"></canvas>
+                    <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="weekly-chart"></canvas>
+                    </div>
                 </div>
-                <div>
+                <div class="bg-gray-50 p-4 rounded-lg">
                     <h3 class="text-lg font-semibold text-gray-800 mb-2">Acessos Mensais</h3>
-                    <canvas id="monthly-chart"></canvas>
+                    <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="monthly-chart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -364,15 +373,21 @@ AABBCCDDEEFF,XYZ5678
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                     <h3 class="text-lg font-semibold text-gray-800 mb-2">Acessos Diários</h3>
-                    <canvas id="mac-daily-chart"></canvas>
+                    <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="mac-daily-chart"></canvas>
+                    </div>
                 </div>
-                <div>
+                <div class="bg-gray-50 p-4 rounded-lg">
                     <h3 class="text-lg font-semibold text-gray-800 mb-2">Acessos Semanais</h3>
-                    <canvas id="mac-weekly-chart"></canvas>
+                    <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="mac-weekly-chart"></canvas>
+                    </div>
                 </div>
-                <div>
+                <div class="bg-gray-50 p-4 rounded-lg">
                     <h3 class="text-lg font-semibold text-gray-800 mb-2">Acessos Mensais</h3>
-                    <canvas id="mac-monthly-chart"></canvas>
+                    <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="mac-monthly-chart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -422,15 +437,32 @@ AABBCCDDEEFF,XYZ5678
         </div>
     </div>
 
+    <script>
+        // Aguardar Chart.js carregar
+        document.addEventListener("DOMContentLoaded", function() {
+            if (typeof Chart === "undefined") {
+                console.error("Chart.js nao carregado");
+            } else {
+                console.log("Chart.js OK");
+            }
+        });
+    </script>
     <script src="js/api-client.js"></script>
     <script src="js/ui-components.js"></script>
+    <script>
+        // Garantir que o Chart.js está disponível globalmente
+        if (typeof Chart === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"><\/script>');
+        }
+    </script>
     <script src="js/app.js"></script>
     <script src="js/simulation.js"></script>
+    <script src="js/chart-resize.js"></script>
     <script>
         // Register service worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register('./sw.js')
                     .then(registration => {
                         console.log('Service Worker registered with scope:', registration.scope);
                     })
