@@ -430,7 +430,7 @@
             <button class="navbar-mobile-toggle" id="navbar-toggle">
                 <i class="fas fa-bars"></i>
             </button>
-            <div class="navbar-menu" id="navbar-menu">
+            <div class="navbar-menu" id="navbar-menu" data-user="Admin">
                 <a href="#dashboard" class="navbar-item active">
                     <i class="fas fa-tachometer-alt"></i>
                     <span>Painel Principal</span>
@@ -448,26 +448,31 @@
                     <span>Métricas</span>
                 </a>
             </div>
+            <div class="hidden md:flex items-center ml-4 space-x-4">
+                <div class="text-white text-sm">
+                    <i class="fas fa-user-circle mr-1"></i>
+                    <span id="user-name">Admin</span>
+                </div>
+                <button id="logout-btn" class="bg-white text-blue-600 hover:bg-blue-100 px-3 py-1 rounded-lg text-sm font-medium flex items-center">
+                    <i class="fas fa-sign-out-alt mr-1"></i> Sair
+                </button>
+            </div>
+            <!-- Mobile user info and logout (visible when menu is active) -->
+            <div class="mobile-user-info">
+                <i class="fas fa-user-circle mr-2"></i>
+                <span id="mobile-user-name">Admin</span>
+            </div>
+            <button id="mobile-logout-btn" class="mobile-logout-btn">
+                <i class="fas fa-sign-out-alt mr-2"></i> Sair
+            </button>
         </div>
     </nav>
     <div class="container mx-auto px-4 py-8">
-        <!-- Header -->
-        <header class="bg-blue-600 text-white rounded-lg shadow-lg p-6 mb-8">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                <div class="mb-4 md:mb-0">
-                    <h1 class="text-3xl font-bold"><i class="fas fa-traffic-light mr-2"></i>Sistema de Controlo de Barreiras</h1>
-                    <p class="text-blue-100">Deteção de direção com LoRa para abertura seletiva de barreiras</p>
-                </div>
-                <div>
-                    <button id="logout-btn" class="bg-white text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-lg font-medium flex items-center">
-                        <i class="fas fa-sign-out-alt mr-2"></i> Sair
-                    </button>
-                </div>
-            </div>
-        </header>
 
         <!-- Main Dashboard -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Dashboard Section -->
+        <div class="dashboard-section" id="dashboard">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Left Panel - Vehicle Detection -->
             <div class="bg-white rounded-lg shadow-lg p-6 lg:col-span-2">
                 <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2 flex items-center">
@@ -997,8 +1002,148 @@ AABBCCDDEEFF,XYZ5678
                 <span>Dados atualizados em tempo real</span>
             </div>
         </div>
+        </div>
 
-        <!-- MAC Metrics -->
+        <!-- MACs Autorizados Section -->
+        <div class="macs-section" id="macs" style="display: none;">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2 flex items-center">
+                <i class="fas fa-list-alt mr-2 text-blue-500"></i>Gestão de MACs Autorizados
+            </h2>
+
+            <!-- MAC Authorization -->
+            <div class="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-5 shadow-sm border border-blue-100">
+                <h3 class="font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-key mr-2 text-blue-600"></i>Adicionar MAC Autorizado
+                </h3>
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-blue-100">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Endereço MAC</label>
+                            <div class="flex">
+                                <span class="inline-flex items-center px-3 text-gray-500 bg-gray-100 border border-r-0 border-gray-300 rounded-l-md">
+                                    <i class="fas fa-microchip"></i>
+                                </span>
+                                <input type="text" id="mac-address" class="flex-1 p-2 border border-gray-300 rounded-r-md focus:ring-2 focus:ring-blue-500 focus:border-blue-300" placeholder="24A160123456">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Matrícula do Veículo</label>
+                            <div class="flex">
+                                <span class="inline-flex items-center px-3 text-gray-500 bg-gray-100 border border-r-0 border-gray-300 rounded-l-md">
+                                    <i class="fas fa-car"></i>
+                                </span>
+                                <input type="text" id="mac-plate" class="flex-1 p-2 border border-gray-300 rounded-r-md focus:ring-2 focus:ring-blue-500 focus:border-blue-300" placeholder="ABC-1234">
+                            </div>
+                        </div>
+                        <button id="add-mac" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg transition flex items-center justify-center">
+                            <i class="fas fa-plus-circle mr-2"></i> Adicionar MAC
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Authorized MACs -->
+            <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-5 shadow-sm border border-indigo-100">
+                <h3 class="font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-list-alt mr-2 text-indigo-600"></i>MACs Autorizados
+                </h3>
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-indigo-100">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-search text-gray-400"></i>
+                            </div>
+                            <input type="text" id="mac-search" class="pl-10 w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-300" placeholder="Pesquisar por MAC...">
+                        </div>
+                        <div class="relative">
+                            <select id="mac-filter" class="appearance-none w-full p-2 pl-10 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-300">
+                                <option value="all">Todos</option>
+                                <option value="active">Ativos</option>
+                                <option value="inactive">Inativos</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center px-3 text-gray-500">
+                                <i class="fas fa-filter"></i>
+                            </div>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="authorized-macs" class="bg-gray-50 border border-gray-200 rounded-lg h-48 overflow-y-auto text-sm shadow-inner"></div>
+
+                    <div class="mt-3 text-xs text-gray-500 flex items-center">
+                        <i class="fas fa-info-circle mr-1 text-indigo-500"></i>
+                        <span>Clique em um MAC para ver detalhes ou editar</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Config Section -->
+        <div class="config-section" id="config" style="display: none;">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2 flex items-center">
+                <i class="fas fa-cogs mr-2 text-blue-500"></i>Configuração do Sistema
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- LoRa Settings -->
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-blue-100">
+                    <h4 class="text-sm font-medium text-blue-700 border-b border-blue-100 pb-2 mb-3 flex items-center">
+                        <i class="fas fa-broadcast-tower mr-2"></i>Configurações LoRa
+                    </h4>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Frequência</label>
+                            <select id="lora-frequency" class="w-full text-sm border border-gray-300 rounded-md px-3 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-300 transition duration-200">
+                                <option value="868">868 MHz (Europa)</option>
+                                <option value="915">915 MHz (Américas)</option>
+                                <option value="433">433 MHz (Ásia)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Potência de Transmissão</label>
+                            <div class="flex items-center space-x-3">
+                                <span class="text-xs text-gray-500">5 dBm</span>
+                                <input type="range" id="lora-power" min="5" max="20" value="14" class="flex-1 h-2 bg-blue-100 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                                <span id="power-value" class="text-sm font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded-md">14 dBm</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Settings -->
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-blue-100">
+                    <h4 class="text-sm font-medium text-blue-700 border-b border-blue-100 pb-2 mb-3 flex items-center">
+                        <i class="fas fa-shield-alt mr-2"></i>Configurações de Segurança
+                    </h4>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tempo de Bloqueio</label>
+                            <select id="block-time" class="w-full text-sm border border-gray-300 rounded-md px-3 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-300 transition duration-200">
+                                <option value="1">1 minuto</option>
+                                <option value="3">3 minutos</option>
+                                <option value="5" selected>5 minutos</option>
+                                <option value="10">10 minutos</option>
+                                <option value="15">15 minutos</option>
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1 italic">Tempo que a barreira oposta permanece bloqueada</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metrics Section -->
+        <div class="metrics-section" id="metrics" style="display: none;">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2 flex items-center">
+                <i class="fas fa-chart-line mr-2 text-blue-500"></i>Métricas do Sistema
+            </h2>
+
+            <!-- MAC Metrics -->
         <div class="mt-8 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-6 shadow-md border border-purple-100"></div>
             <h2 class="text-2xl font-bold text-gray-800 mb-5 border-b border-purple-100 pb-3 flex items-center">
                 <i class="fas fa-chart-pie mr-3 text-purple-600"></i>Métricas por MAC
@@ -1137,6 +1282,42 @@ AABBCCDDEEFF,XYZ5678
     <script src="js/chart-resize.js?v=9538"></script>
     <script src="js/responsive-layout.js"></script>
     <script src="js/navbar.js"></script>
+
+    <script>
+        // Ensure navbar works correctly with hash changes
+        window.addEventListener('hashchange', function() {
+            const hash = window.location.hash || '#dashboard';
+            const sectionId = hash.substring(1);
+
+            // Update active nav item
+            const navbarItems = document.querySelectorAll('.navbar-item');
+            navbarItems.forEach(item => {
+                if (item.getAttribute('href') === hash) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+
+            // Show correct section
+            const sections = {
+                'dashboard': document.querySelector('.dashboard-section'),
+                'macs': document.querySelector('.macs-section'),
+                'config': document.querySelector('.config-section'),
+                'metrics': document.querySelector('.metrics-section')
+            };
+
+            Object.values(sections).forEach(section => {
+                if (section) {
+                    section.style.display = 'none';
+                }
+            });
+
+            if (sections[sectionId]) {
+                sections[sectionId].style.display = 'block';
+            }
+        });
+    </script>
     <script>
         // Force cache refresh
         function forceRefresh() {
