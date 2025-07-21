@@ -6,9 +6,210 @@
     <title>Sistema de Controle de Barreiras IoT - LoRa</title>
     <link rel="stylesheet" href="css/tailwind-local.css">
     <link rel="stylesheet" href="css/chart-styles.css">
+    <link rel="stylesheet" href="css/responsive-layout.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    <script src="js/chart-polyfill.js"></script>
+    <script src="js/cache-buster.js"></script>
+    <script src="js/chart-polyfill.js?v=13474"></script>
+    <!-- Meta tags para responsividade -->
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+
+    <!-- Estilos adicionais para responsividade -->
+    <style>
+        /* Responsividade para dispositivos móveis */
+        @media (max-width: 640px) {
+            .container {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+                max-width: 100% !important;
+            }
+
+            .radar-scan {
+                height: 250px;
+            }
+
+            .chart-container {
+                height: 200px !important;
+            }
+
+            h2 {
+                font-size: 1.25rem;
+            }
+
+            h3 {
+                font-size: 1rem;
+            }
+
+            .py-8 {
+                padding-top: 1rem;
+                padding-bottom: 1rem;
+            }
+
+            .p-6 {
+                padding: 1rem;
+            }
+
+            .p-5 {
+                padding: 0.75rem;
+            }
+
+            .p-4 {
+                padding: 0.75rem;
+            }
+
+            .gap-8 {
+                gap: 1rem;
+            }
+
+            .gap-6 {
+                gap: 0.75rem;
+            }
+
+            .mb-8 {
+                margin-bottom: 1rem;
+            }
+
+            .mt-8 {
+                margin-top: 1rem;
+            }
+
+            .rounded-xl {
+                border-radius: 0.5rem;
+            }
+        }
+
+        /* Responsividade para tablets */
+        @media (max-width: 768px) {
+            .lg\:col-span-2 {
+                grid-column: span 1 / span 1;
+            }
+
+            .grid-cols-1 {
+                grid-template-columns: repeat(1, minmax(0, 1fr));
+            }
+
+            .md\:grid-cols-2, .md\:grid-cols-3, .md\:grid-cols-4 {
+                grid-template-columns: repeat(1, minmax(0, 1fr));
+            }
+
+            .md\:flex-row {
+                flex-direction: column;
+            }
+
+            .md\:mb-0 {
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        /* Responsividade para telas médias */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .container {
+                max-width: 95% !important;
+            }
+
+            .lg\:col-span-2 {
+                grid-column: span 2 / span 2;
+            }
+
+            .md\:grid-cols-3 {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .gap-8 {
+                gap: 1.5rem;
+            }
+        }
+
+        /* Responsividade para telas grandes */
+        @media (min-width: 1025px) {
+            .container {
+                max-width: 1400px !important;
+            }
+        }
+
+        /* Layout principal mais semelhante à imagem */
+        .container {
+            max-width: 1400px;
+        }
+
+        /* Melhorias visuais gerais */
+        .card {
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Melhorias para o radar */
+        .radar-scan {
+            box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.2);
+        }
+
+        /* Melhorias para os inputs */
+        input:focus, select:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Melhorias para os botões */
+        button {
+            transition: all 0.2s ease;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* Melhorias para os gráficos */
+        .chart-container {
+            transition: all 0.3s ease;
+        }
+
+        /* Animação suave para transições */
+        * {
+            transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+        }
+
+        /* Melhorias para o scroll */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c5c5c5;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        /* Melhorias para impressão */
+        @media print {
+            .no-print {
+                display: none;
+            }
+
+            body {
+                font-size: 12pt;
+            }
+
+            .container {
+                width: 100%;
+                max-width: none;
+            }
+        }
+    </style>
     <script>
         // Definir dateFns globalmente
         window.dateFns = {
@@ -898,22 +1099,59 @@ AABBCCDDEEFF,XYZ5678
             document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"><\/script>');
         }
     </script>
-    <script src="js/app.js"></script>
-    <script src="js/radar-simulation.js"></script>
-    <script src="js/search-functionality.js"></script>
-    <script src="js/system-configuration.js"></script>
-    <script src="js/chart-resize.js"></script>
+    <script src="js/app.js?v=26529"></script>
+    <script src="js/radar-simulation.js?v=28493"></script>
+    <script src="js/search-functionality.js?v=383"></script>
+    <script src="js/system-configuration.js?v=28091"></script>
+    <script src="js/chart-resize.js?v=9538"></script>
+    <script src="js/responsive-layout.js"></script>
     <script>
+        // Force cache refresh
+        function forceRefresh() {
+            // Add timestamp to force cache refresh
+            const timestamp = new Date().getTime();
+            const links = document.getElementsByTagName('link');
+            const scripts = document.getElementsByTagName('script');
+
+            // Update CSS links
+            for (let i = 0; i < links.length; i++) {
+                if (links[i].rel === 'stylesheet') {
+                    links[i].href = links[i].href.split('?')[0] + '?v=' + timestamp;
+                }
+            }
+
+            // Update JS scripts
+            for (let i = 0; i < scripts.length; i++) {
+                if (scripts[i].src && !scripts[i].src.includes('cdn')) {
+                    scripts[i].src = scripts[i].src.split('?')[0] + '?v=' + timestamp;
+                }
+            }
+
+            console.log('Cache refresh forced at:', new Date().toLocaleTimeString());
+        }
+
+        // Run on page load
+        window.addEventListener('load', forceRefresh);
+
         // Register service worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(registration => {
-                        console.log('Service Worker registered with scope:', registration.scope);
-                    })
-                    .catch(error => {
-                        console.error('Service Worker registration failed:', error);
-                    });
+                // Unregister any existing service workers first
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    for(let registration of registrations) {
+                        registration.unregister();
+                        console.log('Service Worker unregistered');
+                    }
+
+                    // Then register the new one
+                    navigator.serviceWorker.register('./sw.js?v=' + new Date().getTime())
+                        .then(registration => {
+                            console.log('Service Worker registered with scope:', registration.scope);
+                        })
+                        .catch(error => {
+                            console.error('Service Worker registration failed:', error);
+                        });
+                });
             });
         }
 

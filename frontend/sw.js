@@ -1,36 +1,55 @@
-// Service Worker for IoT Barrier Control System
-const CACHE_NAME = 'barrier-control-v1';
-const urlsToCache = [
+// Service Worker para Sistema de Controle de Barreiras IoT
+const CACHE_NAME = 'radar-system-cache-v' + new Date().getTime();
+const OFFLINE_URL = 'offline.html';
+
+// Arquivos para cache
+const CACHE_ASSETS = [
   './',
-  '.../index.html',
-  '.../login.html',
-  '.../manifest.json',
-  '.../css/tailwind-local.css',
-  '.../js/app.js',
-  '.../js/simulation.js',
-  '.../js/api-client.js',
-  '.../js/ui-components.js'
+  './index.html',
+  './css/tailwind-local.css',
+  './css/chart-styles.css',
+  './js/chart-polyfill.js',
+  './js/api-client.js',
+  './js/ui-components.js',
+  './js/app.js',
+  './js/radar-simulation.js',
+  './js/search-functionality.js',
+  './js/system-configuration.js',
+  './js/chart-resize.js',
+  './manifest.json',
+  './offline.html'
 ];
 
-// Install event - cache assets
+// Instalação do Service Worker
 self.addEventListener('install', event => {
+  console.log('[Service Worker] Instalando...');
+
+  // Forçar o service worker a se tornar ativo imediatamente
+  self.skipWaiting();
+
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Cache opened');
-        return cache.addAll(urlsToCache);
+        console.log('[Service Worker] Cacheando arquivos');
+        return cache.addAll(CACHE_ASSETS);
       })
   );
 });
 
-// Activate event - clean up old caches
+// Ativação do Service Worker
 self.addEventListener('activate', event => {
-  const cacheWhitelist = [CACHE_NAME];
+  console.log('[Service Worker] Ativando...');
+
+  // Tomar controle de todas as páginas imediatamente
+  self.clients.claim();
+
+  // Remover caches antigos
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
+          if (cacheName !== CACHE_NAME) {
+            console.log('[Service Worker] Removendo cache antigo:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -39,173 +58,117 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch event - serve from cache, fall back to network
+// Interceptação de requisições
 self.addEventListener('fetch', event => {
-  // Skip cross-origin requests and API calls
-  if (event.request.url.includes('/api/') ||
-      !event.request.url.startsWith(self.location.origin) ||
-      event.request.url.includes('pusher') ||
-      event.request.url.includes('echo')) {
-    return;
-  }
+  // Verificar se a requisição é para um arquivo de API
+  if (event.request.url.includes('/api/')) {
+    // Para APIs, sempre buscar da rede primeiro
+    event.respondWith(
+      fetch(event.request)
+        .catch(() => {
+          // Se falhar, tentar do cache
+          return caches.match(event.request)
+            .then(cachedResponse => {
+              if (cachedResponse) {
+                return cachedResponse;
+              }
+              // Se não estiver no cache, retornar página offline
+              return caches.match(OFFLINE_URL);
+            });
+        })
+    );
+  } else {
+    // Para arquivos estáticos, verificar se há parâmetro de versão
+    const url = new URL(event.request.url);
+    const hasVersionParam = url.search.includes('v=');
 
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Cache hit - return response
-        if (response) {
-          return response;
-        }
+    if (hasVersionParam) {
+      // Se tem parâmetro de versão, buscar da rede e atualizar o cache
+      event.respondWith(
+        fetch(event.request)
+          .then(response => {
+            // Clonar a resposta para poder usá-la duas vezes
+            const responseClone = response.clone();
 
-        // Clone the request
-        const fetchRequest = event.request.clone();
-
-        return fetch(fetchRequest).then(
-          response => {
-            // Check if valid response
-            if(!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-
-            // Clone the response
-            const responseToCache = response.clone();
-
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                cache.put(event.request, responseToCache);
-              });
+            // Atualizar o cache
+            caches.open(CACHE_NAME).then(cache => {
+              // Armazenar a resposta sem o parâmetro de versão
+              const cacheUrl = new URL(event.request.url);
+              cacheUrl.search = '';
+              cache.put(new Request(cacheUrl.toString()), responseClone);
+            });
 
             return response;
-          }
-        );
+          })
+          .catch(() => {
+            // Se falhar, tentar do cache
+            return caches.match(event.request);
+          })
+      );
+    } else {
+      // Para requisições sem parâmetro de versão, usar estratégia cache-first
+      event.respondWith(
+        caches.match(event.request)
+          .then(cachedResponse => {
+            // Retornar do cache se disponível
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+
+            // Se não estiver no cache, buscar da rede
+            return fetch(event.request)
+              .then(response => {
+                // Clonar a resposta para poder usá-la duas vezes
+                const responseClone = response.clone();
+
+                // Atualizar o cache
+                caches.open(CACHE_NAME).then(cache => {
+                  cache.put(event.request, responseClone);
+                });
+
+                return response;
+              })
+              .catch(() => {
+                // Se falhar, retornar página offline para navegação
+                if (event.request.mode === 'navigate') {
+                  return caches.match(OFFLINE_URL);
+                }
+
+                // Para outros recursos, retornar erro 404
+                return new Response('Recurso não disponível offline', {
+                  status: 404,
+                  statusText: 'Not Found'
+                });
+              });
+          })
+      );
+    }
+  }
+});
+
+// Evento de mensagem para limpar o cache
+self.addEventListener('message', event => {
+  if (event.data && event.data.action === 'CLEAR_CACHE') {
+    console.log('[Service Worker] Limpando cache por solicitação');
+
+    event.waitUntil(
+      caches.keys().then(cacheNames => {
+        return Promise.all(
+          cacheNames.map(cacheName => {
+            return caches.delete(cacheName);
+          })
+        ).then(() => {
+          // Notificar cliente que o cache foi limpo
+          self.clients.matchAll().then(clients => {
+            clients.forEach(client => {
+              client.postMessage({
+                action: 'CACHE_CLEARED',
+                timestamp: new Date().getTime()
+              });
+            });
+          });
+        });
       })
-  );
-});
-
-// Background sync for offline data
-self.addEventListener('sync', event => {
-  if (event.tag === 'sync-access-logs') {
-    event.waitUntil(syncAccessLogs());
-  } else if (event.tag === 'sync-mac-auth') {
-    event.waitUntil(syncMacAuth());
+    );
   }
 });
-
-// Function to sync access logs when back online
-async function syncAccessLogs() {
-  try {
-    const db = await openDB();
-    const transaction = db.transaction('offlineAccessLogs', 'readonly');
-    const store = transaction.objectStore('offlineAccessLogs');
-    const offlineLogs = await store.getAll ? store.getAll() : getAllFromStore(store);
-
-    if (!offlineLogs || offlineLogs.length === 0) return;
-
-    for (const log of offlineLogs) {
-      try {
-        const response = await fetch('./api/v1/access-logs', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-          },
-          body: JSON.stringify(log)
-        });
-
-        if (response.ok) {
-          const deleteTransaction = db.transaction('offlineAccessLogs', 'readwrite');
-          const deleteStore = deleteTransaction.objectStore('offlineAccessLogs');
-          await deleteStore.delete(log.id);
-        }
-      } catch (error) {
-        console.error('Failed to sync log:', error);
-      }
-    }
-  } catch (error) {
-    console.error('Error in syncAccessLogs:', error);
-  }
-}
-
-// Helper function to get all items from a store that doesn't support getAll
-function getAllFromStore(store) {
-  return new Promise((resolve, reject) => {
-    const items = [];
-    const request = store.openCursor();
-
-    request.onsuccess = function(event) {
-      const cursor = event.target.result;
-      if (cursor) {
-        items.push(cursor.value);
-        cursor.continue();
-      } else {
-        resolve(items);
-      }
-    };
-
-    request.onerror = function(event) {
-      reject(event.target.error);
-    };
-  });
-}
-
-// Function to sync MAC authorizations when back online
-async function syncMacAuth() {
-  try {
-    const db = await openDB();
-    const transaction = db.transaction('offlineMacAuth', 'readonly');
-    const store = transaction.objectStore('offlineMacAuth');
-    const offlineMacs = await store.getAll ? store.getAll() : getAllFromStore(store);
-
-    if (!offlineMacs || offlineMacs.length === 0) return;
-
-    for (const mac of offlineMacs) {
-      try {
-        const response = await fetch('./api/v1/macs-autorizados', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-          },
-          body: JSON.stringify(mac)
-        });
-
-        if (response.ok) {
-          const deleteTransaction = db.transaction('offlineMacAuth', 'readwrite');
-          const deleteStore = deleteTransaction.objectStore('offlineMacAuth');
-          await deleteStore.delete(mac.id);
-        }
-      } catch (error) {
-        console.error('Failed to sync MAC:', error);
-      }
-    }
-  } catch (error) {
-    console.error('Error in syncMacAuth:', error);
-  }
-}
-
-// Helper function to open IndexedDB
-function openDB() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open('BarrierControlDB', 1);
-
-    request.onerror = event => {
-      reject('IndexedDB error: ' + event.target.errorCode);
-    };
-
-    request.onsuccess = event => {
-      resolve(event.target.result);
-    };
-
-    request.onupgradeneeded = event => {
-      const db = event.target.result;
-
-      if (!db.objectStoreNames.contains('offlineAccessLogs')) {
-        db.createObjectStore('offlineAccessLogs', { keyPath: 'id', autoIncrement: true });
-      }
-
-      if (!db.objectStoreNames.contains('offlineMacAuth')) {
-        db.createObjectStore('offlineMacAuth', { keyPath: 'id', autoIncrement: true });
-      }
-    };
-  });
-}
