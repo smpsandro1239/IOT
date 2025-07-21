@@ -847,6 +847,11 @@ class BarrierControlApp {
           this.addSystemLog(`MAC ${mac} adicionado com sucesso`);
         }
 
+        // Add to search manager for immediate availability
+        if (window.searchManager) {
+          window.searchManager.addVehicle(mac, placa);
+        }
+
         // Clear form
         macAddress.value = '';
         macPlate.value = '';

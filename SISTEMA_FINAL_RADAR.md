@@ -25,6 +25,7 @@ Este é o sistema final implementado e aprovado, com radar circular e todas as f
   - Distância em tempo real
 - **Força de sinal LoRa** com barra visual
 - **Contador de veículos** detectados
+- **Configuração do Sistema** posicionada estrategicamente após as informações do veículo
 
 ### 3. 🚧 **Controles de Barreira Inteligentes**
 - **Seção "Veículo Ativo"** no centro dos controles
@@ -43,7 +44,24 @@ Este é o sistema final implementado e aprovado, com radar circular e todas as f
 - **Resultados paginados** com contador
 - **Integração bidirecional** (selecionar MAC preenche matrícula e vice-versa)
 
-### 5. 📝 **Sistema de Logs Detalhado**
+### 5. ⚙️ **Sistema de Configuração Avançado**
+- **Configurações LoRa**:
+  - Frequência (868/915/433 MHz)
+  - Potência de transmissão (5-20 dBm)
+  - Spreading Factor (SF7-SF12)
+  - Bandwidth (7.8 kHz - 500 kHz)
+- **Configurações de Segurança**:
+  - Tempo de bloqueio (1-15 minutos)
+  - Distância de ativação (50-500m)
+  - Alcance máximo (100-1000m)
+  - Fechamento automático
+  - Modo de emergência
+- **Gerenciamento de Configurações**:
+  - Salvar no armazenamento local
+  - Restaurar padrões
+  - Exportar para arquivo JSON
+
+### 6. 📝 **Sistema de Logs Detalhado**
 - **Registro completo** de todos os eventos
 - **Timestamps precisos** para cada ação
 - **Informações completas**: Placa + MAC + Direção

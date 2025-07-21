@@ -5,14 +5,17 @@
 
 class SearchManager {
     constructor() {
-        // Sample data for demonstration
-        this.authorizedVehicles = [
+        // Default sample data
+        const defaultVehicles = [
             { mac: '24:A1:60:12:34:56', plate: 'ABC-1234', authorized: true, lastAccess: '2025-01-18 10:30:00' },
             { mac: 'AA:BB:CC:DD:EE:FF', plate: 'XYZ-5678', authorized: true, lastAccess: '2025-01-18 09:15:00' },
             { mac: '12:34:56:78:9A:BC', plate: 'DEF-9012', authorized: true, lastAccess: '2025-01-18 11:45:00' },
             { mac: 'FE:DC:BA:98:76:54', plate: 'GHI-3456', authorized: false, lastAccess: '2025-01-18 08:20:00' },
             { mac: '11:22:33:44:55:66', plate: 'JKL-7890', authorized: true, lastAccess: '2025-01-18 12:10:00' }
         ];
+
+        // Load vehicles from localStorage or use defaults
+        this.authorizedVehicles = this.loadVehicles() || defaultVehicles;
 
         this.currentPage = 1;
         this.itemsPerPage = 10;
@@ -230,9 +233,24 @@ class SearchManager {
 
         if (vehicle && this.macInputMetrics) {
             this.macInputMetrics.value = vehicle.mac;
-        }
+            // Ensure we update charts with the MAC as well
+            this.updateCharts('mac', vehicle.mac);
+        } else {
+            // If no exact match, try a partial match
+            const partialMatches = this.authorizedVehicles.filter(v =>
+                v.plate.toLowerCase().includes(selectedPlate.toLowerCase()));
 
-        this.updateCharts('plate', selectedPlate);
+            if (partialMatches.length > 0 && this.macInputMetrics) {
+                // Use the first partial match
+                this.macInputMetrics.value = partialMatches[0].mac;
+                this.updateCharts('mac', partialMatches[0].mac);
+                // Update the plate input with the full plate
+                this.plateInputMetrics.value = partialMatches[0].plate;
+            } else {
+                // If no match at all, just update with the plate
+                this.updateCharts('plate', selectedPlate);
+            }
+        }
     }
 
     /**
@@ -270,19 +288,96 @@ class SearchManager {
      * Add new vehicle to the system
      */
     addVehicle(mac, plate, authorized = true) {
+        // Format MAC with colons for display if needed
+        const formattedMac = mac.includes(':') ? mac : this.formatMacWithColons(mac);
+
         const newVehicle = {
-            mac: mac,
+            mac: formattedMac,
             plate: plate,
             authorized: authorized,
             lastAccess: new Date().toLocaleString('pt-PT')
         };
 
-        this.authorizedVehicles.push(newVehicle);
+        // Check if vehicle already exists
+        const existingIndex = this.authorizedVehicles.findIndex(v => v.mac === formattedMac || v.plate === plate);
+        if (existingIndex >= 0) {
+            // Update existing vehicle
+            this.authorizedVehicles[existingIndex] = newVehicle;
+        } else {
+            // Add new vehicle
+            this.authorizedVehicles.push(newVehicle);
+        }
+
+        // Update UI
         this.populateDataLists();
         this.performSearch(); // Refresh display
 
+        // Update metrics dropdowns
+        if (this.macInputMetrics && this.plateInputMetrics) {
+            // Add to datalists
+            const macList = document.getElementById('mac-list');
+            const plateList = document.getElementById('plate-list');
+
+            if (macList) {
+                const option = document.createElement('option');
+                option.value = formattedMac;
+                option.textContent = `${formattedMac} (${plate})`;
+                macList.appendChild(option);
+            }
+
+            if (plateList) {
+                const option = document.createElement('option');
+                option.value = plate;
+                option.textContent = `${plate} (${formattedMac})`;
+                plateList.appendChild(option);
+            }
+        }
+
         if (window.addLog) {
-            window.addLog(`Novo veículo adicionado: ${plate} (${mac})`);
+            window.addLog(`Novo veículo adicionado: ${plate} (${formattedMac})`);
+        }
+
+        // Save to localStorage for persistence
+        this.saveVehicles();
+
+        return newVehicle;
+    }
+
+    /**
+     * Format MAC address with colons
+     */
+    formatMacWithColons(mac) {
+        // Remove any non-hex characters
+        const cleanMac = mac.replace(/[^0-9A-Fa-f]/g, '');
+
+        // Insert colons every 2 characters
+        const formattedMac = cleanMac.match(/.{1,2}/g)?.join(':') || cleanMac;
+
+        return formattedMac;
+    }
+
+    /**
+     * Save vehicles to localStorage
+     */
+    saveVehicles() {
+        try {
+            localStorage.setItem('authorizedVehicles', JSON.stringify(this.authorizedVehicles));
+        } catch (error) {
+            console.error('Error saving vehicles:', error);
+        }
+    }
+
+    /**
+     * Load vehicles from localStorage
+     * @returns {Array|null} Array of vehicles or null if not found
+     */
+    loadVehicles() {
+        try {
+            const savedVehicles = localStorage.getItem('authorizedVehicles');
+            return savedVehicles ? JSON.parse(savedVehicles) : null;
+        } catch (error) {
+            console.error('Error loading vehicles:', error);
+            return null;
         }
     }
 }
