@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - Sistema de Controle de Barreiras IoT</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 500px;
+            background-color: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #2563eb;
+            margin-bottom: 20px;
+        }
+        p {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            color: #2563eb;
+        }
+        .btn {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #1d4ed8;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f3f4f6;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">📡</div>
+        <h1>Você está offline</h1>
+        <p>O Sistema de Controle de Barreiras IoT não está disponível no momento porque você está sem conexão com a internet.</p>
+        <p>Algumas funcionalidades podem estar limitadas até que a conexão seja restabelecida.</p>
+        <button class="btn" onclick="tryReconnect()">Tentar reconectar</button>
+        <div class="status" id="status">Status: Offline</div>
+    </div>
+
+    <script>
+        function tryReconnect() {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = 'Status: Tentando reconectar...';
+
+            fetch('/')
+                .then(() => {
+                    statusEl.textContent = 'Status: Conexão restabelecida!';
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                })
+                .catch(() => {
+                    statusEl.textContent = 'Status: Ainda offline. Tente novamente mais tarde.';
+                });
+        }
+
+        // Verificar status de conexão periodicamente
+        setInterval(() => {
+            if (navigator.onLine) {
+                document.getElementById('status').textContent = 'Status: Conexão detectada! Recarregando...';
+                window.location.reload();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>

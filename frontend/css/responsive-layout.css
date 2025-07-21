@@ -1,0 +1,226 @@
+/* Responsive Layout Enhancements for Sistema de Controle de Barreiras IoT */
+
+/* Layout principal mais semelhante à imagem */
+.container {
+    max-width: 1400px;
+}
+
+/* Layout para dispositivos móveis pequenos */
+@media (max-width: 480px) {
+    .container {
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+    }
+
+    .radar-scan {
+        height: 200px;
+    }
+
+    .chart-container {
+        height: 180px !important;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    h2 {
+        font-size: 1.2rem;
+    }
+
+    .p-6 {
+        padding: 0.75rem;
+    }
+
+    .p-5, .p-4 {
+        padding: 0.5rem;
+    }
+
+    .gap-8, .gap-6, .gap-4 {
+        gap: 0.5rem;
+    }
+
+    .mb-8, .mb-6, .mt-8, .mt-6 {
+        margin: 0.75rem 0;
+    }
+
+    .grid-cols-2 {
+        grid-template-columns: 1fr;
+    }
+
+    .flex-wrap {
+        flex-wrap: wrap;
+    }
+
+    button {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.75rem !important;
+    }
+}
+
+/* Layout para tablets e dispositivos médios */
+@media (min-width: 481px) and (max-width: 768px) {
+    .container {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+
+    .lg\:col-span-2 {
+        grid-column: span 1 / span 1;
+    }
+
+    .grid-cols-1 {
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+
+    .md\:grid-cols-2, .md\:grid-cols-3, .md\:grid-cols-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .radar-scan {
+        height: 300px;
+    }
+}
+
+/* Layout para telas médias */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .container {
+        max-width: 95%;
+    }
+
+    .lg\:col-span-2 {
+        grid-column: span 2 / span 2;
+    }
+
+    .md\:grid-cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .md\:grid-cols-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+/* Layout para telas grandes */
+@media (min-width: 1025px) {
+    .container {
+        max-width: 1400px;
+    }
+
+    .lg\:col-span-2 {
+        grid-column: span 2 / span 2;
+    }
+}
+
+/* Melhorias visuais gerais */
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Melhorias para o radar */
+.radar-scan {
+    box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.2);
+}
+
+/* Melhorias para os inputs */
+input:focus, select:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* Melhorias para os botões */
+button {
+    transition: all 0.2s ease;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+/* Melhorias para os gráficos */
+.chart-container {
+    transition: all 0.3s ease;
+}
+
+/* Animação suave para transições */
+* {
+    transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+/* Melhorias para o scroll */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c5c5c5;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Layout específico para se assemelhar à imagem de referência */
+.radar-container {
+    aspect-ratio: 1/1;
+    max-height: 400px;
+    margin: 0 auto;
+}
+
+.vehicle-info-compact {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.5rem;
+}
+
+.metrics-card {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    background-color: white;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.metrics-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.metrics-header {
+    padding: 0.75rem;
+    background-color: #f3f4f6;
+    border-bottom: 1px solid #e5e7eb;
+    font-weight: 600;
+    color: #374151;
+}
+
+.metrics-body {
+    padding: 1rem;
+}
+
+/* Melhorias para impressão */
+@media print {
+    .no-print {
+        display: none;
+    }
+
+    body {
+        font-size: 12pt;
+    }
+
+    .container {
+        width: 100%;
+        max-width: none;
+    }
+}
