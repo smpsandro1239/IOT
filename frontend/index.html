@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Controle de Barreiras IoT - LoRa</title>
+    <title>Sistema de Controlo de Barreiras IoT - LoRa</title>
     <link rel="stylesheet" href="css/tailwind-local.css">
     <link rel="stylesheet" href="css/chart-styles.css">
     <link rel="stylesheet" href="css/responsive-layout.css">
+    <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script src="js/cache-buster.js"></script>
@@ -419,13 +420,43 @@
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-brand">
+                <i class="fas fa-traffic-light"></i>
+                <span>Sistema de Controlo de Barreiras</span>
+            </div>
+            <button class="navbar-mobile-toggle" id="navbar-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="navbar-menu" id="navbar-menu">
+                <a href="#dashboard" class="navbar-item active">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Painel Principal</span>
+                </a>
+                <a href="#macs" class="navbar-item">
+                    <i class="fas fa-list-alt"></i>
+                    <span>MACs Autorizados</span>
+                </a>
+                <a href="#config" class="navbar-item">
+                    <i class="fas fa-cogs"></i>
+                    <span>Configuração</span>
+                </a>
+                <a href="#metrics" class="navbar-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Métricas</span>
+                </a>
+            </div>
+        </div>
+    </nav>
     <div class="container mx-auto px-4 py-8">
         <!-- Header -->
         <header class="bg-blue-600 text-white rounded-lg shadow-lg p-6 mb-8">
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <div class="mb-4 md:mb-0">
-                    <h1 class="text-3xl font-bold"><i class="fas fa-traffic-light mr-2"></i>Sistema de Controle de Barreiras</h1>
-                    <p class="text-blue-100">Detecção de direção com LoRa para abertura seletiva de barreiras</p>
+                    <h1 class="text-3xl font-bold"><i class="fas fa-traffic-light mr-2"></i>Sistema de Controlo de Barreiras</h1>
+                    <p class="text-blue-100">Deteção de direção com LoRa para abertura seletiva de barreiras</p>
                 </div>
                 <div>
                     <button id="logout-btn" class="bg-white text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-lg font-medium flex items-center">
@@ -440,12 +471,12 @@
             <!-- Left Panel - Vehicle Detection -->
             <div class="bg-white rounded-lg shadow-lg p-6 lg:col-span-2">
                 <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2 flex items-center">
-                    <i class="fas fa-car-side mr-2 text-blue-500"></i>Monitoramento de Veículos
+                    <i class="fas fa-car-side mr-2 text-blue-500"></i>Monitorização de Veículos
                 </h2>
 
                 <!-- Radar Visualization -->
                 <div class="flex justify-between items-center mb-4">
-                    <span class="text-sm text-gray-600">Detecção LoRa 868MHz</span>
+                    <span class="text-sm text-gray-600">Deteção LoRa 868MHz</span>
                     <div class="signal-strength-indicator">
                         <div class="signal-bar signal-bar-1"></div>
                         <div class="signal-bar signal-bar-2"></div>
@@ -471,7 +502,7 @@
                 <div class="mt-4 grid grid-cols-2 gap-4">
                     <div class="bg-gray-50 p-3 rounded-lg">
                         <div class="flex justify-between items-center">
-                            <span class="text-sm font-medium text-gray-500">Veículos detectados</span>
+                            <span class="text-sm font-medium text-gray-500">Veículos detetados</span>
                             <span id="vehicle-count-display" class="text-xl font-bold text-green-600">0</span>
                         </div>
                     </div>
@@ -499,7 +530,7 @@
                 <!-- Vehicle Info -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                        <h4 class="text-sm font-semibold text-blue-800 mb-1">Placa</h4>
+                        <h4 class="text-sm font-semibold text-blue-800 mb-1">Matrícula</h4>
                         <div class="bg-white p-2 rounded text-center font-mono text-sm font-bold" id="vehicle-plate">---</div>
                     </div>
                     <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
@@ -607,7 +638,7 @@
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Alcance Máximo de Detecção</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Alcance Máximo de Deteção</label>
                                     <div class="flex items-center">
                                         <input type="number" id="max-range" value="500" min="100" max="1000" step="50" class="w-full text-sm border border-gray-300 rounded-l-md px-3 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-300 transition duration-200">
                                         <span class="bg-gray-100 px-3 py-2 text-sm text-gray-600 border border-l-0 border-gray-300 rounded-r-md">metros</span>
@@ -619,7 +650,7 @@
                                     <label class="flex items-center space-x-2 p-2 rounded-md hover:bg-blue-50 transition duration-200">
                                         <input type="checkbox" id="auto-close" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
                                         <div>
-                                            <span class="text-sm font-medium text-gray-700">Fechamento automático das barreiras</span>
+                                            <span class="text-sm font-medium text-gray-700">Fecho automático das barreiras</span>
                                             <p class="text-xs text-gray-500">Fechar automaticamente após passagem do veículo</p>
                                         </div>
                                     </label>
@@ -663,7 +694,7 @@
             <!-- Right Panel - System Controls -->
             <div class="bg-white rounded-lg shadow-lg p-6">
                 <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2 flex items-center">
-                    <i class="fas fa-cogs mr-2 text-blue-500"></i>Controles do Sistema
+                    <i class="fas fa-cogs mr-2 text-blue-500"></i>Controlos do Sistema
                 </h2>
 
                 <!-- System Status -->
@@ -696,11 +727,11 @@
 
                 <!-- Gate Controls -->
                 <div class="mb-6">
-                    <h3 class="font-semibold text-gray-700 mb-3">Controle de Barreiras</h3>
+                    <h3 class="font-semibold text-gray-700 mb-3">Controlo de Barreiras</h3>
                     <div class="grid grid-cols-1 gap-4">
                         <div class="bg-gray-100 p-3 rounded-lg">
                             <div class="flex justify-between items-center mb-2">
-                                <h4 class="text-sm font-medium text-gray-600">Oeste → Leste</h4>
+                                <h4 class="text-sm font-medium text-gray-600">Norte → Sul</h4>
                                 <span id="west-status" class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Fechada</span>
                             </div>
                             <div class="text-center mb-3 p-2 bg-white rounded border">
@@ -719,7 +750,7 @@
                         </div>
                         <div class="bg-gray-100 p-3 rounded-lg">
                             <div class="flex justify-between items-center mb-2">
-                                <h4 class="text-sm font-medium text-gray-600">Leste → Oeste</h4>
+                                <h4 class="text-sm font-medium text-gray-600">Sul → Norte</h4>
                                 <span id="east-status" class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Fechada</span>
                             </div>
                             <div class="text-center mb-3 p-2 bg-white rounded border">
@@ -756,7 +787,7 @@
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Placa do Veículo</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Matrícula do Veículo</label>
                                 <div class="flex">
                                     <span class="inline-flex items-center px-3 text-gray-500 bg-gray-100 border border-r-0 border-gray-300 rounded-l-md">
                                         <i class="fas fa-car"></i>
@@ -801,7 +832,7 @@
                             <h3 class="text-lg leading-6 font-medium text-gray-900">Como formatar o ficheiro</h3>
                             <div class="mt-2 px-7 py-3">
                                 <p class="text-sm text-gray-500">
-                                    O ficheiro deve ser um ficheiro de texto (.txt) com um endereço MAC e uma placa por linha, separados por uma vírgula.
+                                    O ficheiro deve ser um ficheiro de texto (.txt) com um endereço MAC e uma matrícula por linha, separados por uma vírgula.
                                 </p>
                                 <p class="text-sm text-gray-500 mt-4">
                                     Exemplo:
@@ -828,7 +859,7 @@ AABBCCDDEEFF,XYZ5678
                     <div class="bg-white p-4 rounded-lg shadow-sm border border-green-100">
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Placa do Veículo</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Matrícula do Veículo</label>
                                 <div class="flex">
                                     <span class="inline-flex items-center px-3 text-gray-500 bg-gray-100 border border-r-0 border-gray-300 rounded-l-md">
                                         <i class="fas fa-car"></i>
@@ -840,8 +871,8 @@ AABBCCDDEEFF,XYZ5678
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Direção</label>
                                 <div class="relative">
                                     <select id="sim-direction" class="appearance-none w-full p-2 pl-10 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-green-500 focus:border-green-300">
-                                        <option value="north">Oeste → Leste</option>
-                                        <option value="south">Leste → Oeste</option>
+                                        <option value="north">Norte → Sul</option>
+                                        <option value="south">Sul → Norte</option>
                                     </select>
                                     <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center px-3 text-gray-500">
                                         <i class="fas fa-exchange-alt"></i>
@@ -1043,7 +1074,7 @@ AABBCCDDEEFF,XYZ5678
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Detecção de Direção com LoRa</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Deteção de Direção com LoRa</h3>
                     <p class="text-gray-600 mb-4">
                         O sistema utiliza tecnologia LoRa para estimar o Ângulo de Chegada (AoA) com precisão de 4-14 graus,
                         permitindo determinar a direção de aproximação do veículo (Norte-Sul ou Sul-Norte).
@@ -1051,10 +1082,10 @@ AABBCCDDEEFF,XYZ5678
                     <div class="bg-blue-50 p-4 rounded-lg">
                         <h4 class="font-medium text-blue-800 mb-2">Especificações:</h4>
                         <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
-                            <li>Alcance de detecção: até 500m</li>
+                            <li>Alcance de deteção: até 500m</li>
                             <li>Frequência: 868 MHz (EU)</li>
                             <li>Consumo energético: ~45mA durante transmissão</li>
-                            <li>Array de 3 antenas para detecção AoA</li>
+                            <li>Array de 3 antenas para deteção AoA</li>
                             <li>Protocolo seguro com autenticação</li>
                         </ul>
                     </div>
@@ -1068,7 +1099,7 @@ AABBCCDDEEFF,XYZ5678
                     <div class="bg-green-50 p-4 rounded-lg">
                         <h4 class="font-medium text-green-800 mb-2">Fluxo de Operação:</h4>
                         <ol class="list-decimal list-inside text-sm text-gray-700 space-y-1">
-                            <li>Detecção do veículo a 500m</li>
+                            <li>Deteção do veículo a 500m</li>
                             <li>Determinação da direção (AoA)</li>
                             <li>Verificação de permissões</li>
                             <li>Abertura da barreira correspondente</li>
@@ -1105,6 +1136,7 @@ AABBCCDDEEFF,XYZ5678
     <script src="js/system-configuration.js?v=28091"></script>
     <script src="js/chart-resize.js?v=9538"></script>
     <script src="js/responsive-layout.js"></script>
+    <script src="js/navbar.js"></script>
     <script>
         // Force cache refresh
         function forceRefresh() {
