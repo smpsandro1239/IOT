@@ -79,4 +79,70 @@
     .navbar-menu.active {
         display: flex;
     }
+
+    /* Mobile user info and logout */
+    .navbar-menu.active::after {
+        content: '';
+        display: block;
+        width: 100%;
+        height: 1px;
+        background-color: rgba(255, 255, 255, 0.2);
+        margin: 0.5rem 0;
+    }
+
+    .navbar-menu.active::before {
+        content: attr(data-user);
+        display: block;
+        padding: 0.5rem 0.75rem;
+        color: white;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .navbar-menu.active::before i {
+        margin-right: 0.5rem;
+    }
+}
+    /* Mobile user info and logout */
+    .navbar-menu.active::after {
+        content: '';
+        display: block;
+        width: 100%;
+        height: 1px;
+        background-color: rgba(255, 255, 255, 0.2);
+        margin: 0.5rem 0;
+    }
+
+    /* Add mobile logout button */
+    .mobile-user-info {
+        display: none;
+        padding: 0.5rem 0.75rem;
+        color: white;
+        font-size: 0.875rem;
+        align-items: center;
+        background-color: rgba(255, 255, 255, 0.1);
+        margin: 0.5rem;
+        border-radius: 0.25rem;
+    }
+
+    .navbar-menu.active ~ .mobile-user-info {
+        display: flex;
+    }
+
+    .mobile-logout-btn {
+        display: none;
+        width: calc(100% - 1rem);
+        margin: 0.5rem;
+        justify-content: center;
+        background-color: white;
+        color: #1e40af;
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+        font-weight: 500;
+    }
+
+    .navbar-menu.active ~ .mobile-logout-btn {
+        display: flex;
+    }
 }
