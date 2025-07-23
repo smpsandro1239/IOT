@@ -98,6 +98,16 @@ if %errorlevel% neq 0 (
     for /f "tokens=3" %%i in ('git --version') do (
         echo ✅ Git %%i encontrado
     )
+    
+    :: Verificar configuração do Git
+    git config --global user.name >nul 2>&1
+    if %errorlevel% neq 0 (
+        echo    ⚠️  Git não configurado (nome/email)
+        echo    💡 Execute: configurar_novo_computador_v2.bat
+    ) else (
+        for /f "delims=" %%i in ('git config --global user.name') do echo    👤 Nome: %%i
+        for /f "delims=" %%i in ('git config --global user.email') do echo    📧 Email: %%i
+    )
 )
 
 echo.
