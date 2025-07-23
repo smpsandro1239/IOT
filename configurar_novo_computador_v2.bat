@@ -6,7 +6,43 @@ echo    Sistema de Controle de Barreiras IoT
 echo ===================================================
 echo.
 
-echo [PASSO 1/12] Verificando pré-requisitos...
+echo [PASSO 1/13] Configurando Git...
+echo.
+
+:: Verificar Git
+echo Verificando Git...
+git --version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo ⚠️  Git não encontrado
+    echo    Instale Git: https://git-scm.com/download/win
+    echo    (Opcional, mas recomendado para desenvolvimento)
+) else (
+    echo ✅ Git encontrado!
+    
+    :: Verificar se já está configurado
+    git config --global user.name >nul 2>&1
+    if %errorlevel% neq 0 (
+        echo.
+        echo 🔧 Configuração do Git necessária
+        echo.
+        set /p "GIT_NAME=Digite seu nome para o Git: "
+        set /p "GIT_EMAIL=Digite seu email para o Git: "
+        
+        git config --global user.name "%GIT_NAME%"
+        git config --global user.email "%GIT_EMAIL%"
+        
+        echo ✅ Git configurado com sucesso
+        echo    Nome: %GIT_NAME%
+        echo    Email: %GIT_EMAIL%
+    ) else (
+        echo ✅ Git já configurado
+        for /f "delims=" %%i in ('git config --global user.name') do echo    Nome: %%i
+        for /f "delims=" %%i in ('git config --global user.email') do echo    Email: %%i
+    )
+)
+
+echo.
+echo [PASSO 2/13] Verificando pré-requisitos...
 echo.
 
 :: Verificar PHP
@@ -46,7 +82,7 @@ if %errorlevel% neq 0 (
 )
 
 echo.
-echo [PASSO 2/12] Configurando Backend Laravel...
+echo [PASSO 3/13] Configurando Backend Laravel...
 cd backend
 
 echo Instalando dependências PHP...
@@ -64,7 +100,7 @@ if %errorlevel% neq 0 (
 echo ✅ Dependências PHP instaladas
 
 echo.
-echo [PASSO 3/12] Criando arquivo .env...
+echo [PASSO 4/13] Criando arquivo .env...
 if exist .env (
     echo ✅ Arquivo .env já existe
 ) else (
@@ -78,7 +114,7 @@ if exist .env (
 )
 
 echo.
-echo [PASSO 4/12] Gerando chave da aplicação...
+echo [PASSO 5/13] Gerando chave da aplicação...
 php artisan key:generate
 if %errorlevel% neq 0 (
     echo ❌ ERRO: Falha ao gerar chave da aplicação
@@ -88,7 +124,7 @@ if %errorlevel% neq 0 (
 echo ✅ Chave da aplicação gerada
 
 echo.
-echo [PASSO 5/12] Configurando banco de dados...
+echo [PASSO 6/13] Configurando banco de dados...
 echo.
 echo ⚠️  CONFIGURAÇÃO DO BANCO DE DADOS
 echo.
@@ -106,7 +142,7 @@ echo.
 set /p "CONTINUAR=Pressione ENTER para continuar ou Ctrl+C para parar e editar .env..."
 
 echo.
-echo [PASSO 6/12] Testando conexão com banco...
+echo [PASSO 7/13] Testando conexão com banco...
 php artisan migrate:status >nul 2>&1
 if %errorlevel% neq 0 (
     echo ❌ ERRO: Não foi possível conectar ao banco de dados
@@ -135,7 +171,7 @@ if %errorlevel% neq 0 (
 echo ✅ Conexão com banco de dados OK
 
 echo.
-echo [PASSO 7/12] Executando migrações...
+echo [PASSO 8/13] Executando migrações...
 php artisan migrate:fresh --seed
 if %errorlevel% neq 0 (
     echo ❌ ERRO: Falha ao executar migrações
@@ -152,7 +188,7 @@ if %errorlevel% neq 0 (
 )
 
 echo.
-echo [PASSO 8/12] Configurando Frontend...
+echo [PASSO 9/13] Configurando Frontend...
 cd ..\frontend
 
 echo Verificando package.json...
@@ -179,7 +215,7 @@ if %errorlevel% neq 0 (
 echo ✅ Dependências Node.js instaladas
 
 echo.
-echo [PASSO 9/12] Compilando CSS...
+echo [PASSO 10/13] Compilando CSS...
 call npm run build:css
 if %errorlevel% neq 0 (
     echo ❌ ERRO: Falha ao compilar CSS
@@ -191,7 +227,7 @@ if %errorlevel% neq 0 (
 echo ✅ CSS compilado com sucesso
 
 echo.
-echo [PASSO 10/12] Limpando cache...
+echo [PASSO 11/13] Limpando cache...
 cd ..\backend
 php artisan cache:clear >nul 2>&1
 php artisan config:clear >nul 2>&1
@@ -199,7 +235,7 @@ php artisan route:clear >nul 2>&1
 echo ✅ Cache limpo
 
 echo.
-echo [PASSO 11/12] Criando diretórios necessários...
+echo [PASSO 12/13] Criando diretórios necessários...
 if not exist storage\logs mkdir storage\logs
 if not exist bootstrap\cache mkdir bootstrap\cache
 cd ..\frontend
@@ -207,7 +243,7 @@ if not exist dist mkdir dist
 echo ✅ Diretórios criados
 
 echo.
-echo [PASSO 12/12] Teste final da configuração...
+echo [PASSO 13/13] Teste final da configuração...
 cd ..\backend
 echo Testando rotas...
 php artisan route:list | findstr api >nul 2>&1
