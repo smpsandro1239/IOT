@@ -47,16 +47,16 @@ class SearchManager {
         this.plateSearchInput = document.getElementById('plate-search');
         this.macSearchAdvancedInput = document.getElementById('mac-search-advanced');
         this.plateSearchAdvancedInput = document.getElementById('plate-search-advanced');
-        
+
         this.macInputMetrics = document.getElementById('mac-input');
         this.plateInputMetrics = document.getElementById('plate-input');
-        
+
         this.authorizedMacsContainer = document.getElementById('authorized-macs');
         this.authorizedMacsAdvancedContainer = document.getElementById('authorized-macs-advanced');
-        
+
         this.searchResultsCount = document.getElementById('search-results-count');
         this.searchResultsCountAdvanced = document.getElementById('search-results-count-advanced');
-        
+
         this.prevPageBtn = document.getElementById('prev-page');
         this.nextPageBtn = document.getElementById('next-page');
         this.prevPageAdvancedBtn = document.getElementById('prev-page-advanced');
@@ -124,7 +124,7 @@ class SearchManager {
             systemLog.style.maxHeight = '300px';
             systemLog.style.overflowY = 'auto';
             systemLog.style.scrollBehavior = 'smooth';
-            
+
             // Monitor for new log entries and limit to 20 lines
             const observer = new MutationObserver(() => {
                 const logEntries = systemLog.children;
@@ -137,7 +137,7 @@ class SearchManager {
                 // Auto-scroll to bottom
                 systemLog.scrollTop = systemLog.scrollHeight;
             });
-            
+
             observer.observe(systemLog, { childList: true });
         }
     }
@@ -147,10 +147,10 @@ class SearchManager {
      */
     validateMacFormat(mac) {
         if (!mac || typeof mac !== 'string') return false;
-        
+
         // Remove any separators and spaces
         const cleanMac = mac.replace(/[^0-9A-Fa-f]/g, '');
-        
+
         // Check if it's exactly 12 hex characters
         const macRegex = /^[0-9A-Fa-f]{12}$/;
         return macRegex.test(cleanMac);
@@ -161,13 +161,13 @@ class SearchManager {
      */
     validatePlateFormat(plate) {
         if (!plate || typeof plate !== 'string') return false;
-        
+
         // Remove any separators and spaces
         const cleanPlate = plate.replace(/[^0-9A-Za-z]/g, '');
-        
+
         // Check if it's exactly 6 alphanumeric characters
         if (cleanPlate.length !== 6) return false;
-        
+
         // Portuguese formats (all possible combinations):
         // - AA0000 (2 letras + 4 números) - formato antigo
         // - 00AA00 (2 números + 2 letras + 2 números) - formato intermédio
@@ -175,14 +175,14 @@ class SearchManager {
         // - AA00AA (2 letras + 2 números + 2 letras) - formato especial
         // - 00AAAA (2 números + 4 letras) - formato especial
         // - AAAA00 (4 letras + 2 números) - formato especial
-        
+
         // Verificar se tem pelo menos 2 caracteres de cada tipo (letras e números)
         const letters = cleanPlate.match(/[A-Za-z]/g) || [];
         const numbers = cleanPlate.match(/[0-9]/g) || [];
-        
+
         // Deve ter pelo menos 2 letras e 2 números
         if (letters.length < 2 || numbers.length < 2) return false;
-        
+
         // Aceitar qualquer combinação válida de 6 caracteres com letras e números
         return true;
     }
@@ -194,7 +194,7 @@ class SearchManager {
         if (!mac || typeof mac !== 'string') {
             throw new Error('MAC inválido');
         }
-        
+
         // Remove any non-hex characters
         const cleanMac = mac.replace(/[^0-9A-Fa-f]/g, '').toUpperCase();
 
@@ -216,7 +216,7 @@ class SearchManager {
         if (!plate || typeof plate !== 'string') {
             throw new Error('Matrícula inválida');
         }
-        
+
         // Remove any non-alphanumeric characters and convert to uppercase
         const cleanPlate = plate.replace(/[^0-9A-Za-z]/g, '').toUpperCase();
 
@@ -226,9 +226,9 @@ class SearchManager {
         }
 
         // Format as XX-XX-XX (Portuguese standard with hyphens between each pair)
-        const formattedPlate = cleanPlate.substring(0, 2) + '-' + 
-                              cleanPlate.substring(2, 4) + '-' + 
-                              cleanPlate.substring(4, 6);
+        const formattedPlate = cleanPlate.substring(0, 2) + '-' +
+            cleanPlate.substring(2, 4) + '-' +
+            cleanPlate.substring(4, 6);
 
         return formattedPlate;
     }
@@ -304,11 +304,11 @@ class SearchManager {
             } else {
                 alert(`Erro: ${error.message}`);
             }
-            
+
             if (window.addLog) {
                 window.addLog(`Erro ao adicionar veículo: ${error.message}`);
             }
-            
+
             throw error; // Re-throw for handling by calling function
         }
     }
@@ -324,9 +324,9 @@ class SearchManager {
             hasDuplicate: !!(macDuplicate || plateDuplicate),
             macDuplicate: macDuplicate,
             plateDuplicate: plateDuplicate,
-            duplicateType: macDuplicate && plateDuplicate ? 'both' : 
-                          macDuplicate ? 'mac' : 
-                          plateDuplicate ? 'plate' : 'none'
+            duplicateType: macDuplicate && plateDuplicate ? 'both' :
+                macDuplicate ? 'mac' :
+                    plateDuplicate ? 'plate' : 'none'
         };
     }
 
@@ -402,7 +402,7 @@ class SearchManager {
         return new Promise((resolve) => {
             // Get existing vehicle data
             const existingVehicle = duplicateResult.macDuplicate || duplicateResult.plateDuplicate;
-            
+
             const confirmHTML = `
                 <div id="edit-confirm-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 modal-overlay">
                     <div class="relative top-20 mx-auto p-5 border w-auto max-w-lg shadow-lg rounded-md bg-white modal-content">
@@ -514,11 +514,11 @@ class SearchManager {
      */
     getDuplicateDetails(duplicateResult) {
         let details = '';
-        
+
         if (duplicateResult.macDuplicate) {
             const statusClass = duplicateResult.macDuplicate.authorized ? 'status-authorized' : 'status-unauthorized';
             const statusText = duplicateResult.macDuplicate.authorized ? 'Autorizado' : 'Não Autorizado';
-            
+
             details += `<div class="text-xs text-gray-700 mb-2 p-2 bg-white rounded border">
                 <div class="flex items-center justify-between mb-1">
                     <strong class="text-gray-800">🚗 Veículo:</strong>
@@ -531,11 +531,11 @@ class SearchManager {
                 </div>
             </div>`;
         }
-        
+
         if (duplicateResult.plateDuplicate && duplicateResult.plateDuplicate !== duplicateResult.macDuplicate) {
             const statusClass = duplicateResult.plateDuplicate.authorized ? 'status-authorized' : 'status-unauthorized';
             const statusText = duplicateResult.plateDuplicate.authorized ? 'Autorizado' : 'Não Autorizado';
-            
+
             details += `<div class="text-xs text-gray-700 p-2 bg-white rounded border">
                 <div class="flex items-center justify-between mb-1">
                     <strong class="text-gray-800">🚗 Veículo:</strong>
@@ -548,7 +548,7 @@ class SearchManager {
                 </div>
             </div>`;
         }
-        
+
         return details;
     }
 
@@ -634,55 +634,55 @@ class SearchManager {
 
         this.currentPageAdvanced = 1;
         this.displayAdvancedResults();
-    }edResults = this.authorizedVehicles.filter(vehicle => {
-            const macMatch = vehicle.mac.toLowerCase().includes(macQuery);
-            const plateMatch = vehicle.plate.toLowerCase().includes(plateQuery);
+    } edResults = this.authorizedVehicles.filter(vehicle => {
+        const macMatch = vehicle.mac.toLowerCase().includes(macQuery);
+        const plateMatch = vehicle.plate.toLowerCase().includes(plateQuery);
 
-            // If both fields have input, both must match
-            if (macQuery && plateQuery) {
-                return macMatch && plateMatch;
-            }
-
-            // If only one field has input, that one must match
-            if (macQuery) return macMatch;
-            if (plateQuery) return plateMatch;
-
-            // If no input, show all
-            return true;
-        });
-
-        this.currentPageAdvanced = 1;
-        this.displayAdvancedResults();
-    }
-
-    /**
-     * Display search results
-     */
-    displayResults() {
-        if (!this.authorizedMacsContainer || !this.searchResultsCount) return;
-
-        // Update results count
-        this.searchResultsCount.textContent = this.filteredResults.length;
-
-        // Calculate pagination
-        const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-        const endIndex = startIndex + this.itemsPerPage;
-        const pageResults = this.filteredResults.slice(startIndex, endIndex);
-
-        // Clear container
-        this.authorizedMacsContainer.innerHTML = '';
-
-        if (pageResults.length === 0) {
-            this.authorizedMacsContainer.innerHTML = '<div class="text-gray-500 text-center py-4">Nenhum resultado encontrado</div>';
-            return;
+        // If both fields have input, both must match
+        if (macQuery && plateQuery) {
+            return macMatch && plateMatch;
         }
 
-        // Display results
-        pageResults.forEach(vehicle => {
-            const resultDiv = document.createElement('div');
-            resultDiv.className = `flex justify-between items-center p-2 border-b border-gray-200 ${vehicle.authorized ? 'bg-green-50' : 'bg-red-50'}`;
+        // If only one field has input, that one must match
+        if (macQuery) return macMatch;
+        if (plateQuery) return plateMatch;
 
-            resultDiv.innerHTML = `
+        // If no input, show all
+        return true;
+    });
+
+        this.currentPageAdvanced = 1;
+this.displayAdvancedResults();
+    }
+
+/**
+ * Display search results
+ */
+displayResults() {
+    if (!this.authorizedMacsContainer || !this.searchResultsCount) return;
+
+    // Update results count
+    this.searchResultsCount.textContent = this.filteredResults.length;
+
+    // Calculate pagination
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    const pageResults = this.filteredResults.slice(startIndex, endIndex);
+
+    // Clear container
+    this.authorizedMacsContainer.innerHTML = '';
+
+    if (pageResults.length === 0) {
+        this.authorizedMacsContainer.innerHTML = '<div class="text-gray-500 text-center py-4">Nenhum resultado encontrado</div>';
+        return;
+    }
+
+    // Display results
+    pageResults.forEach(vehicle => {
+        const resultDiv = document.createElement('div');
+        resultDiv.className = `flex justify-between items-center p-2 border-b border-gray-200 ${vehicle.authorized ? 'bg-green-50' : 'bg-red-50'}`;
+
+        resultDiv.innerHTML = `
                 <div class="flex-1">
                     <div class="font-mono text-sm font-bold">${vehicle.plate}</div>
                     <div class="font-mono text-xs text-gray-600">${vehicle.mac}</div>
@@ -698,46 +698,46 @@ class SearchManager {
                 </div>
             `;
 
-            this.authorizedMacsContainer.appendChild(resultDiv);
-        });
+        this.authorizedMacsContainer.appendChild(resultDiv);
+    });
 
-        // Update pagination buttons
-        this.updatePaginationButtons();
+    // Update pagination buttons
+    this.updatePaginationButtons();
+}
+
+/**
+ * Display advanced search results with 5 items per page
+ */
+displayAdvancedResults() {
+    if (!this.authorizedMacsAdvancedContainer || !this.searchResultsCountAdvanced) return;
+
+    // Initialize filtered results if not exists
+    if (!this.filteredAdvancedResults) {
+        this.filteredAdvancedResults = [...this.authorizedVehicles];
     }
 
-    /**
-     * Display advanced search results with 5 items per page
-     */
-    displayAdvancedResults() {
-        if (!this.authorizedMacsAdvancedContainer || !this.searchResultsCountAdvanced) return;
+    // Update results count
+    this.searchResultsCountAdvanced.textContent = this.filteredAdvancedResults.length;
 
-        // Initialize filtered results if not exists
-        if (!this.filteredAdvancedResults) {
-            this.filteredAdvancedResults = [...this.authorizedVehicles];
-        }
+    // Calculate pagination with 5 items per page
+    const startIndex = (this.currentPageAdvanced - 1) * this.itemsPerPageAdvanced;
+    const endIndex = startIndex + this.itemsPerPageAdvanced;
+    const pageResults = this.filteredAdvancedResults.slice(startIndex, endIndex);
 
-        // Update results count
-        this.searchResultsCountAdvanced.textContent = this.filteredAdvancedResults.length;
+    // Clear container
+    this.authorizedMacsAdvancedContainer.innerHTML = '';
 
-        // Calculate pagination with 5 items per page
-        const startIndex = (this.currentPageAdvanced - 1) * this.itemsPerPageAdvanced;
-        const endIndex = startIndex + this.itemsPerPageAdvanced;
-        const pageResults = this.filteredAdvancedResults.slice(startIndex, endIndex);
+    if (pageResults.length === 0) {
+        this.authorizedMacsAdvancedContainer.innerHTML = '<div class="text-gray-500 text-center py-4">Nenhum resultado encontrado</div>';
+        return;
+    }
 
-        // Clear container
-        this.authorizedMacsAdvancedContainer.innerHTML = '';
+    // Display results
+    pageResults.forEach(vehicle => {
+        const resultDiv = document.createElement('div');
+        resultDiv.className = `flex justify-between items-center p-3 border-b border-gray-200 ${vehicle.authorized ? 'bg-green-50' : 'bg-red-50'} hover:bg-blue-50 transition-colors duration-200`;
 
-        if (pageResults.length === 0) {
-            this.authorizedMacsAdvancedContainer.innerHTML = '<div class="text-gray-500 text-center py-4">Nenhum resultado encontrado</div>';
-            return;
-        }
-
-        // Display results
-        pageResults.forEach(vehicle => {
-            const resultDiv = document.createElement('div');
-            resultDiv.className = `flex justify-between items-center p-3 border-b border-gray-200 ${vehicle.authorized ? 'bg-green-50' : 'bg-red-50'} hover:bg-blue-50 transition-colors duration-200`;
-
-            resultDiv.innerHTML = `
+        resultDiv.innerHTML = `
                 <div class="flex-1">
                     <div class="font-mono text-sm font-bold text-gray-800">${vehicle.plate}</div>
                     <div class="font-mono text-xs text-gray-600">${vehicle.mac}</div>
@@ -753,227 +753,227 @@ class SearchManager {
                 </div>
             `;
 
-            this.authorizedMacsAdvancedContainer.appendChild(resultDiv);
-        });
+        this.authorizedMacsAdvancedContainer.appendChild(resultDiv);
+    });
 
-        // Update pagination buttons
-        this.updateAdvancedPaginationButtons();
+    // Update pagination buttons
+    this.updateAdvancedPaginationButtons();
+}
+
+/**
+ * Update pagination buttons state
+ */
+updatePaginationButtons() {
+    const totalPages = Math.ceil(this.filteredResults.length / this.itemsPerPage);
+
+    if (this.prevPageBtn) {
+        this.prevPageBtn.disabled = this.currentPage <= 1;
     }
 
-    /**
-     * Update pagination buttons state
-     */
-    updatePaginationButtons() {
-        const totalPages = Math.ceil(this.filteredResults.length / this.itemsPerPage);
+    if (this.nextPageBtn) {
+        this.nextPageBtn.disabled = this.currentPage >= totalPages;
+    }
+}
 
-        if (this.prevPageBtn) {
-            this.prevPageBtn.disabled = this.currentPage <= 1;
-        }
-
-        if (this.nextPageBtn) {
-            this.nextPageBtn.disabled = this.currentPage >= totalPages;
-        }
+/**
+ * Update advanced pagination buttons state
+ */
+updateAdvancedPaginationButtons() {
+    if (!this.filteredAdvancedResults) {
+        this.filteredAdvancedResults = [...this.authorizedVehicles];
     }
 
-    /**
-     * Update advanced pagination buttons state
-     */
-    updateAdvancedPaginationButtons() {
-        if (!this.filteredAdvancedResults) {
-            this.filteredAdvancedResults = [...this.authorizedVehicles];
-        }
+    const totalPages = Math.ceil(this.filteredAdvancedResults.length / this.itemsPerPageAdvanced);
 
-        const totalPages = Math.ceil(this.filteredAdvancedResults.length / this.itemsPerPageAdvanced);
-
-        if (this.prevPageAdvancedBtn) {
-            this.prevPageAdvancedBtn.disabled = this.currentPageAdvanced <= 1;
-            this.prevPageAdvancedBtn.classList.toggle('opacity-50', this.currentPageAdvanced <= 1);
-            this.prevPageAdvancedBtn.classList.toggle('cursor-not-allowed', this.currentPageAdvanced <= 1);
-        }
-
-        if (this.nextPageAdvancedBtn) {
-            this.nextPageAdvancedBtn.disabled = this.currentPageAdvanced >= totalPages;
-            this.nextPageAdvancedBtn.classList.toggle('opacity-50', this.currentPageAdvanced >= totalPages);
-            this.nextPageAdvancedBtn.classList.toggle('cursor-not-allowed', this.currentPageAdvanced >= totalPages);
-        }
-
-        // Add page info
-        const pageInfo = document.getElementById('page-info-advanced');
-        if (pageInfo) {
-            pageInfo.textContent = `Página ${this.currentPageAdvanced} de ${totalPages}`;
-        }
+    if (this.prevPageAdvancedBtn) {
+        this.prevPageAdvancedBtn.disabled = this.currentPageAdvanced <= 1;
+        this.prevPageAdvancedBtn.classList.toggle('opacity-50', this.currentPageAdvanced <= 1);
+        this.prevPageAdvancedBtn.classList.toggle('cursor-not-allowed', this.currentPageAdvanced <= 1);
     }
 
-    /**
-     * Go to previous page
-     */
-    previousPage() {
-        if (this.currentPage > 1) {
-            this.currentPage--;
-            this.displayResults();
-        }
+    if (this.nextPageAdvancedBtn) {
+        this.nextPageAdvancedBtn.disabled = this.currentPageAdvanced >= totalPages;
+        this.nextPageAdvancedBtn.classList.toggle('opacity-50', this.currentPageAdvanced >= totalPages);
+        this.nextPageAdvancedBtn.classList.toggle('cursor-not-allowed', this.currentPageAdvanced >= totalPages);
     }
 
-    /**
-     * Go to next page
-     */
-    nextPage() {
-        const totalPages = Math.ceil(this.filteredResults.length / this.itemsPerPage);
-        if (this.currentPage < totalPages) {
-            this.currentPage++;
-            this.displayResults();
-        }
+    // Add page info
+    const pageInfo = document.getElementById('page-info-advanced');
+    if (pageInfo) {
+        pageInfo.textContent = `Página ${this.currentPageAdvanced} de ${totalPages}`;
+    }
+}
+
+/**
+ * Go to previous page
+ */
+previousPage() {
+    if (this.currentPage > 1) {
+        this.currentPage--;
+        this.displayResults();
+    }
+}
+
+/**
+ * Go to next page
+ */
+nextPage() {
+    const totalPages = Math.ceil(this.filteredResults.length / this.itemsPerPage);
+    if (this.currentPage < totalPages) {
+        this.currentPage++;
+        this.displayResults();
+    }
+}
+
+/**
+ * Go to previous page (advanced)
+ */
+previousPageAdvanced() {
+    if (this.currentPageAdvanced > 1) {
+        this.currentPageAdvanced--;
+        this.displayAdvancedResults();
+    }
+}
+
+/**
+ * Go to next page (advanced)
+ */
+nextPageAdvanced() {
+    if (!this.filteredAdvancedResults) {
+        this.filteredAdvancedResults = [...this.authorizedVehicles];
     }
 
-    /**
-     * Go to previous page (advanced)
-     */
-    previousPageAdvanced() {
-        if (this.currentPageAdvanced > 1) {
-            this.currentPageAdvanced--;
-            this.displayAdvancedResults();
-        }
+    const totalPages = Math.ceil(this.filteredAdvancedResults.length / this.itemsPerPageAdvanced);
+    if (this.currentPageAdvanced < totalPages) {
+        this.currentPageAdvanced++;
+        this.displayAdvancedResults();
+    }
+}
+
+/**
+ * Update metrics by MAC selection
+ */
+updateMetricsByMAC() {
+    const selectedMAC = this.macInputMetrics.value;
+    const vehicle = this.authorizedVehicles.find(v => v.mac === selectedMAC);
+
+    if (vehicle && this.plateInputMetrics) {
+        this.plateInputMetrics.value = vehicle.plate;
     }
 
-    /**
-     * Go to next page (advanced)
-     */
-    nextPageAdvanced() {
-        if (!this.filteredAdvancedResults) {
-            this.filteredAdvancedResults = [...this.authorizedVehicles];
-        }
+    this.updateCharts('mac', selectedMAC);
+}
 
-        const totalPages = Math.ceil(this.filteredAdvancedResults.length / this.itemsPerPageAdvanced);
-        if (this.currentPageAdvanced < totalPages) {
-            this.currentPageAdvanced++;
-            this.displayAdvancedResults();
-        }
-    }
+/**
+ * Update metrics by plate selection
+ */
+updateMetricsByPlate() {
+    const selectedPlate = this.plateInputMetrics.value;
+    const vehicle = this.authorizedVehicles.find(v => v.plate === selectedPlate);
 
-    /**
-     * Update metrics by MAC selection
-     */
-    updateMetricsByMAC() {
-        const selectedMAC = this.macInputMetrics.value;
-        const vehicle = this.authorizedVehicles.find(v => v.mac === selectedMAC);
+    if (vehicle && this.macInputMetrics) {
+        this.macInputMetrics.value = vehicle.mac;
+        this.updateCharts('mac', vehicle.mac);
+    } else {
+        const partialMatches = this.authorizedVehicles.filter(v =>
+            v.plate.toLowerCase().includes(selectedPlate.toLowerCase()));
 
-        if (vehicle && this.plateInputMetrics) {
-            this.plateInputMetrics.value = vehicle.plate;
-        }
-
-        this.updateCharts('mac', selectedMAC);
-    }
-
-    /**
-     * Update metrics by plate selection
-     */
-    updateMetricsByPlate() {
-        const selectedPlate = this.plateInputMetrics.value;
-        const vehicle = this.authorizedVehicles.find(v => v.plate === selectedPlate);
-
-        if (vehicle && this.macInputMetrics) {
-            this.macInputMetrics.value = vehicle.mac;
-            this.updateCharts('mac', vehicle.mac);
+        if (partialMatches.length > 0 && this.macInputMetrics) {
+            this.macInputMetrics.value = partialMatches[0].mac;
+            this.updateCharts('mac', partialMatches[0].mac);
+            this.plateInputMetrics.value = partialMatches[0].plate;
         } else {
-            const partialMatches = this.authorizedVehicles.filter(v =>
-                v.plate.toLowerCase().includes(selectedPlate.toLowerCase()));
-
-            if (partialMatches.length > 0 && this.macInputMetrics) {
-                this.macInputMetrics.value = partialMatches[0].mac;
-                this.updateCharts('mac', partialMatches[0].mac);
-                this.plateInputMetrics.value = partialMatches[0].plate;
-            } else {
-                this.updateCharts('plate', selectedPlate);
-            }
+            this.updateCharts('plate', selectedPlate);
         }
     }
+}
 
-    /**
-     * Update charts based on selection
-     */
-    updateCharts(type, value) {
-        console.log(`Updating charts for ${type}: ${value}`);
+/**
+ * Update charts based on selection
+ */
+updateCharts(type, value) {
+    console.log(`Updating charts for ${type}: ${value}`);
 
-        if (window.addLog) {
-            const displayValue = type === 'mac' ? value : `${value} (${this.getVehicleByPlate(value)?.mac || 'N/A'})`;
-            window.addLog(`Métricas atualizadas para ${type === 'mac' ? 'MAC' : 'matrícula'}: ${displayValue}`);
-        }
+    if (window.addLog) {
+        const displayValue = type === 'mac' ? value : `${value} (${this.getVehicleByPlate(value)?.mac || 'N/A'})`;
+        window.addLog(`Métricas atualizadas para ${type === 'mac' ? 'MAC' : 'matrícula'}: ${displayValue}`);
     }
+}
 
-    /**
-     * Get vehicle by plate
-     */
-    getVehicleByPlate(plate) {
-        return this.authorizedVehicles.find(v => v.plate === plate);
+/**
+ * Get vehicle by plate
+ */
+getVehicleByPlate(plate) {
+    return this.authorizedVehicles.find(v => v.plate === plate);
+}
+
+/**
+ * View vehicle details
+ */
+viewDetails(mac) {
+    const vehicle = this.authorizedVehicles.find(v => v.mac === mac);
+    if (vehicle) {
+        alert(`Detalhes do Veículo:\n\nMatrícula: ${vehicle.plate}\nMAC: ${vehicle.mac}\nStatus: ${vehicle.authorized ? 'Autorizado' : 'Não Autorizado'}\nÚltimo Acesso: ${vehicle.lastAccess}`);
     }
+}
 
-    /**
-     * View vehicle details
-     */
-    viewDetails(mac) {
-        const vehicle = this.authorizedVehicles.find(v => v.mac === mac);
-        if (vehicle) {
-            alert(`Detalhes do Veículo:\n\nMatrícula: ${vehicle.plate}\nMAC: ${vehicle.mac}\nStatus: ${vehicle.authorized ? 'Autorizado' : 'Não Autorizado'}\nÚltimo Acesso: ${vehicle.lastAccess}`);
-        }
-    }
+/**
+ * Update metrics dropdowns
+ */
+updateMetricsDropdowns(mac, plate) {
+    if (this.macInputMetrics && this.plateInputMetrics) {
+        const macList = document.getElementById('mac-list');
+        const plateList = document.getElementById('plate-list');
 
-    /**
-     * Update metrics dropdowns
-     */
-    updateMetricsDropdowns(mac, plate) {
-        if (this.macInputMetrics && this.plateInputMetrics) {
-            const macList = document.getElementById('mac-list');
-            const plateList = document.getElementById('plate-list');
-
-            if (macList) {
-                const existingOption = macList.querySelector(`option[value="${mac}"]`);
-                if (existingOption) {
-                    existingOption.remove();
-                }
-                
-                const option = document.createElement('option');
-                option.value = mac;
-                option.textContent = `${mac} (${plate})`;
-                macList.appendChild(option);
+        if (macList) {
+            const existingOption = macList.querySelector(`option[value="${mac}"]`);
+            if (existingOption) {
+                existingOption.remove();
             }
 
-            if (plateList) {
-                const existingOption = plateList.querySelector(`option[value="${plate}"]`);
-                if (existingOption) {
-                    existingOption.remove();
-                }
-                
-                const option = document.createElement('option');
-                option.value = plate;
-                option.textContent = `${plate} (${mac})`;
-                plateList.appendChild(option);
+            const option = document.createElement('option');
+            option.value = mac;
+            option.textContent = `${mac} (${plate})`;
+            macList.appendChild(option);
+        }
+
+        if (plateList) {
+            const existingOption = plateList.querySelector(`option[value="${plate}"]`);
+            if (existingOption) {
+                existingOption.remove();
             }
-        }
-    }
 
-    /**
-     * Save vehicles to localStorage
-     */
-    saveVehicles() {
-        try {
-            localStorage.setItem('authorizedVehicles', JSON.stringify(this.authorizedVehicles));
-        } catch (error) {
-            console.error('Error saving vehicles:', error);
+            const option = document.createElement('option');
+            option.value = plate;
+            option.textContent = `${plate} (${mac})`;
+            plateList.appendChild(option);
         }
     }
+}
 
-    /**
-     * Load vehicles from localStorage
-     */
-    loadVehicles() {
-        try {
-            const savedVehicles = localStorage.getItem('authorizedVehicles');
-            return savedVehicles ? JSON.parse(savedVehicles) : null;
-        } catch (error) {
-            console.error('Error loading vehicles:', error);
-            return null;
-        }
+/**
+ * Save vehicles to localStorage
+ */
+saveVehicles() {
+    try {
+        localStorage.setItem('authorizedVehicles', JSON.stringify(this.authorizedVehicles));
+    } catch (error) {
+        console.error('Error saving vehicles:', error);
     }
+}
+
+/**
+ * Load vehicles from localStorage
+ */
+loadVehicles() {
+    try {
+        const savedVehicles = localStorage.getItem('authorizedVehicles');
+        return savedVehicles ? JSON.parse(savedVehicles) : null;
+    } catch (error) {
+        console.error('Error loading vehicles:', error);
+        return null;
+    }
+}
 }
 
 // Initialize search manager when DOM is ready

@@ -482,13 +482,28 @@ class RadarSimulation {
      * Update last access information
      */
     updateLastAccess(gate, plate, mac) {
+        // Map gate names to HTML element IDs (north maps to west elements, south maps to east elements)
+        const gateMapping = {
+            'north': 'west',  // Norte → Sul usa elementos west
+            'south': 'east'   // Sul → Norte usa elementos east
+        };
+        
+        const elementGate = gateMapping[gate] || gate;
+        
         // Update the last access display for the specific gate
-        const plateElement = document.getElementById(`${gate}-last-plate`);
-        const macElement = document.getElementById(`${gate}-last-mac`);
+        const plateElement = document.getElementById(`${elementGate}-last-plate`);
+        const macElement = document.getElementById(`${elementGate}-last-mac`);
+        const timeElement = document.getElementById(`${elementGate}-last-time`);
+
+        const currentTime = new Date().toLocaleString('pt-PT');
 
         if (plateElement && macElement) {
             plateElement.textContent = plate;
             macElement.textContent = mac;
+        }
+
+        if (timeElement) {
+            timeElement.textContent = currentTime;
         }
 
         // Store last access information for future use
@@ -500,11 +515,18 @@ class RadarSimulation {
             plate: plate,
             mac: mac,
             timestamp: new Date().toISOString(),
-            gate: gate
+            gate: gate,
+            formattedTime: currentTime
         };
 
+        // Update the vehicle's last access in the SearchManager database
+        if (window.searchManager) {
+            window.searchManager.updateVehicleLastAccess(mac, plate, currentTime);
+        }
+
         // Log the access
-        this.addLog(`Acesso registrado: ${plate} (${mac}) via barreira ${gate}`);
+        const direction = gate === 'north' ? 'Norte → Sul' : 'Sul → Norte';
+        this.addLog(`Acesso registrado: ${plate} (${mac}) via barreira ${direction} às ${currentTime}`);
     }
 
     /**
