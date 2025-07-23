@@ -100,7 +100,7 @@ class RadarSimulation {
         // Update UI
         this.vehiclePlate.textContent = vehicle.plate;
         this.vehicleMac.textContent = vehicle.mac;
-        this.vehicleDirection.textContent = vehicle.direction === 'north' ? 'Oeste → Leste' : 'Leste → Oeste';
+        this.vehicleDirection.textContent = vehicle.direction === 'north' ? 'Norte → Sul' : 'Sul → Norte';
         this.vehicleDistance.textContent = `${vehicle.distance} m`;
 
         // Update system status
@@ -222,8 +222,8 @@ class RadarSimulation {
             vehicle.barrierOpened = true;
 
             // Determine which barrier to open based on direction
-            const barrierToOpen = vehicle.direction === 'north' ? 'west' : 'east';
-            const direction = vehicle.direction === 'north' ? 'Oeste → Leste' : 'Leste → Oeste';
+            const barrierToOpen = vehicle.direction === 'north' ? 'north' : 'south';
+            const direction = vehicle.direction === 'north' ? 'Norte → Sul' : 'Sul → Norte';
 
             // Open the appropriate barrier
             this.toggleBarrier(barrierToOpen, true);
@@ -398,7 +398,7 @@ class RadarSimulation {
     toggleBarrier(barrier, open) {
         window.barrierStates[barrier] = open ? 'open' : 'closed';
 
-        const direction = barrier === 'west' ? 'Oeste → Leste' : 'Leste → Oeste';
+        const direction = barrier === 'west' ? 'Norte → Sul' : 'Sul → Norte';
         const action = open ? 'aberta' : 'fechada';
 
         this.addLog(`Barreira ${direction} ${action}`);
