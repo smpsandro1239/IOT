@@ -779,6 +779,315 @@ class SearchManager {
             return true;
         }
     }
+
+    /**
+     * Export vehicles to CSV file
+     */
+    exportVehiclesToCSV() {
+        try {
+            // Create CSV header
+            const csvHeader = 'MAC,Matrícula,Autorizado,Último Acesso\n';
+            
+            // Create CSV content
+            const csvContent = this.authorizedVehicles.map(vehicle => {
+                const authorized = vehicle.authorized ? 'Sim' : 'Não';
+                const lastAccess = vehicle.lastAccess || 'Nunca';
+                return `"${vehicle.mac}","${vehicle.plate}","${authorized}","${lastAccess}"`;
+            }).join('\n');
+            
+            // Combine header and content
+            const fullCSV = csvHeader + csvContent;
+            
+            // Create blob and download
+            const blob = new Blob([fullCSV], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `veiculos_autorizados_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            if (window.showToast) {
+                window.showToast(`Exportados ${this.authorizedVehicles.length} veículos para CSV`, 'success');
+            }
+            
+            if (window.addLog) {
+                window.addLog(`Exportação CSV realizada: ${this.authorizedVehicles.length} veículos`);
+            }
+            
+        } catch (error) {
+            console.error('Error exporting vehicles:', error);
+            if (window.showToast) {
+                window.showToast(`Erro ao exportar: ${error.message}`, 'error');
+            }
+        }
+    }
+
+    /**
+     * Import vehicles from CSV file
+     */
+    async importVehiclesFromCSV(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            
+            reader.onload = async (e) => {
+                try {
+                    const csvContent = e.target.result;
+                    const lines = csvContent.split('\n').filter(line => line.trim());
+                    
+                    if (lines.length < 2) {
+                        throw new Error('Arquivo CSV vazio ou inválido');
+                    }
+                    
+                    // Skip header line
+                    const dataLines = lines.slice(1);
+                    const importResults = {
+                        total: dataLines.length,
+                        success: 0,
+                        errors: 0,
+                        duplicates: 0,
+                        errorDetails: []
+                    };
+                    
+                    for (let i = 0; i < dataLines.length; i++) {
+                        const line = dataLines[i].trim();
+                        if (!line) continue;
+                        
+                        try {
+                            // Parse CSV line (handle quoted values)
+                            const values = this.parseCSVLine(line);
+                            
+                            if (values.length < 2) {
+                                throw new Error('Linha inválida: dados insuficientes');
+                            }
+                            
+                            const mac = values[0];
+                            const plate = values[1];
+                            const authorized = values[2] ? values[2].toLowerCase() === 'sim' : true;
+                            
+                            // Try to add vehicle
+                            const result = await this.addVehicle(mac, plate, authorized, true); // Skip validation for import
+                            
+                            if (result) {
+                                importResults.success++;
+                            } else {
+                                importResults.duplicates++;
+                            }
+                            
+                        } catch (error) {
+                            importResults.errors++;
+                            importResults.errorDetails.push(`Linha ${i + 2}: ${error.message}`);
+                        }
+                    }
+                    
+                    // Show import results
+                    this.showImportResults(importResults);
+                    resolve(importResults);
+                    
+                } catch (error) {
+                    console.error('Error importing CSV:', error);
+                    if (window.showToast) {
+                        window.showToast(`Erro ao importar: ${error.message}`, 'error');
+                    }
+                    reject(error);
+                }
+            };
+            
+            reader.onerror = () => {
+                const error = new Error('Erro ao ler o arquivo');
+                if (window.showToast) {
+                    window.showToast(error.message, 'error');
+                }
+                reject(error);
+            };
+            
+            reader.readAsText(file, 'UTF-8');
+        });
+    }
+
+    /**
+     * Parse CSV line handling quoted values
+     */
+    parseCSVLine(line) {
+        const values = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                values.push(current.trim());
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        
+        values.push(current.trim());
+        return values;
+    }
+
+    /**
+     * Show import results modal
+     */
+    showImportResults(results) {
+        const modalHTML = `
+            <div id="import-results-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                    <div class="mt-3">
+                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
+                            <i class="fas fa-file-import text-blue-600 text-xl"></i>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">📊 Resultado da Importação</h3>
+                            <div class="mt-2 px-7 py-3">
+                                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                                    <div class="grid grid-cols-2 gap-4 text-sm">
+                                        <div class="text-center">
+                                            <div class="text-2xl font-bold text-blue-600">${results.total}</div>
+                                            <div class="text-gray-600">Total</div>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="text-2xl font-bold text-green-600">${results.success}</div>
+                                            <div class="text-gray-600">Sucesso</div>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="text-2xl font-bold text-yellow-600">${results.duplicates}</div>
+                                            <div class="text-gray-600">Duplicados</div>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="text-2xl font-bold text-red-600">${results.errors}</div>
+                                            <div class="text-gray-600">Erros</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                ${results.errorDetails.length > 0 ? `
+                                    <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                                        <h4 class="text-sm font-medium text-red-700 mb-2">Detalhes dos Erros:</h4>
+                                        <div class="text-xs text-red-600 max-h-32 overflow-y-auto">
+                                            ${results.errorDetails.map(error => `<div>• ${error}</div>`).join('')}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="flex justify-center mt-4">
+                                <button id="close-import-results" class="px-4 py-2 bg-blue-600 text-white text-base font-medium rounded-md shadow-sm hover:bg-blue-700">
+                                    <i class="fas fa-check mr-1"></i> OK
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        document.getElementById('close-import-results').addEventListener('click', () => {
+            document.getElementById('import-results-modal').remove();
+        });
+
+        // Show toast summary
+        if (window.showToast) {
+            window.showToast(`Importação concluída: ${results.success} sucessos, ${results.errors} erros`, 
+                results.errors > 0 ? 'warning' : 'success');
+        }
+
+        // Log results
+        if (window.addLog) {
+            window.addLog(`Importação CSV: ${results.success}/${results.total} veículos importados`);
+        }
+    }
+
+    /**
+     * Show file format instructions
+     */
+    showFileFormatInstructions() {
+        const modalHTML = `
+            <div id="format-instructions-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                <div class="relative top-10 mx-auto p-5 border w-auto max-w-2xl shadow-lg rounded-md bg-white">
+                    <div class="mt-3">
+                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                            <i class="fas fa-info-circle text-green-600 text-xl"></i>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">📋 Como Formatar o Arquivo CSV</h3>
+                            <div class="mt-2 px-4 py-3 text-left">
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                                    <h4 class="text-sm font-medium text-blue-700 mb-2">📝 Formato do Arquivo:</h4>
+                                    <div class="text-sm text-blue-600">
+                                        <p class="mb-2"><strong>Tipo:</strong> Arquivo CSV (separado por vírgulas)</p>
+                                        <p class="mb-2"><strong>Codificação:</strong> UTF-8</p>
+                                        <p><strong>Extensão:</strong> .csv</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+                                    <h4 class="text-sm font-medium text-gray-700 mb-2">📊 Estrutura das Colunas:</h4>
+                                    <div class="text-xs font-mono bg-white p-2 rounded border">
+                                        MAC,Matrícula,Autorizado,Último Acesso
+                                    </div>
+                                    <div class="text-sm text-gray-600 mt-2">
+                                        <p><strong>Coluna 1 (MAC):</strong> Endereço MAC (obrigatório)</p>
+                                        <p><strong>Coluna 2 (Matrícula):</strong> Matrícula do veículo (obrigatório)</p>
+                                        <p><strong>Coluna 3 (Autorizado):</strong> "Sim" ou "Não" (opcional, padrão: Sim)</p>
+                                        <p><strong>Coluna 4 (Último Acesso):</strong> Data/hora (opcional)</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                                    <h4 class="text-sm font-medium text-green-700 mb-2">✅ Exemplo de Arquivo Válido:</h4>
+                                    <div class="text-xs font-mono bg-white p-2 rounded border">
+                                        MAC,Matrícula,Autorizado,Último Acesso<br>
+                                        "24:A1:60:12:34:56","AB-12-34","Sim","2025-01-18 10:30:00"<br>
+                                        "11:22:33:44:55:AA","CD-56-78","Sim","2025-01-18 09:15:00"<br>
+                                        "BB:CC:DD:EE:11:22","EF-90-12","Não","2025-01-18 11:45:00"
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                                    <h4 class="text-sm font-medium text-yellow-700 mb-2">⚠️ Formatos Aceitos:</h4>
+                                    <div class="text-sm text-yellow-600">
+                                        <p><strong>MAC:</strong> 24A160123456 ou 24:A1:60:12:34:56</p>
+                                        <p><strong>Matrícula:</strong> AB1234 ou AB-12-34 (formatos portugueses)</p>
+                                        <p><strong>Autorizado:</strong> Sim/Não, Yes/No, 1/0, true/false</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                                    <h4 class="text-sm font-medium text-red-700 mb-2">❌ Erros Comuns:</h4>
+                                    <div class="text-sm text-red-600">
+                                        <p>• Arquivo sem cabeçalho</p>
+                                        <p>• MAC com formato inválido (deve ter 12 caracteres hex)</p>
+                                        <p>• Matrícula com formato inválido (deve seguir padrão português)</p>
+                                        <p>• Linhas vazias ou incompletas</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-center mt-4">
+                                <button id="close-format-instructions" class="px-4 py-2 bg-green-600 text-white text-base font-medium rounded-md shadow-sm hover:bg-green-700">
+                                    <i class="fas fa-check mr-1"></i> Entendi
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        document.getElementById('close-format-instructions').addEventListener('click', () => {
+            document.getElementById('format-instructions-modal').remove();
+        });
+    }
 }
 
 // Initialize search manager when DOM is ready

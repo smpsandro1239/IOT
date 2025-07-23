@@ -1623,6 +1623,54 @@ AABBCCDDEEFF,XYZ5678
         
         // Make showToast globally available
         window.showToast = showToast;
+        
+        // Import/Export functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // File upload handler
+            const macFileInput = document.getElementById('mac-file');
+            if (macFileInput) {
+                macFileInput.addEventListener('change', async function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        if (!file.name.toLowerCase().endsWith('.csv')) {
+                            showToast('Por favor, selecione um arquivo CSV', 'error');
+                            return;
+                        }
+                        
+                        try {
+                            if (window.searchManager) {
+                                await window.searchManager.importVehiclesFromCSV(file);
+                            }
+                        } catch (error) {
+                            console.error('Import error:', error);
+                        }
+                        
+                        // Clear file input
+                        e.target.value = '';
+                    }
+                });
+            }
+            
+            // Download MACs button
+            const downloadMacsBtn = document.getElementById('download-macs');
+            if (downloadMacsBtn) {
+                downloadMacsBtn.addEventListener('click', function() {
+                    if (window.searchManager) {
+                        window.searchManager.exportVehiclesToCSV();
+                    }
+                });
+            }
+            
+            // File instructions button
+            const fileInstructionsBtn = document.getElementById('file-instructions');
+            if (fileInstructionsBtn) {
+                fileInstructionsBtn.addEventListener('click', function() {
+                    if (window.searchManager) {
+                        window.searchManager.showFileFormatInstructions();
+                    }
+                });
+            }
+        });
     </script>
     <script src="js/system-configuration.js?v=28091"></script>
     <script src="js/chart-resize.js?v=9538"></script>
