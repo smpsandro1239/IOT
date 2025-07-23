@@ -423,15 +423,55 @@ class SearchManager {
     }
 
     /**
-     * Perform search based on MAC and plate inputs
+     * Normalize MAC for search (remove separators)
+     */
+    normalizeMacForSearch(mac) {
+        return mac.replace(/[^0-9A-Fa-f]/g, '').toLowerCase();
+    }
+
+    /**
+     * Normalize plate for search (remove separators)
+     */
+    normalizePlateForSearch(plate) {
+        return plate.replace(/[^0-9A-Za-z]/g, '').toLowerCase();
+    }
+
+    /**
+     * Check if search query matches vehicle data (flexible format matching)
+     */
+    matchesSearchQuery(vehicleValue, searchQuery, isMAC = false) {
+        if (!searchQuery) return true;
+        
+        const query = searchQuery.toLowerCase();
+        const value = vehicleValue.toLowerCase();
+        
+        // Direct match (with separators)
+        if (value.includes(query)) {
+            return true;
+        }
+        
+        // Normalized match (without separators)
+        if (isMAC) {
+            const normalizedValue = this.normalizeMacForSearch(value);
+            const normalizedQuery = this.normalizeMacForSearch(query);
+            return normalizedValue.includes(normalizedQuery);
+        } else {
+            const normalizedValue = this.normalizePlateForSearch(value);
+            const normalizedQuery = this.normalizePlateForSearch(query);
+            return normalizedValue.includes(normalizedQuery);
+        }
+    }
+
+    /**
+     * Perform search based on MAC and plate inputs - ENHANCED VERSION
      */
     performSearch() {
-        const macQuery = this.macSearchInput ? this.macSearchInput.value.toLowerCase() : '';
-        const plateQuery = this.plateSearchInput ? this.plateSearchInput.value.toLowerCase() : '';
+        const macQuery = this.macSearchInput ? this.macSearchInput.value.trim() : '';
+        const plateQuery = this.plateSearchInput ? this.plateSearchInput.value.trim() : '';
 
         this.filteredResults = this.authorizedVehicles.filter(vehicle => {
-            const macMatch = vehicle.mac.toLowerCase().includes(macQuery);
-            const plateMatch = vehicle.plate.toLowerCase().includes(plateQuery);
+            const macMatch = this.matchesSearchQuery(vehicle.mac, macQuery, true);
+            const plateMatch = this.matchesSearchQuery(vehicle.plate, plateQuery, false);
 
             if (macQuery && plateQuery) {
                 return macMatch && plateMatch;
@@ -448,15 +488,15 @@ class SearchManager {
     }
 
     /**
-     * Perform advanced search
+     * Perform advanced search - ENHANCED VERSION
      */
     performAdvancedSearch() {
-        const macQuery = this.macSearchAdvancedInput ? this.macSearchAdvancedInput.value.toLowerCase() : '';
-        const plateQuery = this.plateSearchAdvancedInput ? this.plateSearchAdvancedInput.value.toLowerCase() : '';
+        const macQuery = this.macSearchAdvancedInput ? this.macSearchAdvancedInput.value.trim() : '';
+        const plateQuery = this.plateSearchAdvancedInput ? this.plateSearchAdvancedInput.value.trim() : '';
 
         this.filteredAdvancedResults = this.authorizedVehicles.filter(vehicle => {
-            const macMatch = vehicle.mac.toLowerCase().includes(macQuery);
-            const plateMatch = vehicle.plate.toLowerCase().includes(plateQuery);
+            const macMatch = this.matchesSearchQuery(vehicle.mac, macQuery, true);
+            const plateMatch = this.matchesSearchQuery(vehicle.plate, plateQuery, false);
 
             if (macQuery && plateQuery) {
                 return macMatch && plateMatch;
