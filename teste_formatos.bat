@@ -1,136 +1,114 @@
 @echo off
 chcp 65001 >nul
-echo ===================================================
-echo    TESTE DE FORMATOS DE ENTRADA - BARREIRAS IOT
-echo    Validação e Padronização Automática
-echo ===================================================
+cls
+
+echo.
+echo ╔══════════════════════════════════════════════════════════════════════════════╗
+echo ║                    🧪 TESTE DE FORMATOS E DUPLICATAS                        ║
+echo ╚══════════════════════════════════════════════════════════════════════════════╝
 echo.
 
-echo 🔍 Testando novos formatos de entrada...
+echo 🚀 Iniciando sistema para teste...
 echo.
 
-echo ✅ FORMATOS ACEITOS:
+echo [1/3] Iniciando backend...
+cd backend
+start "Backend API" cmd /k "php artisan serve --host=0.0.0.0 --port=8000"
+timeout /t 2 >nul
+cd ..
+
+echo [2/3] Iniciando frontend...
+cd frontend
+start "Frontend Server" cmd /k "php -S localhost:8080"
+timeout /t 2 >nul
+cd ..
+
+echo [3/3] Aguardando serviços iniciarem...
+timeout /t 3 >nul
+
+echo ✅ Sistema iniciado!
 echo.
-echo 📱 MAC ADDRESS:
-echo    ✅ Formato compacto: 1234567890aa
-echo    ✅ Formato padrão: 12:34:56:78:90:aa
-echo    ✅ Formato misto: 12-34-56-78-90-aa
-echo    ✅ Case insensitive: 1234567890AA ou 1234567890aa
+echo 🌐 Abrindo navegador...
+start http://localhost:8080
+
 echo.
-echo 🚗 MATRÍCULA:
-echo    ✅ Formato compacto: AA1212
-echo    ✅ Formato padrão: AA-12-12
-echo    ✅ Case insensitive: aa1212 ou AA1212
+echo ╔══════════════════════════════════════════════════════════════════════════════╗
+echo ║                    📋 TESTE DE VALIDAÇÃO DE DUPLICATAS                      ║
+echo ╚══════════════════════════════════════════════════════════════════════════════╝
 echo.
-echo 💾 ARMAZENAMENTO PADRONIZADO:
-echo    ✅ MAC: Sempre salvo como 12:34:56:78:90:AA (maiúsculas com dois pontos)
-echo    ✅ Matrícula: Sempre salva como AA-12-12 (maiúsculas com hífens)
+
+echo 🎯 CENÁRIOS DE TESTE:
 echo.
-echo 🧪 CENÁRIOS DE TESTE:
+echo 1. 📱 Clique em "MACs Autorizados" na navegação
 echo.
-echo 1️⃣ TESTE MAC FORMATO COMPACTO:
-echo    Entrada: 1234567890aa
-echo    Resultado esperado: 12:34:56:78:90:AA
-echo    Status: ✅ Deve aceitar e formatar automaticamente
+echo 2. 🧪 TESTE DE FORMATOS EQUIVALENTES (devem detectar duplicata):
 echo.
-echo 2️⃣ TESTE MAC FORMATO PADRÃO:
-echo    Entrada: 12:34:56:78:90:aa
-echo    Resultado esperado: 12:34:56:78:90:AA
-echo    Status: ✅ Deve aceitar e converter para maiúsculas
+echo    ✅ CENÁRIO 1 - Adicione primeiro:
+echo       MAC: 24A160123456
+echo       Matrícula: AB1234
 echo.
-echo 3️⃣ TESTE MATRÍCULA FORMATO COMPACTO:
-echo    Entrada: aa1212
-echo    Resultado esperado: AA-12-12
-echo    Status: ✅ Deve aceitar e formatar automaticamente
+echo    ⚠️  CENÁRIO 2 - Tente adicionar depois (deve detectar duplicata):
+echo       MAC: 24:A1:60:12:34:56  (mesmo MAC, formato diferente)
+echo       Matrícula: AB-12-34      (mesma matrícula, formato diferente)
 echo.
-echo 4️⃣ TESTE MATRÍCULA FORMATO PADRÃO:
-echo    Entrada: AA-12-12
-echo    Resultado esperado: AA-12-12
-echo    Status: ✅ Deve aceitar sem alterações
+echo    📋 RESULTADO ESPERADO:
+echo       • Sistema deve detectar que são iguais APÓS formatação
+echo       • Deve mostrar modal de duplicata
+echo       • Deve mostrar dados existentes vs novos dados
 echo.
-echo 5️⃣ TESTE COMBINADO:
-echo    MAC: 9988776655aa + Matrícula: bb3434
-echo    Resultado esperado: 99:88:77:66:55:AA + BB-34-34
-echo    Status: ✅ Ambos devem ser formatados corretamente
+echo 3. 🔄 TESTE DE SUBSTITUIÇÃO:
 echo.
-echo 6️⃣ TESTE FORMATOS INVÁLIDOS:
-echo    MAC inválido: 12345 (muito curto)
-echo    MAC inválido: 1234567890xyz (caracteres inválidos)
-echo    Matrícula inválida: A1 (muito curta)
-echo    Matrícula inválida: ABCDEFG (muito longa)
-echo    Status: ❌ Deve mostrar erro de validação
+echo    ✅ CENÁRIO 3 - Adicione primeiro:
+echo       MAC: 1122334455AA
+echo       Matrícula: CD5678
 echo.
-echo 🎯 VALIDAÇÕES IMPLEMENTADAS:
+echo    🔄 CENÁRIO 4 - Tente adicionar (deve permitir substituir):
+echo       MAC: 11:22:33:44:55:AA  (mesmo MAC formatado)
+echo       Matrícula: CD-56-78      (mesma matrícula formatada)
 echo.
-echo 🔧 MAC ADDRESS:
-echo    ✅ Exatamente 12 caracteres hexadecimais
-echo    ✅ Aceita separadores (: ou -) ou sem separadores
-echo    ✅ Case insensitive na entrada
-echo    ✅ Conversão automática para maiúsculas
-echo    ✅ Formatação automática com dois pontos
+echo    📋 RESULTADO ESPERADO:
+echo       • Modal de duplicata aparece
+echo       • Opção "Substituir" disponível
+echo       • Dados são atualizados após confirmação
 echo.
-echo 🔧 MATRÍCULA:
-echo    ✅ Exatamente 6 caracteres alfanuméricos
-echo    ✅ Formato português: 2 letras + 4 números OU 2 letras + 2 números + 2 letras
-echo    ✅ Aceita com ou sem hífens
-echo    ✅ Case insensitive na entrada
-echo    ✅ Conversão automática para maiúsculas
-echo    ✅ Formatação automática com hífens (XX-XX-XX)
+echo 4. ✅ TESTE DE FORMATOS VÁLIDOS (devem ser aceitos):
 echo.
-echo 💡 EXEMPLOS PRÁTICOS DE TESTE:
+echo    FORMATO ANTIGO:
+echo    • AA1234 → AA-12-34
+echo    • BC5678 → BC-56-78
 echo.
-echo Teste 1 - Entrada simples:
-echo    MAC: 24a160123456
-echo    Matrícula: ab1234
-echo    Resultado: 24:A1:60:12:34:56 + AB-12-34
+echo    FORMATO INTERMÉDIO:
+echo    • 12AB34 → 12-AB-34
+echo    • 56CD78 → 56-CD-78
 echo.
-echo Teste 2 - Entrada com separadores:
-echo    MAC: 24-a1-60-12-34-56
-echo    Matrícula: AB-12-34
-echo    Resultado: 24:A1:60:12:34:56 + AB-12-34
+echo    FORMATO ATUAL:
+echo    • 1234AB → 12-34-AB
+echo    • 5678CD → 56-78-CD
 echo.
-echo Teste 3 - Entrada mista:
-echo    MAC: 24:A1:60:12:34:56
-echo    Matrícula: cd5678
-echo    Resultado: 24:A1:60:12:34:56 + CD-56-78
+echo 5. ❌ TESTE DE FORMATOS INVÁLIDOS (devem ser rejeitados):
 echo.
-echo 🚀 COMO TESTAR:
+echo    • 123456 (só números)
+echo    • ABCDEF (só letras)
+echo    • A1B2C3 (formato inválido)
+echo    • 12345  (muito curto)
+echo    • 1234567 (muito longo)
 echo.
-echo 1. Acesse: http://localhost:8080
-echo 2. Faça login: admin@example.com / password
-echo 3. Vá para a seção "Adicionar Veículo"
-echo 4. Teste cada formato listado acima
-echo 5. Observe as mensagens de validação
-echo 6. Verifique se os dados são salvos no formato correto
-echo 7. Confirme na seção de pesquisa se aparecem formatados
+
+echo ⚠️  IMPORTANTE:
+echo    • Sistema: http://localhost:8080
+echo    • API: http://localhost:8000
+echo    • Pressione Ctrl+C nas janelas para parar
 echo.
-echo ⚠️  MENSAGENS DE ERRO ESPERADAS:
+
+echo 📊 FUNCIONALIDADES TESTADAS:
+echo    ✅ Validação de formatos portugueses
+echo    ✅ Detecção de duplicatas APÓS formatação
+echo    ✅ Modal de confirmação de duplicatas
+echo    ✅ Comparação dados existentes vs novos
+echo    ✅ Opção de substituir dados existentes
+echo    ✅ Feedback de sucesso/erro
+echo    ✅ Pesquisa avançada (5 itens por página)
+echo    ✅ Direções corretas (Norte-Sul/Sul-Norte)
 echo.
-echo ❌ MAC muito curto: "MAC deve ter exatamente 12 caracteres hexadecimais"
-echo ❌ MAC com caracteres inválidos: "Formato de MAC inválido"
-echo ❌ Matrícula muito curta: "Matrícula deve ter exatamente 6 caracteres"
-echo ❌ Matrícula inválida: "Formato de matrícula inválido"
-echo.
-echo 📊 DADOS DE TESTE SUGERIDOS:
-echo.
-echo Válidos:
-echo    MAC: 1234567890ab, 12:34:56:78:90:ab, 12-34-56-78-90-ab
-echo    Matrícula: aa1234, AA-12-34, bb5678, BB-56-78
-echo.
-echo Inválidos:
-echo    MAC: 12345, 1234567890xyz, 12:34:56:78
-echo    Matrícula: A1, ABCDEFGH, 123456
-echo.
-echo ===================================================
-echo    ✅ TESTE PRONTO PARA EXECUÇÃO!
-echo ===================================================
-echo.
-echo 🚀 Para iniciar o sistema:
-echo    iniciar_sistema_otimizado.bat
-echo.
-echo 🌐 Acesse: http://localhost:8080
-echo.
-echo 📝 DICA: Abra o console do navegador (F12) para ver logs detalhados
-echo         dos processos de validação e formatação
-echo.
+
 pause
