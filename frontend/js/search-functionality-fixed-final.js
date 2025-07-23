@@ -691,6 +691,54 @@ class SearchManager {
             console.error('Error saving vehicles to localStorage:', error);
         }
     }
+
+    /**
+     * Update vehicle's last access time
+     */
+    updateVehicleLastAccess(mac, plate, accessTime) {
+        // Find vehicle by MAC or plate
+        const vehicleIndex = this.authorizedVehicles.findIndex(v => v.mac === mac || v.plate === plate);
+        
+        if (vehicleIndex >= 0) {
+            // Update last access time
+            this.authorizedVehicles[vehicleIndex].lastAccess = accessTime;
+            
+            // Save to localStorage
+            this.saveVehicles();
+            
+            // Update displays
+            this.performSearch();
+            this.performAdvancedSearch();
+            
+            // Log the update
+            if (window.addLog) {
+                window.addLog(`Último acesso atualizado: ${plate} (${mac}) - ${accessTime}`);
+            }
+            
+            return true;
+        } else {
+            // Vehicle not found, try to add it as authorized
+            if (window.addLog) {
+                window.addLog(`Veículo não encontrado na base de dados: ${plate} (${mac}) - adicionando automaticamente`);
+            }
+            
+            // Add vehicle automatically as authorized
+            this.authorizedVehicles.push({
+                mac: mac,
+                plate: plate,
+                authorized: true,
+                lastAccess: accessTime
+            });
+            
+            // Save and update displays
+            this.saveVehicles();
+            this.performSearch();
+            this.performAdvancedSearch();
+            this.populateDataLists();
+            
+            return true;
+        }
+    }
 }
 
 // Initialize search manager when DOM is ready
