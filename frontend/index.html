@@ -416,6 +416,101 @@
             background: #EF4444;
         }
 
+        /* Modal styles for duplicate validation */
+        .modal-overlay {
+            backdrop-filter: blur(2px);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-content {
+            animation: slideIn 0.3s ease-out;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { 
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Button hover effects for modals */
+        .modal-button {
+            transition: all 0.2s ease;
+            transform: translateY(0);
+        }
+
+        .modal-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-button:active {
+            transform: translateY(0);
+        }
+
+        /* Duplicate info styling */
+        .duplicate-info {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-left: 4px solid #3b82f6;
+        }
+
+        /* Status badges in modals */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-authorized {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .status-unauthorized {
+            background-color: #fef2f2;
+            color: #991b1b;
+        }
+
+        /* Form validation styles */
+        .input-error {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+        }
+
+        .input-success {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+        }
+
+        /* Loading spinner for async operations */
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
 
     </style>
 </head>
