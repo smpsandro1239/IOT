@@ -1,166 +1,145 @@
 @echo off
 chcp 65001 >nul
-echo ===================================================
-echo    TESTE COMPLETO DO SISTEMA - BARREIRAS IOT
-echo    Todas as Funcionalidades Implementadas
-echo ===================================================
+cls
+
+echo.
+echo ╔══════════════════════════════════════════════════════════════════════════════╗
+echo ║                    🚀 TESTE COMPLETO DO SISTEMA FINAL                       ║
+echo ╚══════════════════════════════════════════════════════════════════════════════╝
 echo.
 
-echo 🎉 SISTEMA COMPLETO IMPLEMENTADO COM SUCESSO!
+echo 🚀 Iniciando sistema para teste completo...
 echo.
 
-echo ✅ FUNCIONALIDADES PRINCIPAIS:
+echo [1/3] Iniciando backend...
+cd backend
+start "Backend API" cmd /k "php artisan serve --host=0.0.0.0 --port=8000"
+timeout /t 2 >nul
+cd ..
+
+echo [2/3] Iniciando frontend...
+cd frontend
+start "Frontend Server" cmd /k "php -S localhost:8080"
+timeout /t 2 >nul
+cd ..
+
+echo [3/3] Aguardando serviços iniciarem...
+timeout /t 3 >nul
+
+echo ✅ Sistema iniciado!
 echo.
-echo 🔍 PESQUISA INTELIGENTE:
-echo    ✅ Busca em tempo real (a cada letra digitada)
-echo    ✅ Busca por MAC e matrícula simultaneamente
-echo    ✅ Duas seções independentes de pesquisa
-echo    ✅ Paginação inteligente para cada seção
-echo    ✅ Contador de resultados dinâmico
-echo    ✅ Debounce para otimização de performance
+echo 🌐 Abrindo navegador...
+start http://localhost:8080
+
 echo.
-echo 🚫 VALIDAÇÃO DE DUPLICATAS:
-echo    ✅ Detecta MAC duplicado
-echo    ✅ Detecta matrícula duplicada
-echo    ✅ Detecta ambos duplicados
-echo    ✅ Modal elegante de confirmação
-echo    ✅ Opção de editar com confirmação dupla
-echo    ✅ Botão cancelar para abortar operação
+echo ╔══════════════════════════════════════════════════════════════════════════════╗
+echo ║                    📋 TESTE DE IMPORTAR/EXPORTAR                            ║
+echo ╚══════════════════════════════════════════════════════════════════════════════╝
 echo.
-echo 🔧 FORMATAÇÃO AUTOMÁTICA:
-echo    ✅ MAC: 1234567890aa → 12:34:56:78:90:AA
-echo    ✅ MAC: 12:34:56:78:90:aa → 12:34:56:78:90:AA
-echo    ✅ Matrícula: aa1212 → AA-12-12
-echo    ✅ Matrícula: AA-12-12 → AA-12-12
-echo    ✅ Case insensitive na entrada
-echo    ✅ Armazenamento padronizado
+
+echo 🎯 FUNCIONALIDADES DE IMPORTAR/EXPORTAR:
 echo.
-echo 📱 INTERFACE MODERNA:
-echo    ✅ Design responsivo para mobile
-echo    ✅ Modais com animações CSS
-echo    ✅ Botões com hover effects
-echo    ✅ Status badges coloridos
-echo    ✅ Ícones informativos
-echo    ✅ Feedback visual em tempo real
+echo 1. 📤 TESTE DE EXPORTAÇÃO:
 echo.
-echo 💾 PERSISTÊNCIA DE DADOS:
-echo    ✅ Armazenamento local (localStorage)
-echo    ✅ Sincronização com API quando online
-echo    ✅ Modo offline funcional
-echo    ✅ Dados mantidos entre sessões
+echo    ✅ PASSO 1 - Adicionar alguns veículos:
+echo       • Clique em "MACs Autorizados"
+echo       • Adicione: MAC: 24A160123456, Matrícula: AB1234
+echo       • Adicione: MAC: 1122334455AA, Matrícula: CD5678
+echo       • Adicione: MAC: BBCCDDEE1122, Matrícula: EF9012
 echo.
-echo 🧪 CENÁRIOS DE TESTE COMPLETOS:
+echo    📤 PASSO 2 - Exportar para CSV:
+echo       • Na seção "Importar/Exportar"
+echo       • Clique em "Baixar MACs"
+echo       • Deve baixar arquivo CSV com todos os veículos
+echo       • Arquivo deve ter formato: MAC,Matrícula,Autorizado,Último Acesso
 echo.
-echo 1️⃣ TESTE DE FORMATAÇÃO:
-echo    Entrada: 1234567890aa + bb3434
-echo    Resultado: 12:34:56:78:90:AA + BB-34-34
-echo    Status: ✅ Formatação automática
+echo 2. 📥 TESTE DE IMPORTAÇÃO:
 echo.
-echo 2️⃣ TESTE DE PESQUISA:
-echo    Digite "12:34" no campo MAC
-echo    Resultado: Mostra veículos com MAC contendo "12:34"
-echo    Status: ✅ Busca inteligente em tempo real
+echo    📋 PASSO 1 - Ver instruções de formato:
+echo       • Clique em "Como formatar o ficheiro?"
+echo       • Deve mostrar modal com instruções detalhadas
+echo       • Formato: CSV com colunas MAC,Matrícula,Autorizado,Último Acesso
 echo.
-echo 3️⃣ TESTE DE DUPLICATAS:
-echo    Tente adicionar MAC existente: 24:A1:60:12:34:56
-echo    Resultado: Modal de aviso com opção de editar
-echo    Status: ✅ Validação de duplicatas
+echo    📥 PASSO 2 - Criar arquivo de teste:
+echo       • Crie um arquivo CSV com o seguinte conteúdo:
 echo.
-echo 4️⃣ TESTE DE VALIDAÇÃO:
-echo    Entrada inválida: 12345 (MAC muito curto)
-echo    Resultado: Erro "MAC deve ter 12 caracteres"
-echo    Status: ✅ Validação de formato
+echo         MAC,Matrícula,Autorizado,Último Acesso
+echo         "99:88:77:66:55:44","GH-90-12","Sim","2025-01-18 15:00:00"
+echo         "33:22:11:AA:BB:CC","IJ-34-56","Não","2025-01-18 14:30:00"
+echo         "DD:EE:FF:11:22:33","KL-78-90","Sim","2025-01-18 16:15:00"
 echo.
-echo 5️⃣ TESTE DE PAGINAÇÃO:
-echo    Adicione mais de 10 veículos
-echo    Resultado: Botões de paginação funcionais
-echo    Status: ✅ Paginação independente por seção
+echo    📥 PASSO 3 - Importar arquivo:
+echo       • Clique em "Selecionar ficheiro"
+echo       • Escolha o arquivo CSV criado
+echo       • Deve mostrar modal com resultado da importação
+echo       • Deve mostrar: Total, Sucessos, Duplicados, Erros
 echo.
-echo 📊 DADOS DE TESTE PADRONIZADOS:
+echo 3. 🔍 TESTE DE FORMATOS FLEXÍVEIS:
 echo.
-echo Formato antigo → Formato novo:
-echo    ABC-1234 → AB-12-34
-echo    XYZ-5678 → XY-56-78
-echo    DEF-9012 → DE-90-12
-echo    GHI-3456 → GH-34-56
-echo    JKL-7890 → JK-78-90
+echo    ✅ CENÁRIO A - Formatos sem separadores:
+echo       • Crie CSV com: 998877665544,GH9012,Sim
+echo       • Deve importar e formatar como: 99:88:77:66:55:44, GH-90-12
 echo.
-echo 🎯 FLUXO DE TESTE RECOMENDADO:
+echo    ✅ CENÁRIO B - Formatos com separadores:
+echo       • Crie CSV com: 33:22:11:AA:BB:CC,IJ-34-56,Não
+echo       • Deve importar corretamente
 echo.
-echo 1. Acesse: http://localhost:8080
-echo 2. Login: admin@example.com / password
-echo 3. Teste formatação automática:
-echo    - MAC: 1234567890aa
-echo    - Matrícula: cc5678
-echo    - Observe formatação: 12:34:56:78:90:AA + CC-56-78
+echo 4. 🔄 TESTE DE DUPLICATAS NA IMPORTAÇÃO:
 echo.
-echo 4. Teste pesquisa inteligente:
-echo    - Digite "12" no campo MAC
-echo    - Digite "CC" no campo matrícula
-echo    - Observe resultados em tempo real
+echo    ⚠️  CENÁRIO C - Importar duplicatas:
+echo       • Tente importar veículo que já existe
+echo       • Sistema deve detectar e contar como duplicado
+echo       • Deve atualizar dados existentes
 echo.
-echo 5. Teste validação de duplicatas:
-echo    - Tente adicionar MAC existente
-echo    - Observe modal de confirmação
-echo    - Teste botões "Cancelar" e "Editar"
+echo 5. ❌ TESTE DE ERROS:
 echo.
-echo 6. Teste validação de formato:
-echo    - MAC inválido: 12345
-echo    - Matrícula inválida: A1
-echo    - Observe mensagens de erro
+echo    ❌ CENÁRIO D - Arquivo inválido:
+echo       • Tente importar arquivo não-CSV
+echo       • Deve mostrar erro
 echo.
-echo 💡 DICAS DE TESTE AVANÇADO:
+echo    ❌ CENÁRIO E - Dados inválidos:
+echo       • Crie CSV com MAC inválido: 123,ABC123,Sim
+echo       • Deve mostrar erro na importação
 echo.
-echo ✅ Console do navegador (F12):
-echo    - Veja logs detalhados de validação
-echo    - Monitore chamadas de API
-echo    - Observe eventos de pesquisa
+
+echo ⚠️  IMPORTANTE:
+echo    • Sistema: http://localhost:8080
+echo    • API: http://localhost:8000
+echo    • Pressione Ctrl+C nas janelas para parar
 echo.
-echo ✅ Teste de responsividade:
-echo    - Redimensione a janela do navegador
-echo    - Teste em modo mobile (F12 → Device Mode)
-echo    - Verifique se modais se adaptam
+
+echo 📊 FUNCIONALIDADES A VERIFICAR:
+echo    ✅ Exportação para CSV funcional
+echo    ✅ Importação de CSV funcional
+echo    ✅ Modal de instruções de formato
+echo    ✅ Modal de resultados de importação
+echo    ✅ Validação de formatos na importação
+echo    ✅ Detecção de duplicatas na importação
+echo    ✅ Tratamento de erros na importação
+echo    ✅ Formatos flexíveis (com/sem separadores)
+echo    ✅ Pesquisa flexível após importação
+echo    ✅ Último acesso atualizado
+echo    ✅ Persistência em localStorage
 echo.
-echo ✅ Teste de persistência:
-echo    - Adicione veículos
-echo    - Recarregue a página (F5)
-echo    - Verifique se dados permanecem
+
+echo 🎯 RESULTADOS ESPERADOS:
+echo    ✅ Arquivo CSV exportado com dados corretos
+echo    ✅ Importação bem-sucedida com feedback detalhado
+echo    ✅ Formatos normalizados automaticamente
+echo    ✅ Duplicatas detectadas e tratadas
+echo    ✅ Erros reportados claramente
+echo    ✅ Dados persistidos entre sessões
+echo    ✅ Pesquisa funciona com dados importados
 echo.
-echo ⚠️  REQUISITOS PARA TESTE COMPLETO:
-echo    ✅ Sistema rodando (iniciar_sistema_otimizado.bat)
-echo    ✅ JavaScript habilitado
-echo    ✅ LocalStorage habilitado
-echo    ✅ Console do navegador aberto (recomendado)
+
+echo 💡 EXEMPLO DE ARQUIVO CSV PARA TESTE:
 echo.
-echo 🚀 SCRIPTS DE TESTE DISPONÍVEIS:
+echo MAC,Matrícula,Autorizado,Último Acesso
+echo "24:A1:60:12:34:56","AB-12-34","Sim","2025-01-18 10:30:00"
+echo "11:22:33:44:55:AA","CD-56-78","Sim","2025-01-18 09:15:00"
+echo "BB:CC:DD:EE:11:22","EF-90-12","Não","2025-01-18 11:45:00"
+echo "99:88:77:66:55:44","GH-90-12","Sim","2025-01-18 15:00:00"
+echo "33:22:11:AA:BB:CC","IJ-34-56","Não","2025-01-18 14:30:00"
 echo.
-echo    teste_pesquisa.bat           - Testa pesquisa inteligente
-echo    teste_validacao_duplicatas.bat - Testa validação de duplicatas
-echo    teste_formatos.bat           - Testa formatação automática
-echo    teste_configuracao.bat       - Testa configuração geral
-echo.
-echo ===================================================
-echo    🎉 SISTEMA 100%% FUNCIONAL E TESTADO!
-echo ===================================================
-echo.
-echo 🌟 CARACTERÍSTICAS FINAIS:
-echo    ✅ Pesquisa inteligente em tempo real
-echo    ✅ Validação robusta de duplicatas
-echo    ✅ Formatação automática de dados
-echo    ✅ Interface moderna e responsiva
-echo    ✅ Persistência de dados local
-echo    ✅ Modais elegantes com animações
-echo    ✅ Validação de formatos flexível
-echo    ✅ Paginação independente
-echo    ✅ Feedback visual em tempo real
-echo    ✅ Compatibilidade mobile
-echo.
-echo 🚀 Para iniciar o sistema:
-echo    iniciar_sistema_otimizado.bat
-echo.
-echo 🌐 Acesse: http://localhost:8080
-echo.
-echo 📝 NOTA: Este sistema está pronto para produção!
-echo    Todas as funcionalidades foram implementadas e testadas.
-echo.
+
 pause
