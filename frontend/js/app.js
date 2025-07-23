@@ -810,7 +810,7 @@ class BarrierControlApp {
   }
 
   /**
-   * Add authorized MAC
+   * Add authorized MAC with duplicate validation
    */
   async addAuthorizedMac() {
     const macAddress = document.getElementById('mac-address');
@@ -818,8 +818,8 @@ class BarrierControlApp {
 
     if (!macAddress || !macPlate) return;
 
-    const mac = macAddress.value;
-    const placa = macPlate.value;
+    const mac = macAddress.value.trim();
+    const placa = macPlate.value.trim();
 
     if (!mac || !placa) {
       UIComponents.showToast('Erro: MAC e placa são obrigatórios', 'error');
@@ -827,40 +827,82 @@ class BarrierControlApp {
       return;
     }
 
-    // Validate MAC format
-    const macRegex = /^[0-9A-Fa-f]{12}$/;
+    // Validate MAC format (accept both with and without colons)
+    const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$|^[0-9A-Fa-f]{12}$/;
     if (!macRegex.test(mac)) {
-      UIComponents.showToast('Erro: Formato de MAC inválido. Use 12 caracteres hexadecimais sem separadores', 'error');
+      UIComponents.showToast('Erro: Formato de MAC inválido. Use formato XX:XX:XX:XX:XX:XX ou XXXXXXXXXXXX', 'error');
       this.addSystemLog('Erro: Formato de MAC inválido');
       return;
     }
 
+    // Validate plate format (basic validation)
+    const plateRegex = /^[A-Z0-9]{2,3}-[A-Z0-9]{2,4}$/i;
+    if (!plateRegex.test(placa)) {
+      UIComponents.showToast('Erro: Formato de matrícula inválido. Use formato ABC-1234', 'error');
+      this.addSystemLog('Erro: Formato de matrícula inválido');
+      return;
+    }
+
     try {
-      const response = await apiClient.addAuthorizedMac({ mac, placa });
-
-      if (response.ok) {
-        if (response.offline) {
-          UIComponents.showToast('MAC salvo para sincronização quando online', 'warning');
-          this.addSystemLog(`MAC ${mac} salvo para sincronização quando online`);
-        } else {
-          UIComponents.showToast('MAC adicionado com sucesso', 'success');
-          this.addSystemLog(`MAC ${mac} adicionado com sucesso`);
+      // Check for duplicates using search manager
+      if (window.searchManager) {
+        const result = await window.searchManager.addVehicle(mac, placa.toUpperCase(), true);
+        
+        if (result === null) {
+          // User cancelled the operation
+          this.addSystemLog('Operação cancelada pelo utilizador');
+          return;
         }
 
-        // Add to search manager for immediate availability
-        if (window.searchManager) {
-          window.searchManager.addVehicle(mac, placa);
-        }
-
-        // Clear form
+        // If we get here, the vehicle was added/updated successfully
+        UIComponents.showToast('Veículo processado com sucesso', 'success');
+        
+        // Clear form only if successful
         macAddress.value = '';
         macPlate.value = '';
+
+        // Try to add to API as well
+        const cleanMac = mac.replace(/[:-]/g, ''); // Remove separators for API
+        const response = await apiClient.addAuthorizedMac({ mac: cleanMac, placa: placa.toUpperCase() });
+
+        if (response.ok) {
+          if (response.offline) {
+            UIComponents.showToast('Dados também salvos para sincronização quando online', 'info');
+            this.addSystemLog(`MAC ${cleanMac} salvo para sincronização quando online`);
+          } else {
+            this.addSystemLog(`MAC ${cleanMac} sincronizado com servidor`);
+          }
+        } else {
+          // Even if API fails, local storage worked
+          UIComponents.showToast('Salvo localmente. Erro na sincronização: ' + response.error, 'warning');
+          this.addSystemLog(`Erro na sincronização: ${response.error}`);
+        }
 
         // Refresh list
         await this.fetchAuthorizedMacs();
       } else {
-        UIComponents.showToast(`Erro ao adicionar MAC: ${response.error}`, 'error');
-        this.addSystemLog(`Erro ao adicionar MAC: ${response.error}`);
+        // Fallback to original method if search manager not available
+        const response = await apiClient.addAuthorizedMac({ mac: mac.replace(/[:-]/g, ''), placa: placa.toUpperCase() });
+
+        if (response.ok) {
+          if (response.offline) {
+            UIComponents.showToast('MAC salvo para sincronização quando online', 'warning');
+            this.addSystemLog(`MAC ${mac} salvo para sincronização quando online`);
+          } else {
+            UIComponents.showToast('MAC adicionado com sucesso', 'success');
+            this.addSystemLog(`MAC ${mac} adicionado com sucesso`);
+          }
+
+          // Clear form
+          macAddress.value = '';
+          macPlate.value = '';
+
+          // Refresh list
+          await this.fetchAuthorizedMacs();
+        } else {
+          UIComponents.showToast(`Erro ao adicionar MAC: ${response.error}`, 'error');
+          this.addSystemLog(`Erro ao adicionar MAC: ${response.error}`);
+        }
       }
     } catch (error) {
       console.error('Failed to add MAC:', error);
