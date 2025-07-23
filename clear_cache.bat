@@ -1,37 +1,86 @@
 @echo off
-echo ========================================
-echo  LIMPEZA DE CACHE DO SISTEMA RADAR
-echo ========================================
+chcp 65001 >nul
+echo ===================================================
+echo    LIMPEZA COMPLETA DE CACHE - BARREIRAS IOT
+echo ===================================================
 echo.
 
-echo [1/4] Parando servidores existentes...
+echo [1/7] Parando servidores...
 taskkill /F /IM php.exe >nul 2>&1
+taskkill /F /IM node.exe >nul 2>&1
+timeout /t 2 >nul
+echo ✅ Servidores parados
 
-echo [2/4] Criando arquivo de cache-buster...
-echo // Cache buster - %DATE% %TIME% > frontend/js/cache-buster.js
-echo window.CACHE_VERSION = "%DATE%-%TIME%"; >> frontend/js/cache-buster.js
-echo console.log("Cache atualizado em: %DATE% %TIME%"); >> frontend/js/cache-buster.js
+echo [2/7] Limpando cache do Laravel...
+cd backend
+php artisan cache:clear >nul 2>&1
+php artisan config:clear >nul 2>&1
+php artisan route:clear >nul 2>&1
+php artisan view:clear >nul 2>&1
+php artisan optimize:clear >nul 2>&1
+echo ✅ Cache Laravel limpo
 
-echo [3/4] Atualizando referências de cache no HTML...
-powershell -Command "(Get-Content frontend/index.html) -replace '<script src=\"js/chart-polyfill.js\"></script>', '<script src=\"js/chart-polyfill.js?v=%RANDOM%\"></script>' | Set-Content frontend/index.html"
-powershell -Command "(Get-Content frontend/index.html) -replace '<script src=\"js/app.js\"></script>', '<script src=\"js/app.js?v=%RANDOM%\"></script>' | Set-Content frontend/index.html"
-powershell -Command "(Get-Content frontend/index.html) -replace '<script src=\"js/radar-simulation.js\"></script>', '<script src=\"js/radar-simulation.js?v=%RANDOM%\"></script>' | Set-Content frontend/index.html"
-powershell -Command "(Get-Content frontend/index.html) -replace '<script src=\"js/search-functionality.js\"></script>', '<script src=\"js/search-functionality.js?v=%RANDOM%\"></script>' | Set-Content frontend/index.html"
-powershell -Command "(Get-Content frontend/index.html) -replace '<script src=\"js/system-configuration.js\"></script>', '<script src=\"js/system-configuration.js?v=%RANDOM%\"></script>' | Set-Content frontend/index.html"
-powershell -Command "(Get-Content frontend/index.html) -replace '<script src=\"js/chart-resize.js\"></script>', '<script src=\"js/chart-resize.js?v=%RANDOM%\"></script>' | Set-Content frontend/index.html"
+echo [3/7] Limpando autoload do Composer...
+composer dump-autoload >nul 2>&1
+echo ✅ Autoload recarregado
 
-echo [4/4] Adicionando script de cache-buster...
-powershell -Command "(Get-Content frontend/index.html) -replace '<script src=\"js/chart-polyfill.js', '<script src=\"js/cache-buster.js?v=%RANDOM%\"></script>\n    <script src=\"js/chart-polyfill.js' | Set-Content frontend/index.html"
+echo [4/7] Limpando logs antigos...
+if exist storage\logs\*.log (
+    del /q storage\logs\*.log >nul 2>&1
+    echo ✅ Logs limpos
+) else (
+    echo ✅ Nenhum log para limpar
+)
+
+echo [5/7] Limpando cache do Node.js...
+cd ..\frontend
+if exist node_modules (
+    echo Removendo node_modules...
+    rmdir /s /q node_modules >nul 2>&1
+    echo ✅ node_modules removido
+) else (
+    echo ✅ node_modules já limpo
+)
+
+if exist package-lock.json (
+    del package-lock.json >nul 2>&1
+    echo ✅ package-lock.json removido
+)
+
+echo [6/7] Reinstalando dependências...
+call npm install >nul 2>&1
+if %errorlevel% neq 0 (
+    echo ❌ ERRO: Falha ao reinstalar dependências Node.js
+) else (
+    echo ✅ Dependências Node.js reinstaladas
+)
+
+echo [7/7] Recompilando CSS...
+call npm run build:css >nul 2>&1
+if %errorlevel% neq 0 (
+    echo ❌ ERRO: Falha ao compilar CSS
+) else (
+    echo ✅ CSS recompilado
+)
+
+cd ..
 
 echo.
-echo ========================================
-echo  CACHE LIMPO COM SUCESSO!
-echo ========================================
+echo ===================================================
+echo    ✅ LIMPEZA COMPLETA FINALIZADA!
+echo ===================================================
 echo.
-echo Agora você pode iniciar o sistema com:
-echo   teste_sistema_final.bat
+echo 🧹 O que foi limpo:
+echo    - Cache do Laravel (config, routes, views)
+echo    - Autoload do Composer
+echo    - Logs antigos
+echo    - node_modules e package-lock.json
+echo    - CSS recompilado
 echo.
-echo O sistema carregará sempre a versão mais recente dos arquivos.
+echo 🚀 Para reiniciar o sistema:
+echo    Execute: iniciar_sistema_otimizado.bat
 echo.
-echo Pressione qualquer tecla para continuar...
-pause > nul
+echo 💡 Se ainda houver problemas:
+echo    Execute: configurar_novo_computador.bat
+echo.
+pause
