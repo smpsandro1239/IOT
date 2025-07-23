@@ -41,16 +41,16 @@ class SearchManager {
         this.plateSearchInput = document.getElementById('plate-search');
         this.macSearchAdvancedInput = document.getElementById('mac-search-advanced');
         this.plateSearchAdvancedInput = document.getElementById('plate-search-advanced');
-        
+
         this.macInputMetrics = document.getElementById('mac-input');
         this.plateInputMetrics = document.getElementById('plate-input');
-        
+
         this.authorizedMacsContainer = document.getElementById('authorized-macs');
         this.authorizedMacsAdvancedContainer = document.getElementById('authorized-macs-advanced');
-        
+
         this.searchResultsCount = document.getElementById('search-results-count');
         this.searchResultsCountAdvanced = document.getElementById('search-results-count-advanced');
-        
+
         this.prevPageBtn = document.getElementById('prev-page');
         this.nextPageBtn = document.getElementById('next-page');
         this.prevPageAdvancedBtn = document.getElementById('prev-page-advanced');
@@ -406,21 +406,16 @@ class SearchManager {
 
         if (vehicle && this.macInputMetrics) {
             this.macInputMetrics.value = vehicle.mac;
-            // Ensure we update charts with the MAC as well
             this.updateCharts('mac', vehicle.mac);
         } else {
-            // If no exact match, try a partial match
             const partialMatches = this.authorizedVehicles.filter(v =>
                 v.plate.toLowerCase().includes(selectedPlate.toLowerCase()));
 
             if (partialMatches.length > 0 && this.macInputMetrics) {
-                // Use the first partial match
                 this.macInputMetrics.value = partialMatches[0].mac;
                 this.updateCharts('mac', partialMatches[0].mac);
-                // Update the plate input with the full plate
                 this.plateInputMetrics.value = partialMatches[0].plate;
             } else {
-                // If no match at all, just update with the plate
                 this.updateCharts('plate', selectedPlate);
             }
         }
@@ -430,10 +425,7 @@ class SearchManager {
      * Update charts based on selection
      */
     updateCharts(type, value) {
-        // This would integrate with the existing chart system
         console.log(`Updating charts for ${type}: ${value}`);
-
-        // Add log entry
         if (window.addLog) {
             const displayValue = type === 'mac' ? value : `${value} (${this.getVehicleByPlate(value)?.mac || 'N/A'})`;
             window.addLog(`Métricas atualizadas para ${type === 'mac' ? 'MAC' : 'matrícula'}: ${displayValue}`);
@@ -462,27 +454,23 @@ class SearchManager {
      */
     async addVehicle(mac, plate, authorized = true, skipValidation = false) {
         try {
-            // Validate and format MAC address
             if (!this.validateMacFormat(mac)) {
                 throw new Error('Formato de MAC inválido. Use 12 caracteres hexadecimais (ex: 1234567890aa ou 12:34:56:78:90:aa)');
             }
             const formattedMac = this.formatMacWithColons(mac);
 
-            // Validate and format plate
             if (!this.validatePlateFormat(plate)) {
                 throw new Error('Formato de matrícula inválido. Use 6 caracteres (ex: AA1212 ou AA-12-12)');
             }
             const formattedPlate = this.formatPlateStandard(plate);
 
-            // Check for duplicates if validation is not skipped
             if (!skipValidation) {
                 const duplicateResult = this.checkForDuplicates(formattedMac, formattedPlate);
                 if (duplicateResult.hasDuplicate) {
                     const shouldEdit = await this.showDuplicateDialog(duplicateResult);
                     if (!shouldEdit) {
-                        return null; // User cancelled
+                        return null;
                     }
-                    // If user wants to edit, continue with the update
                 }
             }
 
@@ -493,47 +481,38 @@ class SearchManager {
                 lastAccess: new Date().toLocaleString('pt-PT')
             };
 
-            // Check if vehicle already exists for update
             const existingIndex = this.authorizedVehicles.findIndex(v => v.mac === formattedMac || v.plate === formattedPlate);
             if (existingIndex >= 0) {
-                // Update existing vehicle
                 this.authorizedVehicles[existingIndex] = newVehicle;
                 if (window.addLog) {
                     window.addLog(`Veículo atualizado: ${formattedPlate} (${formattedMac})`);
                 }
             } else {
-                // Add new vehicle
                 this.authorizedVehicles.push(newVehicle);
                 if (window.addLog) {
                     window.addLog(`Novo veículo adicionado: ${formattedPlate} (${formattedMac})`);
                 }
             }
 
-            // Update UI
             this.populateDataLists();
-            this.performSearch(); // Refresh original display
-            this.performAdvancedSearch(); // Refresh advanced display
+            this.performSearch();
+            this.performAdvancedSearch();
 
-            // Update metrics dropdowns
             this.updateMetricsDropdowns(formattedMac, formattedPlate);
 
-            // Save to localStorage for persistence
             this.saveVehicles();
 
             return newVehicle;
         } catch (error) {
-            // Show error message to user
             if (window.UIComponents && window.UIComponents.showToast) {
                 window.UIComponents.showToast(`Erro: ${error.message}`, 'error');
             } else {
                 alert(`Erro: ${error.message}`);
             }
-            
             if (window.addLog) {
                 window.addLog(`Erro ao adicionar veículo: ${error.message}`);
             }
-            
-            throw error; // Re-throw for handling by calling function
+            throw error;
         }
     }
 
@@ -548,9 +527,9 @@ class SearchManager {
             hasDuplicate: !!(macDuplicate || plateDuplicate),
             macDuplicate: macDuplicate,
             plateDuplicate: plateDuplicate,
-            duplicateType: macDuplicate && plateDuplicate ? 'both' : 
-                          macDuplicate ? 'mac' : 
-                          plateDuplicate ? 'plate' : 'none'
+            duplicateType: macDuplicate && plateDuplicate ? 'both' :
+                macDuplicate ? 'mac' :
+                    plateDuplicate ? 'plate' : 'none'
         };
     }
 
@@ -559,7 +538,6 @@ class SearchManager {
      */
     async showDuplicateDialog(duplicateResult) {
         return new Promise((resolve) => {
-            // Create modal HTML
             const modalHTML = `
                 <div id="duplicate-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 modal-overlay">
                     <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white modal-content">
@@ -594,28 +572,24 @@ class SearchManager {
                 </div>
             `;
 
-            // Add modal to DOM
             document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-            // Add event listeners
             document.getElementById('cancel-duplicate').addEventListener('click', () => {
                 document.getElementById('duplicate-modal').remove();
                 resolve(false);
             });
 
             document.getElementById('edit-duplicate').addEventListener('click', async () => {
-                // Get the new data from the current form inputs
                 const macInput = document.getElementById('mac-address');
                 const plateInput = document.getElementById('mac-plate');
                 const newMac = macInput ? this.formatMacWithColons(macInput.value) : '';
                 const newPlate = plateInput ? this.formatPlateStandard(plateInput.value) : '';
-                
+
                 const confirmEdit = await this.showEditConfirmation(duplicateResult, newMac, newPlate);
                 document.getElementById('duplicate-modal').remove();
                 resolve(confirmEdit);
             });
 
-            // Close on outside click
             document.getElementById('duplicate-modal').addEventListener('click', (e) => {
                 if (e.target.id === 'duplicate-modal') {
                     document.getElementById('duplicate-modal').remove();
@@ -630,9 +604,8 @@ class SearchManager {
      */
     async showEditConfirmation(duplicateResult, newMac, newPlate) {
         return new Promise((resolve) => {
-            // Get existing vehicle data
             const existingVehicle = duplicateResult.macDuplicate || duplicateResult.plateDuplicate;
-            
+
             const confirmHTML = `
                 <div id="edit-confirm-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 modal-overlay">
                     <div class="relative top-20 mx-auto p-5 border w-auto max-w-lg shadow-lg rounded-md bg-white modal-content">
@@ -646,15 +619,11 @@ class SearchManager {
                                     <p class="text-sm text-gray-600 mb-4">
                                         Tem a certeza que deseja alterar os dados do veículo existente?
                                     </p>
-                                    
-                                    <!-- Before/After Comparison -->
                                     <div class="bg-gray-50 rounded-lg p-4 mb-4">
                                         <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
                                             <i class="fas fa-eye mr-2 text-blue-500"></i>Comparação de Alterações
                                         </h4>
-                                        
                                         <div class="grid grid-cols-2 gap-4 text-xs">
-                                            <!-- Before Column -->
                                             <div class="bg-red-50 border border-red-200 rounded p-3">
                                                 <h5 class="font-semibold text-red-700 mb-2 flex items-center">
                                                     <i class="fas fa-arrow-left mr-1"></i>Dados Atuais
@@ -665,8 +634,6 @@ class SearchManager {
                                                     <div><strong>Status:</strong> <span class="px-1 py-0.5 rounded text-xs ${existingVehicle.authorized ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${existingVehicle.authorized ? 'Autorizado' : 'Não Autorizado'}</span></div>
                                                 </div>
                                             </div>
-                                            
-                                            <!-- After Column -->
                                             <div class="bg-green-50 border border-green-200 rounded p-3">
                                                 <h5 class="font-semibold text-green-700 mb-2 flex items-center">
                                                     <i class="fas fa-arrow-right mr-1"></i>Novos Dados
@@ -679,7 +646,6 @@ class SearchManager {
                                             </div>
                                         </div>
                                     </div>
-                                    
                                     <div class="bg-yellow-50 border border-yellow-200 rounded-md p-3">
                                         <p class="text-xs text-yellow-700 flex items-center">
                                             <i class="fas fa-exclamation-triangle mr-2"></i>
@@ -713,7 +679,6 @@ class SearchManager {
                 resolve(true);
             });
 
-            // Close on outside click
             document.getElementById('edit-confirm-modal').addEventListener('click', (e) => {
                 if (e.target.id === 'edit-confirm-modal') {
                     document.getElementById('edit-confirm-modal').remove();
@@ -744,11 +709,11 @@ class SearchManager {
      */
     getDuplicateDetails(duplicateResult) {
         let details = '';
-        
+
         if (duplicateResult.macDuplicate) {
             const statusClass = duplicateResult.macDuplicate.authorized ? 'status-authorized' : 'status-unauthorized';
             const statusText = duplicateResult.macDuplicate.authorized ? 'Autorizado' : 'Não Autorizado';
-            
+
             details += `<div class="text-xs text-gray-700 mb-2 p-2 bg-white rounded border">
                 <div class="flex items-center justify-between mb-1">
                     <strong class="text-gray-800">🚗 Veículo:</strong>
@@ -761,11 +726,11 @@ class SearchManager {
                 </div>
             </div>`;
         }
-        
+
         if (duplicateResult.plateDuplicate && duplicateResult.plateDuplicate !== duplicateResult.macDuplicate) {
             const statusClass = duplicateResult.plateDuplicate.authorized ? 'status-authorized' : 'status-unauthorized';
             const statusText = duplicateResult.plateDuplicate.authorized ? 'Autorizado' : 'Não Autorizado';
-            
+
             details += `<div class="text-xs text-gray-700 p-2 bg-white rounded border">
                 <div class="flex items-center justify-between mb-1">
                     <strong class="text-gray-800">🚗 Veículo:</strong>
@@ -778,7 +743,7 @@ class SearchManager {
                 </div>
             </div>`;
         }
-        
+
         return details;
     }
 
@@ -786,17 +751,11 @@ class SearchManager {
      * Format MAC address with colons (standardized format)
      */
     formatMacWithColons(mac) {
-        // Remove any non-hex characters
         const cleanMac = mac.replace(/[^0-9A-Fa-f]/g, '').toUpperCase();
-
-        // Validate length (must be 12 characters)
         if (cleanMac.length !== 12) {
             throw new Error('MAC deve ter exatamente 12 caracteres hexadecimais');
         }
-
-        // Insert colons every 2 characters
-        const formattedMac = cleanMac.match(/.{1,2}/g)?.join(':') || cleanMac;
-
+        const formattedMac = cleanMac.match(/.{1,2}/g).join(':');
         return formattedMac;
     }
 
@@ -804,436 +763,15 @@ class SearchManager {
      * Format plate to Portuguese standard format (XX-XX-XX)
      */
     formatPlateStandard(plate) {
-        // Remove any non-alphanumeric characters and convert to uppercase
         const cleanPlate = plate.replace(/[^0-9A-Za-z]/g, '').toUpperCase();
-
-        // Validate length (must be 6 characters)
         if (cleanPlate.length !== 6) {
             throw new Error('Matrícula deve ter exatamente 6 caracteres (formato português)');
         }
-
-        // Format as XX-XX-XX (Portuguese standard with hyphens between each pair)
-        const formattedPlate = cleanPlate.substring(0, 2) + '-' + 
-                              cleanPlate.substring(2, 4) + '-' + 
-                              cleanPlate.substring(4, 6);
-
+        const formattedPlate = cleanPlate.substring(0, 2) + '-' + cleanPlate.substring(2, 4) + '-' + cleanPlate.substring(4, 6);
         return formattedPlate;
-    }
-
-    /**
-     * Validate MAC format (accepts multiple input formats)
-     */
-    validateMacFormat(mac) {
-        // Remove any separators and spaces
-        const cleanMac = mac.replace(/[^0-9A-Fa-f]/g, '');
-        
-        // Check if it's exactly 12 hex characters
-        const macRegex = /^[0-9A-Fa-f]{12}$/;
-        return macRegex.test(cleanMac);
-    }
-
-    /**
-     * Validate Portuguese plate format (accepts multiple input formats)
-     */
-    validatePlateFormat(plate) {
-        // Remove any separators and spaces
-        const cleanPlate = plate.replace(/[^0-9A-Za-z]/g, '');
-        
-        // Check if it's exactly 6 alphanumeric characters
-        // Portuguese formats:
-        // - Formato antigo: AA-00-00 (2 letras + 4 números)
-        // - Formato novo: 00-AA-00 (2 números + 2 letras + 2 números)  
-        // - Formato atual: 00-00-AA (4 números + 2 letras)
-        const plateRegex = /^[A-Za-z]{2}[0-9]{4}$|^[0-9]{2}[A-Za-z]{2}[0-9]{2}$|^[0-9]{4}[A-Za-z]{2}$/;
-        return plateRegex.test(cleanPlate);
-    }
-
-    /**
-     * Update metrics dropdowns
-     */
-    updateMetricsDropdowns(mac, plate) {
-        if (this.macInputMetrics && this.plateInputMetrics) {
-            // Add to datalists
-            const macList = document.getElementById('mac-list');
-            const plateList = document.getElementById('plate-list');
-
-            if (macList) {
-                // Remove existing option if exists
-                const existingOption = macList.querySelector(`option[value="${mac}"]`);
-                if (existingOption) {
-                    existingOption.remove();
-                }
-                
-                const option = document.createElement('option');
-                option.value = mac;
-                option.textContent = `${mac} (${plate})`;
-                macList.appendChild(option);
-            }
-
-            if (plateList) {
-                // Remove existing option if exists
-                const existingOption = plateList.querySelector(`option[value="${plate}"]`);
-                if (existingOption) {
-                    existingOption.remove();
-                }
-                
-                const option = document.createElement('option');
-                option.value = plate;
-                option.textContent = `${plate} (${mac})`;
-                plateList.appendChild(option);
-            }
-        }
-    }
-
-    /**
-     * Save vehicles to localStorage
-     */
-    saveVehicles() {
-        try {
-            localStorage.setItem('authorizedVehicles', JSON.stringify(this.authorizedVehicles));
-        } catch (error) {
-            console.error('Error saving vehicles:', error);
-        }
-    }
-
-    /**
-     * Load vehicles from localStorage
-     * @returns {Array|null} Array of vehicles or null if not found
-     */
-    loadVehicles() {
-        try {
-            const savedVehicles = localStorage.getItem('authorizedVehicles');
-            return savedVehicles ? JSON.parse(savedVehicles) : null;
-        } catch (error) {
-            console.error('Error loading vehicles:', error);
-            return null;
-        }
     }
 }
 
-// Initialize search manager when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    window.searchManager = new SearchManager();
-});>${newMac}</code></div>
-                                                    <div><strong>Matrícula:</strong> <code class="bg-green-100 px-1 rounded">${newPlate}</code></div>
-                                                    <div><strong>Status:</strong> <span class="px-1 py-0.5 rounded text-xs bg-green-100 text-green-700">Autorizado</span></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="bg-yellow-50 border border-yellow-200 rounded-md p-3">
-                                        <p class="text-xs text-yellow-700 flex items-center">
-                                            <i class="fas fa-exclamation-triangle mr-2"></i>
-                                            <strong>Atenção:</strong> Esta ação irá substituir permanentemente os dados atuais pelos novos dados.
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="flex justify-center space-x-3 mt-4">
-                                    <button id="cancel-edit" class="modal-button px-4 py-2 bg-gray-300 text-gray-700 text-base font-medium rounded-md shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300">
-                                        <i class="fas fa-times mr-1"></i> Cancelar
-                                    </button>
-                                    <button id="confirm-edit" class="modal-button px-4 py-2 bg-orange-600 text-white text-base font-medium rounded-md shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500">
-                                        <i class="fas fa-check mr-1"></i> Confirmar Alteração
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            document.body.insertAdjacentHTML('beforeend', confirmHTML);
-
-            document.getElementById('cancel-edit').addEventListener('click', () => {
-                document.getElementById('edit-confirm-modal').remove();
-                resolve(false);
-            });
-
-            document.getElementById('confirm-edit').addEventListener('click', () => {
-                document.getElementById('edit-confirm-modal').remove();
-                resolve(true);
-            });
-
-            // Close on outside click
-            document.getElementById('edit-confirm-modal').addEventListener('click', (e) => {
-                if (e.target.id === 'edit-confirm-modal') {
-                    document.getElementById('edit-confirm-modal').remove();
-                    resolve(false);
-                }
-            });
-        });
-    }
-
-    /**
-     * Get duplicate message based on type
-     */
-    getDuplicateMessage(duplicateResult) {
-        switch (duplicateResult.duplicateType) {
-            case 'both':
-                return 'Já existe um veículo com o mesmo MAC e a mesma matrícula na base de dados.';
-            case 'mac':
-                return 'Já existe um veículo com o mesmo endereço MAC na base de dados.';
-            case 'plate':
-                return 'Já existe um veículo com a mesma matrícula na base de dados.';
-            default:
-                return 'Veículo duplicado encontrado.';
-        }
-    }
-
-    /**
-     * Get duplicate details for display
-     */
-    getDuplicateDetails(duplicateResult) {
-        let details = '';
-        
-        if (duplicateResult.macDuplicate) {
-            const statusClass = duplicateResult.macDuplicate.authorized ? 'status-authorized' : 'status-unauthorized';
-            const statusText = duplicateResult.macDuplicate.authorized ? 'Autorizado' : 'Não Autorizado';
-            
-            details += `<div class="text-xs text-gray-700 mb-2 p-2 bg-white rounded border">
-                <div class="flex items-center justify-between mb-1">
-                    <strong class="text-gray-800">🚗 Veículo:</strong>
-                    <span class="status-badge ${statusClass}">${statusText}</span>
-                </div>
-                <div class="space-y-1">
-                    <div><strong>MAC:</strong> <code class="bg-gray-100 px-1 rounded">${duplicateResult.macDuplicate.mac}</code></div>
-                    <div><strong>Matrícula:</strong> <code class="bg-gray-100 px-1 rounded">${duplicateResult.macDuplicate.plate}</code></div>
-                    <div><strong>Último Acesso:</strong> ${duplicateResult.macDuplicate.lastAccess}</div>
-                </div>
-            </div>`;
-        }
-        
-        if (duplicateResult.plateDuplicate && duplicateResult.plateDuplicate !== duplicateResult.macDuplicate) {
-            const statusClass = duplicateResult.plateDuplicate.authorized ? 'status-authorized' : 'status-unauthorized';
-            const statusText = duplicateResult.plateDuplicate.authorized ? 'Autorizado' : 'Não Autorizado';
-            
-            details += `<div class="text-xs text-gray-700 p-2 bg-white rounded border">
-                <div class="flex items-center justify-between mb-1">
-                    <strong class="text-gray-800">🚗 Veículo:</strong>
-                    <span class="status-badge ${statusClass}">${statusText}</span>
-                </div>
-                <div class="space-y-1">
-                    <div><strong>MAC:</strong> <code class="bg-gray-100 px-1 rounded">${duplicateResult.plateDuplicate.mac}</code></div>
-                    <div><strong>Matrícula:</strong> <code class="bg-gray-100 px-1 rounded">${duplicateResult.plateDuplicate.plate}</code></div>
-                    <div><strong>Último Acesso:</strong> ${duplicateResult.plateDuplicate.lastAccess}</div>
-                </div>
-            </div>`;
-        }
-        
-        return details;
-    }
-
-    /**
-     * Update metrics dropdowns
-     */
-    updateMetricsDropdowns(mac, plate) {
-        if (this.macInputMetrics && this.plateInputMetrics) {
-            // Add to datalists
-            const macList = document.getElementById('mac-list');
-            const plateList = document.getElementById('plate-list');
-
-            if (macList) {
-                // Remove existing option if exists
-                const existingOption = macList.querySelector(`option[value="${mac}"]`);
-                if (existingOption) {
-                    existingOption.remove();
-                }
-                
-                const option = document.createElement('option');
-                option.value = mac;
-                option.textContent = `${mac} (${plate})`;
-                macList.appendChild(option);
-            }
-
-            if (plateList) {
-                // Remove existing option if exists
-                const existingOption = plateList.querySelector(`option[value="${plate}"]`);
-                if (existingOption) {
-                    existingOption.remove();
-                }
-                
-                const option = document.createElement('option');
-                option.value = plate;
-                option.textContent = `${plate} (${mac})`;
-                plateList.appendChild(option);
-            }
-        }
-    }
-
-    /**
-     * Format MAC address with colons (standardized format)
-     */
-    formatMacWithColons(mac) {
-        // Remove any non-hex characters
-        const cleanMac = mac.replace(/[^0-9A-Fa-f]/g, '').toUpperCase();
-
-        // Validate length (must be 12 characters)
-        if (cleanMac.length !== 12) {
-            throw new Error('MAC deve ter exatamente 12 caracteres hexadecimais');
-        }
-
-        // Insert colons every 2 characters
-        const formattedMac = cleanMac.match(/.{1,2}/g)?.join(':') || cleanMac;
-
-        return formattedMac;
-    }
-
-    /**
-     * Format plate to Portuguese standard format (XX-XX-XX)
-     */
-    formatPlateStandard(plate) {
-        // Remove any non-alphanumeric characters and convert to uppercase
-        const cleanPlate = plate.replace(/[^0-9A-Za-z]/g, '').toUpperCase();
-
-        // Validate length (must be 6 characters)
-        if (cleanPlate.length !== 6) {
-            throw new Error('Matrícula deve ter exatamente 6 caracteres (formato português)');
-        }
-
-        // Format as XX-XX-XX (Portuguese standard with hyphens between each pair)
-        const formattedPlate = cleanPlate.substring(0, 2) + '-' + 
-                              cleanPlate.substring(2, 4) + '-' + 
-                              cleanPlate.substring(4, 6);
-
-        return formattedPlate;
-    }
-
-    /**
-     * Validate MAC format (accepts multiple input formats)
-     */
-    validateMacFormat(mac) {
-        // Remove any separators and spaces
-        const cleanMac = mac.replace(/[^0-9A-Fa-f]/g, '');
-        
-        // Check if it's exactly 12 hex characters
-        const macRegex = /^[0-9A-Fa-f]{12}$/;
-        return macRegex.test(cleanMac);
-    }
-
-    /**
-     * Validate Portuguese plate format (accepts multiple input formats)
-     */
-    validatePlateFormat(plate) {
-        // Remove any separators and spaces
-        const cleanPlate = plate.replace(/[^0-9A-Za-z]/g, '');
-        
-        // Check if it's exactly 6 alphanumeric characters
-        // Portuguese formats:
-        // - Formato antigo: AA-00-00 (2 letras + 4 números)
-        // - Formato novo: 00-AA-00 (2 números + 2 letras + 2 números)  
-        // - Formato atual: 00-00-AA (4 números + 2 letras)
-        const plateRegex = /^[A-Za-z]{2}[0-9]{4}$|^[0-9]{2}[A-Za-z]{2}[0-9]{2}$|^[0-9]{4}[A-Za-z]{2}$/;
-        return plateRegex.test(cleanPlate);
-    }
-
-    /**
-     * Update metrics dropdowns
-     */
-    updateMetricsDropdowns(mac, plate) {
-        if (this.macInputMetrics && this.plateInputMetrics) {
-            // Add to datalists
-            const macList = document.getElementById('mac-list');
-            const plateList = document.getElementById('plate-list');
-
-            if (macList) {
-                // Remove existing option if exists
-                const existingOption = macList.querySelector(`option[value="${mac}"]`);
-                if (existingOption) {
-                    existingOption.remove();
-                }
-                
-                const option = document.createElement('option');
-                option.value = mac;
-                option.textContent = `${mac} (${plate})`;
-                macList.appendChild(option);
-            }
-
-            if (plateList) {
-                // Remove existing option if exists
-                const existingOption = plateList.querySelector(`option[value="${plate}"]`);
-                if (existingOption) {
-                    existingOption.remove();
-                }
-                
-                const option = document.createElement('option');
-                option.value = plate;
-                option.textContent = `${plate} (${mac})`;
-                plateList.appendChild(option);
-            }
-        }
-    }
-
-    /**
-     * Get duplicate details for display
-     */
-    getDuplicateDetails(duplicateResult) {
-        let details = '';
-        
-        if (duplicateResult.macDuplicate) {
-            const statusClass = duplicateResult.macDuplicate.authorized ? 'status-authorized' : 'status-unauthorized';
-            const statusText = duplicateResult.macDuplicate.authorized ? 'Autorizado' : 'Não Autorizado';
-            
-            details += `<div class="text-xs text-gray-700 mb-2 p-2 bg-white rounded border">
-                <div class="flex items-center justify-between mb-1">
-                    <strong class="text-gray-800">🚗 Veículo:</strong>
-                    <span class="status-badge ${statusClass}">${statusText}</span>
-                </div>
-                <div class="space-y-1">
-                    <div><strong>MAC:</strong> <code class="bg-gray-100 px-1 rounded">${duplicateResult.macDuplicate.mac}</code></div>
-                    <div><strong>Matrícula:</strong> <code class="bg-gray-100 px-1 rounded">${duplicateResult.macDuplicate.plate}</code></div>
-                    <div><strong>Último Acesso:</strong> ${duplicateResult.macDuplicate.lastAccess}</div>
-                </div>
-            </div>`;
-        }
-        
-        if (duplicateResult.plateDuplicate && duplicateResult.plateDuplicate !== duplicateResult.macDuplicate) {
-            const statusClass = duplicateResult.plateDuplicate.authorized ? 'status-authorized' : 'status-unauthorized';
-            const statusText = duplicateResult.plateDuplicate.authorized ? 'Autorizado' : 'Não Autorizado';
-            
-            details += `<div class="text-xs text-gray-700 p-2 bg-white rounded border">
-                <div class="flex items-center justify-between mb-1">
-                    <strong class="text-gray-800">🚗 Veículo:</strong>
-                    <span class="status-badge ${statusClass}">${statusText}</span>
-                </div>
-                <div class="space-y-1">
-                    <div><strong>MAC:</strong> <code class="bg-gray-100 px-1 rounded">${duplicateResult.plateDuplicate.mac}</code></div>
-                    <div><strong>Matrícula:</strong> <code class="bg-gray-100 px-1 rounded">${duplicateResult.plateDuplicate.plate}</code></div>
-                    <div><strong>Último Acesso:</strong> ${duplicateResult.plateDuplicate.lastAccess}</div>
-                </div>
-            </div>`;
-        }
-        
-        return details;
-    }
-
-    /**
-     * Save vehicles to localStorage
-     */
-    saveVehicles() {
-        try {
-            localStorage.setItem('authorizedVehicles', JSON.stringify(this.authorizedVehicles));
-        } catch (error) {
-            console.error('Error saving vehicles:', error);
-        }
-    }
-
-    /**
-     * Load vehicles from localStorage
-     * @returns {Array|null} Array of vehicles or null if not found
-     */
-    loadVehicles() {
-        try {
-            const savedVehicles = localStorage.getItem('authorizedVehicles');
-            return savedVehicles ? JSON.parse(savedVehicles) : null;
-        } catch (error) {
-            console.error('Error loading vehicles:', error);
-            return null;
-        }
-    }
-}
-
-// Initialize search manager when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    window.searchManager = new SearchManager();
-});
+/**
+ * Validate MAC format (accepts multiple input formats)
+ */
