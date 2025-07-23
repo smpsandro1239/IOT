@@ -827,20 +827,34 @@ class BarrierControlApp {
       return;
     }
 
-    // Validate MAC format (accept both with and without colons)
-    const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$|^[0-9A-Fa-f]{12}$/;
-    if (!macRegex.test(mac)) {
-      UIComponents.showToast('Erro: Formato de MAC inválido. Use formato XX:XX:XX:XX:XX:XX ou XXXXXXXXXXXX', 'error');
-      this.addSystemLog('Erro: Formato de MAC inválido');
-      return;
-    }
+    // Validate formats using SearchManager functions if available
+    if (window.searchManager) {
+      if (!window.searchManager.validateMacFormat(mac)) {
+        UIComponents.showToast('Erro: Formato de MAC inválido. Use 12 caracteres hexadecimais (ex: 1234567890aa ou 12:34:56:78:90:aa)', 'error');
+        this.addSystemLog('Erro: Formato de MAC inválido');
+        return;
+      }
 
-    // Validate plate format (basic validation)
-    const plateRegex = /^[A-Z0-9]{2,3}-[A-Z0-9]{2,4}$/i;
-    if (!plateRegex.test(placa)) {
-      UIComponents.showToast('Erro: Formato de matrícula inválido. Use formato ABC-1234', 'error');
-      this.addSystemLog('Erro: Formato de matrícula inválido');
-      return;
+      if (!window.searchManager.validatePlateFormat(placa)) {
+        UIComponents.showToast('Erro: Formato de matrícula inválido. Use 6 caracteres (ex: AA1212 ou AA-12-12)', 'error');
+        this.addSystemLog('Erro: Formato de matrícula inválido');
+        return;
+      }
+    } else {
+      // Fallback validation if SearchManager not available
+      const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$|^[0-9A-Fa-f]{12}$/;
+      if (!macRegex.test(mac)) {
+        UIComponents.showToast('Erro: Formato de MAC inválido. Use formato XX:XX:XX:XX:XX:XX ou XXXXXXXXXXXX', 'error');
+        this.addSystemLog('Erro: Formato de MAC inválido');
+        return;
+      }
+
+      const plateRegex = /^[A-Z0-9]{2,3}-[A-Z0-9]{2,4}$/i;
+      if (!plateRegex.test(placa)) {
+        UIComponents.showToast('Erro: Formato de matrícula inválido. Use formato ABC-1234', 'error');
+        this.addSystemLog('Erro: Formato de matrícula inválido');
+        return;
+      }
     }
 
     try {
