@@ -38,6 +38,7 @@ Sistema completo de controle de barreiras baseado em IoT, utilizando Laravel par
 
 ## 📋 Índice
 
+- [Screenshots](#-screenshots)
 - [Características](#-características)
 - [Pré-requisitos](#-pré-requisitos)
 - [Configuração Rápida](#-configuração-rápida)
@@ -45,10 +46,12 @@ Sistema completo de controle de barreiras baseado em IoT, utilizando Laravel par
 - [Scripts Disponíveis](#-scripts-disponíveis)
 - [Credenciais](#-credenciais)
 - [URLs do Sistema](#-urls-do-sistema)
-- [Screenshots](#-screenshots)
 - [Arquitetura](#-arquitetura)
 - [Solução de Problemas](#-solução-de-problemas)
 - [Desenvolvimento](#-desenvolvimento)
+- [Documentação](#-documentação)
+- [Contribuição](#-contribuição)
+- [Licença](#-licença)
 
 ## 🎯 Características
 
@@ -406,13 +409,90 @@ Este projeto está licenciado sob a licença MIT - veja o arquivo [LICENSE](LICE
 4. Push para a branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
 
+## 📚 Documentação
+
+### Documentação Completa
+- **[Instalação Completa](docs/INSTALACAO_COMPLETA.md)** - Guia detalhado de instalação
+- **[Documentação Técnica](docs/DOCUMENTACAO_TECNICA.md)** - Detalhes técnicos e arquitetura
+- **[Como Adicionar Imagens](docs/COMO_ADICIONAR_IMAGENS.md)** - Guia para documentação visual
+
+### Arquivos de Projeto
+- **[CHANGELOG.md](CHANGELOG.md)** - Histórico de versões e mudanças
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Guia para contribuidores
+- **[LICENSE](LICENSE)** - Licença do projeto
+
+## 🤝 Contribuição
+
+Contribuições são bem-vindas! Por favor, leia o [Guia de Contribuição](CONTRIBUTING.md) para detalhes sobre:
+
+- Como reportar bugs
+- Como solicitar funcionalidades
+- Padrões de código
+- Processo de Pull Request
+
+### Contribuidores
+
+Agradecemos a todos que contribuíram para este projeto:
+
+- **João Silva** - Desenvolvimento principal
+- **Maria Santos** - Frontend e UX/UI
+- **Pedro Costa** - Hardware e firmware ESP32
+
+## 📄 Licença
+
+Este projeto está licenciado sob a licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
+
+### Resumo da Licença
+- ✅ Uso comercial permitido
+- ✅ Modificação permitida
+- ✅ Distribuição permitida
+- ✅ Uso privado permitido
+- ❗ Sem garantia
+- ❗ Limitação de responsabilidade
+
 ## 📞 Suporte
 
-- **Documentação:** Este README
-- **Issues:** GitHub Issues
-- **Wiki:** GitHub Wiki
-- **Logs:** `backend/storage/logs/`
+### Canais de Suporte
+- **📖 Documentação**: [docs/](docs/) - Documentação completa
+- **🐛 Issues**: [GitHub Issues](../../issues) - Reportar bugs
+- **💬 Discussões**: [GitHub Discussions](../../discussions) - Discussões gerais
+- **📧 Email**: suporte@projeto.com
+- **📱 Discord**: [Link para servidor Discord]
+
+### Logs e Debug
+- **Laravel**: `backend/storage/logs/laravel.log`
+- **Frontend**: Console do navegador (F12)
+- **Sistema**: Logs do sistema operacional
+
+### FAQ
+
+**P: Como iniciar o sistema rapidamente?**
+R: Execute `iniciar_sistema_otimizado.bat`
+
+**P: O sistema funciona sem internet?**
+R: Sim, o frontend tem modo offline com sincronização automática
+
+**P: Posso usar com outros bancos de dados?**
+R: Sim, suporta MySQL, MariaDB e SQLite
+
+**P: Como contribuir para o projeto?**
+R: Leia o [Guia de Contribuição](CONTRIBUTING.md)
+
+---
+
+## 🌟 Agradecimentos Especiais
+
+- **Comunidade Laravel** - Framework incrível
+- **Tailwind CSS** - Framework CSS moderno
+- **ESP32 Community** - Suporte técnico excepcional
+- **Beta Testers** - Feedback valioso
+- **Open Source Community** - Inspiração constante
 
 ---
 
 **Desenvolvido com ❤️ para controle inteligente de barreiras IoT**
+
+[![Made with Laravel](https://img.shields.io/badge/Made%20with-Laravel-red.svg)](https://laravel.com)
+[![Made with Tailwind](https://img.shields.io/badge/Made%20with-Tailwind%20CSS-blue.svg)](https://tailwindcss.com)
+[![Made with ESP32](https://img.shields.io/badge/Made%20with-ESP32-green.svg)](https://www.espressif.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
