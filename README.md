@@ -2,6 +2,40 @@
 
 Sistema completo de controle de barreiras baseado em IoT, utilizando Laravel para o backend, HTML/JavaScript/Tailwind CSS para o frontend, e ESP32 com LoRa para comunicação entre dispositivos.
 
+## 📸 Screenshots
+
+### 🏠 Interface Principal
+![Interface Principal](docs/images/screenshots/interface-principal.png)
+*Dashboard principal com status em tempo real das barreiras e métricas do sistema*
+
+### 🔐 Sistema de Login
+![Login](docs/images/screenshots/Login.png)
+*Tela de autenticação segura para acesso ao sistema*
+
+### 📊 Dashboard Inicial
+![Index](docs/images/screenshots/Index.png)
+*Página inicial com visão geral do sistema e navegação principal*
+
+### 🚗 Gestão de MACs Autorizados
+![Gestão de MACs](docs/images/screenshots/gestao-macs.png)
+*Interface completa para gestão de veículos autorizados com pesquisa avançada, importação CSV e validação*
+
+### 🎯 Simulação de Radar
+![Simulação de Radar](docs/images/screenshots/simulacao-radar.png)
+*Simulador de radar com detecção de veículos, cálculo de AoA e visualização em tempo real*
+
+### 📈 Métricas de Acesso
+![Métricas](docs/images/screenshots/Metricas%20de%20acesso.png)
+*Dashboard de métricas com gráficos de acessos, estatísticas e histórico detalhado*
+
+### ⚙️ Configurações do Sistema
+![Configurações](docs/images/screenshots/Configuracoes%20do%20sistema.png)
+*Painel de configurações para personalização do sistema e parâmetros operacionais*
+
+### 🔌 API Endpoints
+![API](docs/images/screenshots/API.png)
+*Documentação interativa da API com endpoints disponíveis e exemplos de uso*
+
 ## 📋 Índice
 
 - [Características](#-características)
@@ -11,6 +45,7 @@ Sistema completo de controle de barreiras baseado em IoT, utilizando Laravel par
 - [Scripts Disponíveis](#-scripts-disponíveis)
 - [Credenciais](#-credenciais)
 - [URLs do Sistema](#-urls-do-sistema)
+- [Screenshots](#-screenshots)
 - [Arquitetura](#-arquitetura)
 - [Solução de Problemas](#-solução-de-problemas)
 - [Desenvolvimento](#-desenvolvimento)

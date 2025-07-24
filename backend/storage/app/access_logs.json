@@ -1,0 +1,18 @@
+[
+    {
+        "id": 1,
+        "mac_address": "AA-BB-CC-DD-EE-FF",
+        "nome": "Veículo Teste 1",
+        "timestamp": "2025-01-24T10:30:00Z",
+        "status": "autorizado",
+        "created_at": "2025-01-24T10:30:00Z"
+    },
+    {
+        "id": 2,
+        "mac_address": "FF-EE-DD-CC-BB-AA",
+        "nome": "Veículo Não Autorizado",
+        "timestamp": "2025-01-24T09:15:00Z",
+        "status": "negado",
+        "created_at": "2025-01-24T09:15:00Z"
+    }
+]
