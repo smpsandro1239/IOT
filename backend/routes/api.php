@@ -28,15 +28,22 @@ use App\Http\Controllers\AuthController;
 Route::post('/login', [AuthController::class, 'login'])->name('api.login')->middleware('cors');
 
 Route::prefix('v1')->middleware('cors')->group(function () {
-    // Public endpoint for the dashboard to get the latest status
-    Route::get('/status/latest', [AccessLogController::class, 'getLatest'])->name('api.status.latest');
+    // Test endpoint
+    Route::get('/test', function() {
+        return response()->json(['status' => 'API funcionando!', 'timestamp' => now()]);
+    });
 
-    // Public endpoint for ESP32 to register access events
-    Route::post('/access-logs', [AccessLogController::class, 'store'])->name('api.accesslogs.store');
+    // Public endpoint for the dashboard to get the latest status
+    Route::get('/status/latest', [\App\Http\Controllers\JsonController::class, 'getLatest'])->name('api.status.latest');
+
+    // Public endpoint to get authorized MACs
+    Route::get('/macs-autorizados', [\App\Http\Controllers\JsonController::class, 'getMacsAutorizados'])->name('api.macs.index');
 
     // Public endpoint to add authorized MAC addresses
-    Route::post('/macs-autorizados/bulk', [MacsAutorizadosController::class, 'storeBulk'])->name('api.macs.store.bulk');
-    Route::get('/macs-autorizados/download', [MacsAutorizadosController::class, 'download'])->name('api.macs.download');
+    Route::post('/macs-autorizados', [\App\Http\Controllers\JsonController::class, 'storeMac'])->name('api.macs.store');
+    Route::post('/macs-autorizados/bulk', [\App\Http\Controllers\JsonController::class, 'storeBulkMacs'])->name('api.macs.store.bulk');
+    Route::get('/macs-autorizados/download', [\App\Http\Controllers\JsonController::class, 'downloadMacs'])->name('api.macs.download');
+    Route::delete('/macs-autorizados/{mac}', [\App\Http\Controllers\JsonController::class, 'deleteMac'])->name('api.macs.destroy');
 
     // Public endpoint for the dashboard to get metrics
     Route::get('/metrics', 'MetricsController@getMetrics')->name('api.metrics');

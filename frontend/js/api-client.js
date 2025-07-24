@@ -5,7 +5,7 @@
 
 // API Client class
 class ApiClient {
-  constructor(baseUrl = './api/v1') {
+  constructor(baseUrl = 'http://localhost:8000/api/v1') {
     this.baseUrl = baseUrl;
     this.offlineMode = false;
     this.checkConnection();
@@ -31,7 +31,7 @@ class ApiClient {
    */
   async checkConnection() {
     try {
-      const response = await fetch(this.baseUrl + '/status/latest', {
+      const response = await fetch(this.baseUrl + '/status/latest.php', {
         method: 'HEAD',
         cache: 'no-store',
         mode: 'cors',
@@ -280,14 +280,14 @@ class ApiClient {
    * Get latest system status
    */
   async getLatestStatus() {
-    return this.request('/status/latest', { method: 'GET' });
+    return this.request('/status/latest.php', { method: 'GET' });
   }
 
   /**
    * Get authorized MACs with pagination and search
    */
   async getAuthorizedMacs(page = 1, search = '') {
-    return this.request(`/macs-autorizados?page=${page}&search=${encodeURIComponent(search)}`, {
+    return this.request(`/macs-autorizados.php?page=${page}&search=${encodeURIComponent(search)}`, {
       method: 'GET'
     });
   }
@@ -308,21 +308,21 @@ class ApiClient {
       delete options.offlineSupport;
     }
 
-    return this.request('/macs-autorizados', options);
+    return this.request('/macs-autorizados.php', options);
   }
 
   /**
    * Delete an authorized MAC
    */
   async deleteAuthorizedMac(mac) {
-    return this.request(`/macs-autorizados/${mac}`, { method: 'DELETE' });
+    return this.request(`/macs-autorizados.php/${mac}`, { method: 'DELETE' });
   }
 
   /**
    * Add multiple authorized MACs
    */
   async addBulkAuthorizedMacs(macs) {
-    return this.request('/macs-autorizados/bulk', {
+    return this.request('/macs-autorizados.php/bulk', {
       method: 'POST',
       body: JSON.stringify({ macs }),
       offlineSupport: true,
@@ -335,7 +335,7 @@ class ApiClient {
    */
   async downloadAuthorizedMacs() {
     try {
-      const response = await fetch(this.baseUrl + '/macs-autorizados/download', {
+      const response = await fetch(this.baseUrl + '/macs-autorizados.php/download', {
         headers: {
           'Authorization': `Bearer ${this.getAuthToken()}`
         }
@@ -357,7 +357,7 @@ class ApiClient {
 
       return { ok: true };
     } catch (error) {
-      return this.handleApiError(error, '/macs-autorizados/download');
+      return this.handleApiError(error, '/macs-autorizados.php/download');
     }
   }
 
