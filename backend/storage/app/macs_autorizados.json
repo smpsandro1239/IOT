@@ -2,15 +2,15 @@
     {
         "id": 1,
         "mac_address": "AA-BB-CC-DD-EE-FF",
-        "nome": "Veículo Teste 1",
-        "ultimo_acesso": "2025-01-24T10:30:00Z",
+        "nome": "Ve\u00edculo Teste 1",
+        "ultimo_acesso": "2025-07-27T23:19:09+00:00",
         "created_at": "2025-01-20T08:00:00Z",
         "updated_at": "2025-01-24T10:30:00Z"
     },
     {
         "id": 2,
         "mac_address": "11-22-33-44-55-66",
-        "nome": "Veículo Teste 2",
+        "nome": "Ve\u00edculo Teste 2",
         "ultimo_acesso": null,
         "created_at": "2025-01-21T09:15:00Z",
         "updated_at": "2025-01-21T09:15:00Z"

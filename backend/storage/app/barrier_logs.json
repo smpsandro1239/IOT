@@ -1,0 +1,22 @@
+[
+    {
+        "id": "17534592613350",
+        "barrier_id": "main",
+        "action": "OPEN",
+        "previous_status": "aberta",
+        "new_status": "aberta",
+        "duration": 5,
+        "timestamp": "2025-07-25T16:01:01+00:00",
+        "created_at": "2025-07-25T16:01:01+00:00"
+    },
+    {
+        "id": "17534592612179",
+        "barrier_id": "main",
+        "action": "CLOSE",
+        "previous_status": "aberta",
+        "new_status": "fechada",
+        "duration": 5,
+        "timestamp": "2025-07-25T16:01:01+00:00",
+        "created_at": "2025-07-25T16:01:01+00:00"
+    }
+]

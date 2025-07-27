@@ -2,7 +2,7 @@
     {
         "id": 1,
         "mac_address": "AA-BB-CC-DD-EE-FF",
-        "nome": "Veículo Teste 1",
+        "nome": "Ve\u00edculo Teste 1",
         "timestamp": "2025-01-24T10:30:00Z",
         "status": "autorizado",
         "created_at": "2025-01-24T10:30:00Z"
@@ -10,9 +10,33 @@
     {
         "id": 2,
         "mac_address": "FF-EE-DD-CC-BB-AA",
-        "nome": "Veículo Não Autorizado",
+        "nome": "Ve\u00edculo N\u00e3o Autorizado",
         "timestamp": "2025-01-24T09:15:00Z",
         "status": "negado",
         "created_at": "2025-01-24T09:15:00Z"
+    },
+    {
+        "id": 3,
+        "mac_address": "AA-BB-CC-DD-EE-FF",
+        "nome": "Ve\u00edculo Teste 1",
+        "timestamp": "2025-07-25T16:01:01+00:00",
+        "status": "AUTORIZADO",
+        "created_at": "2025-07-25T16:01:01+00:00"
+    },
+    {
+        "id": 4,
+        "mac_address": "AA-BB-CC-DD-EE-FF",
+        "nome": "Ve\u00edculo Teste 1",
+        "timestamp": "2025-07-25T16:01:57+00:00",
+        "status": "AUTORIZADO",
+        "created_at": "2025-07-25T16:01:57+00:00"
+    },
+    {
+        "id": 5,
+        "mac_address": "AA-BB-CC-DD-EE-FF",
+        "nome": "Ve\u00edculo Teste 1",
+        "timestamp": "2025-07-27T23:19:09+00:00",
+        "status": "AUTORIZADO",
+        "created_at": "2025-07-27T23:19:09+00:00"
     }
 ]
