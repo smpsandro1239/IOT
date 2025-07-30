@@ -1,0 +1,39 @@
+# ============================================================================
+# TEMPLATE DE MENSAGEM DE COMMIT - PORTUGUÊS DE PORTUGAL
+# ============================================================================
+#
+# INSTRUÇÕES:
+# 1. Primeira linha: Resumo em português (máximo 50 caracteres)
+# 2. Linha em branco
+# 3. Descrição detalhada (se necessário)
+# 4. Use verbos no infinitivo: adicionar, corrigir, atualizar, remover
+#
+# EXEMPLOS DE BOAS MENSAGENS:
+# - "Adicionar sistema de autenticação de utilizadores"
+# - "Corrigir erro na validação de formulários"
+# - "Atualizar documentação de instalação"
+# - "Remover código obsoleto do módulo de pagamentos"
+#
+# TIPOS DE COMMIT RECOMENDADOS:
+# - feat: Nova funcionalidade
+# - fix: Correção de erro
+# - docs: Documentação
+# - style: Formatação
+# - refactor: Refatorização
+# - test: Testes
+# - chore: Manutenção
+#
+# FORMATO SUGERIDO:
+# tipo: Descrição breve em português
+#
+# Descrição mais detalhada do que foi alterado e porquê.
+# Pode incluir múltiplas linhas se necessário.
+#
+# - Lista de alterações específicas
+# - Outra alteração importante
+#
+# Resolves #123
+# ============================================================================
+
+# Escreva a sua mensagem de commit acima desta linha
+# Lembre-se: Use português de Portugal e seja claro e conciso
