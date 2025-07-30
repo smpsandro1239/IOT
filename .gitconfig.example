@@ -1,0 +1,222 @@
+# ============================================================================
+# CONFIGURAÇÃO GIT - TEMPLATE SEGURO
+# ============================================================================
+# 
+# INSTRUÇÕES DE CONFIGURAÇÃO:
+# 1. Copie este ficheiro para .gitconfig: cp .gitconfig.example .gitconfig
+# 2. Altere os valores com as suas informações pessoais
+# 3. NUNCA commite o ficheiro .gitconfig real no Git
+# 4. Configure adequadamente para o seu ambiente
+#
+# ============================================================================
+
+[user]
+    # ALTERE PARA AS SUAS INFORMAÇÕES
+    name = Seu Nome Completo
+    email = seu.email@exemplo.com
+
+[core]
+    # Editor padrão (altere conforme preferência)
+    editor = code --wait
+    
+    # Configurações de linha
+    autocrlf = true
+    safecrlf = warn
+    
+    # Configurações de ficheiros
+    filemode = false
+    ignorecase = true
+
+[init]
+    # Branch padrão
+    defaultBranch = main
+
+[pull]
+    # Estratégia de pull
+    rebase = false
+
+[push]
+    # Estratégia de push
+    default = simple
+    autoSetupRemote = true
+
+[merge]
+    # Ferramenta de merge
+    tool = vscode
+    
+[mergetool "vscode"]
+    cmd = code --wait $MERGED
+
+[diff]
+    # Ferramenta de diff
+    tool = vscode
+
+[difftool "vscode"]
+    cmd = code --wait --diff $LOCAL $REMOTE
+
+[alias]
+    # Aliases úteis para o projeto
+    st = status
+    co = checkout
+    br = branch
+    ci = commit
+    ca = commit -a
+    cm = commit -m
+    cam = commit -am
+    
+    # Aliases específicos para mensagens em português
+    cmp = commit -m
+    camp = commit -am
+    
+    # Logs formatados
+    lg = log --oneline --graph --decorate --all
+    lp = log --pretty=format:'%h - %an, %ar : %s'
+    
+    # Operações úteis
+    unstage = reset HEAD --
+    last = log -1 HEAD
+    visual = !gitk
+    
+    # Segurança
+    check = status --porcelain
+    safe-push = !git status --porcelain && git push
+
+[color]
+    # Cores no terminal
+    ui = auto
+    branch = auto
+    diff = auto
+    status = auto
+
+[color "branch"]
+    current = yellow reverse
+    local = yellow
+    remote = green
+
+[color "diff"]
+    meta = yellow bold
+    frag = magenta bold
+    old = red bold
+    new = green bold
+
+[color "status"]
+    added = yellow
+    changed = green
+    untracked = cyan
+
+[branch]
+    # Auto-setup de tracking
+    autosetupmerge = always
+    autosetuprebase = always
+
+[remote "origin"]
+    # Configuração do repositório remoto
+    # ALTERE PARA O SEU REPOSITÓRIO
+    url = https://github.com/SEU_USUARIO/controle-barreiras-iot.git
+    fetch = +refs/heads/*:refs/remotes/origin/*
+
+# ============================================================================
+# CONFIGURAÇÕES ESPECÍFICAS DO PROJETO
+# ============================================================================
+
+[commit]
+    # Template de mensagem de commit
+    template = .gitmessage.txt
+    
+    # Verificações antes do commit
+    gpgsign = false
+
+[tag]
+    # Configurações de tags
+    sort = version:refname
+
+# ============================================================================
+# CONFIGURAÇÕES DE SEGURANÇA
+# ============================================================================
+
+[credential]
+    # Gestão de credenciais (Windows)
+    helper = manager-core
+    
+    # Para Linux/Mac, use:
+    # helper = store
+
+[http]
+    # Configurações HTTPS
+    sslverify = true
+    
+[https]
+    # Configurações HTTPS
+    sslverify = true
+
+# ============================================================================
+# CONFIGURAÇÕES AVANÇADAS
+# ============================================================================
+
+[rerere]
+    # Reutilizar resoluções de conflitos
+    enabled = true
+
+[help]
+    # Auto-correção de comandos
+    autocorrect = 1
+
+[log]
+    # Formato de data
+    date = relative
+
+[format]
+    # Formato de patches
+    pretty = fuller
+
+# ============================================================================
+# HOOKS E AUTOMAÇÃO
+# ============================================================================
+
+[hooks]
+    # Configurações de hooks (se implementados)
+    pre-commit = true
+    pre-push = true
+
+# ============================================================================
+# CONFIGURAÇÕES POR PLATAFORMA
+# ============================================================================
+
+# Windows específico
+[core]
+    longpaths = true
+    preloadindex = true
+    fscache = true
+
+# ============================================================================
+# EXEMPLOS DE CONFIGURAÇÃO
+# ============================================================================
+#
+# DESENVOLVEDOR PRINCIPAL:
+# [user]
+#     name = João Silva
+#     email = joao.silva@empresa.com
+#
+# CONTRIBUIDOR:
+# [user]
+#     name = Maria Santos
+#     email = maria.santos@freelancer.com
+#
+# AMBIENTE CORPORATIVO:
+# [http]
+#     proxy = http://proxy.empresa.com:8080
+#
+# ============================================================================
+
+# ============================================================================
+# NOTAS IMPORTANTES
+# ============================================================================
+#
+# 🔒 Este ficheiro contém informações pessoais
+# 📧 Use email profissional para projetos corporativos
+# 🔑 Configure autenticação adequadamente
+# 🌐 Configure proxy se necessário
+# 📝 Use mensagens de commit em português de Portugal
+# 🛡️ Mantenha configurações de segurança ativas
+#
+# ============================================================================

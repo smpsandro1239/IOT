@@ -1,0 +1,252 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// ============================================================================
+// CONFIGURAÇÃO ESP32 - ESTAÇÃO BASE - TEMPLATE
+// ============================================================================
+// 
+// INSTRUÇÕES DE CONFIGURAÇÃO:
+// 1. Copie este ficheiro para config.h: cp config.h.example config.h
+// 2. Altere os valores conforme o seu ambiente
+// 3. NUNCA commite o ficheiro config.h real no Git
+// 4. Teste a configuração antes de fazer upload
+//
+// ============================================================================
+
+// ============================================================================
+// 🌐 CONFIGURAÇÕES DE REDE WIFI
+// ============================================================================
+
+// WiFi - ALTERE PARA AS SUAS CREDENCIAIS
+#define WIFI_SSID "SUA_REDE_WIFI_AQUI"           // Nome da sua rede WiFi
+#define WIFI_PASSWORD "SUA_SENHA_WIFI_AQUI"      // Senha da sua rede WiFi
+#define WIFI_TIMEOUT_MS 15000                    // Timeout de conexão (15 segundos)
+
+// Configurações avançadas WiFi
+#define WIFI_MAX_RETRY 3                         // Máximo tentativas de conexão
+#define WIFI_RECONNECT_INTERVAL 30000            // Intervalo reconexão (30s)
+
+// ============================================================================
+// 🖥️ CONFIGURAÇÕES DO SERVIDOR API
+// ============================================================================
+
+// API Server - ALTERE PARA O SEU SERVIDOR
+#define API_HOST "192.168.1.100"                 // IP do seu servidor Laravel
+#define API_PORT 8000                            // Porta do servidor (normalmente 8000)
+#define API_BASE_PATH "/api/v1"                  // Caminho base da API
+#define API_TIMEOUT_MS 5000                      // Timeout HTTP (5 segundos)
+
+// Configurações avançadas API
+#define MAX_API_RETRY 2                          // Máximo tentativas API
+#define API_RETRY_DELAY 1000                     // Delay entre tentativas (1s)
+
+// Autenticação API (se necessário)
+// #define API_TOKEN "seu_token_aqui"            // Token de autenticação
+// #define API_USE_HTTPS false                   // Usar HTTPS (true/false)
+
+// ============================================================================
+// 📡 CONFIGURAÇÕES LORA
+// ============================================================================
+
+// Frequência e modulação
+#define LORA_FREQUENCY 433E6                     // Frequência LoRa (433MHz)
+#define LORA_BANDWIDTH 125E3                     // Largura de banda (125kHz)
+#define LORA_SPREADING_FACTOR 7                  // Fator de espalhamento (7-12)
+#define LORA_CODING_RATE 5                       // Taxa de codificação (4/5)
+#define LORA_TX_POWER 20                         // Potência TX (20dBm)
+#define LORA_SYNC_WORD 0x12                      // Palavra de sincronização
+
+// Configurações avançadas LoRa
+#define LORA_PREAMBLE_LENGTH 8                   // Comprimento preâmbulo
+#define LORA_CRC_ON true                         // Habilitar CRC
+#define LORA_IMPLICIT_HEADER false               // Cabeçalho implícito
+
+// ============================================================================
+// 🔌 CONFIGURAÇÕES DE HARDWARE (ESP32 Heltec V2)
+// ============================================================================
+
+// Pinos LoRa
+#define LORA_SS 18                               // Chip Select (CS)
+#define LORA_RST 14                              // Reset
+#define LORA_DIO0 26                             // DIO0 (IRQ)
+
+// Display OLED
+#define SCREEN_WIDTH 128                         // Largura do display
+#define SCREEN_HEIGHT 64                         // Altura do display
+#define OLED_RESET 16                            // Reset do display
+#define OLED_SDA 4                               // SDA (I2C)
+#define OLED_SCL 15                              // SCL (I2C)
+#define OLED_ADDRESS 0x3C                        // Endereço I2C
+
+// LEDs de status (simulação de barreiras)
+#define LED_BARREIRA_NORTE 25                    // LED barreira norte
+#define LED_BARREIRA_SUL 2                       // LED barreira sul
+#define LED_STATUS 25                            // LED de status geral
+
+// Botões (se houver)
+#define BUTTON_BOOT 0                            // Botão BOOT
+#define BUTTON_USER 12                           // Botão do utilizador
+
+// ============================================================================
+// 🎯 CONFIGURAÇÕES DO SISTEMA
+// ============================================================================
+
+// Identificação do dispositivo
+#define DEVICE_ID "BASE_001"                     // ID único do dispositivo
+#define FIRMWARE_VERSION "2.0.0"                // Versão do firmware
+#define HARDWARE_VERSION "ESP32_HELTEC_V2"      // Versão do hardware
+
+// Sensores de direção (IDs dos sensores remotos)
+#define SENSOR_ID_NORTE_ENTRADA "DIR_N_1"       // Sensor norte entrada
+#define SENSOR_ID_NORTE_SAIDA   "DIR_N_2"       // Sensor norte saída
+#define SENSOR_ID_SUL_ENTRADA   "DIR_S_1"       // Sensor sul entrada
+#define SENSOR_ID_SUL_SAIDA     "DIR_S_2"       // Sensor sul saída
+
+// ============================================================================
+# ⏱️ TIMEOUTS E INTERVALOS
+// ============================================================================
+
+// Timeouts do sistema
+#define DETECTION_SEQUENCE_TIMEOUT 30000        // Timeout sequência detecção (30s)
+#define PENDING_DETECTION_CLEAR_TIMEOUT 60000   // Timeout limpeza pendentes (60s)
+#define BARRIER_AUTO_CLOSE_TIME 5000            // Tempo auto-fechamento barreira (5s)
+
+// Intervalos de comunicação
+#define HEARTBEAT_INTERVAL 30000                // Intervalo heartbeat (30s)
+#define TELEMETRY_INTERVAL 10000                // Intervalo telemetria (10s)
+#define DISPLAY_UPDATE_INTERVAL 1000            // Atualização display (1s)
+
+// Intervalos de manutenção
+#define OTA_CHECK_INTERVAL 3600000              // Verificação OTA (1 hora)
+#define MEMORY_CHECK_INTERVAL 60000             // Verificação memória (1 minuto)
+
+// ============================================================================
+// 🔧 CONFIGURAÇÕES DE DEBUG E DESENVOLVIMENTO
+// ============================================================================
+
+// Debug serial
+#define DEBUG_SERIAL true                       // Habilitar debug serial
+#define DEBUG_LORA false                        // Debug específico LoRa
+#define DEBUG_API false                         // Debug específico API
+#define DEBUG_WIFI false                        // Debug específico WiFi
+#define SERIAL_BAUD_RATE 115200                 // Velocidade serial
+
+// Configurações de desenvolvimento
+#define ENABLE_SERIAL_COMMANDS true             // Comandos via serial
+#define ENABLE_TEST_MODE false                  // Modo de teste
+#define SIMULATE_SENSORS false                  // Simular sensores
+
+// ============================================================================
+// 🛡️ CONFIGURAÇÕES DE SEGURANÇA E ROBUSTEZ
+// ============================================================================
+
+// Thresholds de sinal
+#define MIN_RSSI_THRESHOLD -100                 // RSSI mínimo para detecção
+#define MAX_RSSI_THRESHOLD -30                  // RSSI máximo válido
+#define MIN_SNR_THRESHOLD -10                   // SNR mínimo
+#define AOA_CONFIDENCE_THRESHOLD 0.7            // Confiança mínima AoA
+
+// Watchdog (para produção)
+#define ENABLE_WATCHDOG false                   // Habilitar watchdog
+#define WATCHDOG_TIMEOUT 30000                  // Timeout watchdog (30s)
+
+// Criptografia LoRa (se implementada)
+// #define LORA_ENCRYPTION_KEY "chave_16_bytes"  // Chave de criptografia
+// #define LORA_USE_ENCRYPTION false             // Habilitar criptografia
+
+// ============================================================================
+// 🎨 CONFIGURAÇÕES DE DISPLAY
+// ============================================================================
+
+// Configurações visuais
+#define DISPLAY_CONTRAST 255                    // Contraste do display (0-255)
+#define DISPLAY_TIMEOUT 0                       // Timeout display (0=sempre ligado)
+#define DISPLAY_FLIP false                      // Inverter display
+#define DISPLAY_FONT_SIZE 1                     // Tamanho da fonte
+
+// Configurações de interface
+#define SHOW_RSSI_ON_DISPLAY true               // Mostrar RSSI no display
+#define SHOW_IP_ON_DISPLAY true                 // Mostrar IP no display
+#define SHOW_UPTIME_ON_DISPLAY false            // Mostrar uptime no display
+
+// ============================================================================
+// 📊 CONFIGURAÇÕES DE TELEMETRIA
+// ============================================================================
+
+// Buffer e envio
+#define TELEMETRY_BUFFER_SIZE 10                // Tamanho buffer telemetria
+#define TELEMETRY_BATCH_SIZE 5                  // Tamanho lote envio
+#define TELEMETRY_MAX_RETRIES 3                 // Máximo tentativas envio
+
+// Dados a coletar
+#define COLLECT_RSSI true                       // Coletar RSSI
+#define COLLECT_SNR true                        // Coletar SNR
+#define COLLECT_TEMPERATURE false               // Coletar temperatura
+#define COLLECT_BATTERY false                   // Coletar nível bateria
+#define COLLECT_MEMORY true                     // Coletar uso memória
+#define COLLECT_WIFI_QUALITY true               // Coletar qualidade WiFi
+
+// ============================================================================
+// 🚀 CONFIGURAÇÕES DE PRODUÇÃO
+// ============================================================================
+// 
+// Para ambiente de produção, considere alterar:
+// - DEBUG_SERIAL = false (desabilitar debug)
+// - ENABLE_WATCHDOG = true (habilitar watchdog)
+// - LORA_USE_ENCRYPTION = true (habilitar criptografia)
+// - API_USE_HTTPS = true (usar HTTPS)
+// - Configurar OTA para atualizações remotas
+// - Otimizar intervalos para economia de energia
+// - Habilitar modo de baixo consumo quando apropriado
+//
+// ============================================================================
+
+// OTA (Over-The-Air Updates) - Para produção
+// #define ENABLE_OTA true                       // Habilitar OTA
+// #define OTA_PASSWORD "senha_ota_segura"       // Senha OTA
+
+// Economia de Energia - Para dispositivos a bateria
+// #define ENABLE_DEEP_SLEEP false               // Habilitar deep sleep
+// #define DEEP_SLEEP_DURATION 60000000          // Duração deep sleep (60s)
+// #define LIGHT_SLEEP_DURATION 1000             // Duração light sleep (1s)
+
+#endif // CONFIG_H
+
+// ============================================================================
+// 📋 EXEMPLOS DE CONFIGURAÇÃO POR AMBIENTE
+// ============================================================================
+//
+// DESENVOLVIMENTO EM CASA:
+// #define WIFI_SSID "WiFi_Casa"
+// #define WIFI_PASSWORD "senha_casa"
+// #define API_HOST "192.168.1.100"
+// #define DEBUG_SERIAL true
+//
+// TESTE NO ESCRITÓRIO:
+// #define WIFI_SSID "WiFi_Escritorio"
+// #define WIFI_PASSWORD "senha_escritorio"
+// #define API_HOST "192.168.10.50"
+// #define DEBUG_SERIAL true
+//
+// PRODUÇÃO NO LOCAL:
+// #define WIFI_SSID "WiFi_Producao"
+// #define WIFI_PASSWORD "senha_producao_segura"
+// #define API_HOST "10.0.0.100"
+// #define DEBUG_SERIAL false
+// #define ENABLE_WATCHDOG true
+//
+// ============================================================================
+
+// ============================================================================
+// ⚠️ NOTAS IMPORTANTES DE SEGURANÇA
+// ============================================================================
+//
+// 🔒 NUNCA commite o ficheiro config.h real
+// 🌐 Use credenciais WiFi seguras
+// 🛡️ Configure firewall no servidor API
+// 🔑 Use tokens de autenticação em produção
+// 📡 Configure criptografia LoRa para dados sensíveis
+// 🔧 Desabilite debug em produção
+// 📊 Monitore logs para atividade suspeita
+//
+// ============================================================================

@@ -1,0 +1,260 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// ============================================================================
+// CONFIGURAÇÃO ESP32 - SENSOR DE DIREÇÃO - TEMPLATE
+// ============================================================================
+// 
+// INSTRUÇÕES DE CONFIGURAÇÃO:
+// 1. Copie este ficheiro para config.h: cp config.h.example config.h
+// 2. Altere os valores conforme o seu ambiente
+// 3. NUNCA commite o ficheiro config.h real no Git
+// 4. Teste a configuração antes de fazer upload
+//
+// ============================================================================
+
+// ============================================================================
+// 🌐 CONFIGURAÇÕES DE REDE WIFI
+// ============================================================================
+
+// WiFi - ALTERE PARA AS SUAS CREDENCIAIS
+#define WIFI_SSID "SUA_REDE_WIFI_AQUI"           // Nome da sua rede WiFi
+#define WIFI_PASSWORD "SUA_SENHA_WIFI_AQUI"      // Senha da sua rede WiFi
+#define WIFI_TIMEOUT_MS 15000                    // Timeout de conexão (15 segundos)
+
+// Configurações avançadas WiFi
+#define WIFI_MAX_RETRY 3                         // Máximo tentativas de conexão
+#define WIFI_RECONNECT_INTERVAL 30000            // Intervalo reconexão (30s)
+
+// ============================================================================
+// 📡 CONFIGURAÇÕES LORA
+// ============================================================================
+
+// Frequência e modulação
+#define LORA_FREQUENCY 433E6                     // Frequência LoRa (433MHz)
+#define LORA_BANDWIDTH 125E3                     // Largura de banda (125kHz)
+#define LORA_SPREADING_FACTOR 7                  // Fator de espalhamento (7-12)
+#define LORA_CODING_RATE 5                       // Taxa de codificação (4/5)
+#define LORA_TX_POWER 20                         // Potência TX (20dBm)
+#define LORA_SYNC_WORD 0x12                      // Palavra de sincronização
+
+// Configurações avançadas LoRa
+#define LORA_PREAMBLE_LENGTH 8                   // Comprimento preâmbulo
+#define LORA_CRC_ON true                         // Habilitar CRC
+#define LORA_IMPLICIT_HEADER false               // Cabeçalho implícito
+
+// ============================================================================
+// 🔌 CONFIGURAÇÕES DE HARDWARE (ESP32 Heltec V2)
+// ============================================================================
+
+// Pinos LoRa
+#define LORA_SS 18                               // Chip Select (CS)
+#define LORA_RST 14                              // Reset
+#define LORA_DIO0 26                             // DIO0 (IRQ)
+
+// Display OLED
+#define SCREEN_WIDTH 128                         // Largura do display
+#define SCREEN_HEIGHT 64                         // Altura do display
+#define OLED_RESET 16                            // Reset do display
+#define OLED_SDA 4                               // SDA (I2C)
+#define OLED_SCL 15                              // SCL (I2C)
+#define OLED_ADDRESS 0x3C                        // Endereço I2C
+
+// LEDs de status
+#define LED_STATUS 25                            // LED de status
+#define LED_DIRECTION_NORTH 2                    // LED direção norte
+#define LED_DIRECTION_SOUTH 13                   // LED direção sul
+
+// Botões (se houver)
+#define BUTTON_BOOT 0                            // Botão BOOT
+#define BUTTON_USER 12                           // Botão do utilizador
+
+// ============================================================================
+// 🎯 CONFIGURAÇÕES DO SISTEMA
+// ============================================================================
+
+// Identificação do dispositivo
+#define DEVICE_ID "DIR_001"                      // ID único do dispositivo
+#define FIRMWARE_VERSION "2.0.0"                // Versão do firmware
+#define HARDWARE_VERSION "ESP32_HELTEC_V2"      // Versão do hardware
+#define DEVICE_TYPE "SENSOR_DIRECAO"             // Tipo de dispositivo
+
+// Posicionamento do sensor
+#define SENSOR_POSITION "NORTE"                  // Posição: "NORTE" ou "SUL"
+#define SENSOR_DISTANCE_FROM_BARRIER 50          // Distância da barreira (metros)
+#define SENSOR_LANE "ENTRADA"                    // Faixa: "ENTRADA" ou "SAIDA"
+
+// Configurações de detecção de direção
+#define AOA_CALCULATION_SAMPLES 10               // Amostras para cálculo AoA
+#define AOA_CONFIDENCE_THRESHOLD 0.7             // Confiança mínima AoA
+#define DIRECTION_DETECTION_TIMEOUT 5000         // Timeout detecção direção (5s)
+
+// ============================================================================
+// ⏱️ TIMEOUTS E INTERVALOS
+// ============================================================================
+
+// Intervalos de comunicação
+#define HEARTBEAT_INTERVAL 60000                // Intervalo heartbeat (60s)
+#define STATUS_UPDATE_INTERVAL 30000            // Atualização status (30s)
+#define DISPLAY_UPDATE_INTERVAL 1000            // Atualização display (1s)
+
+// Timeouts do sistema
+#define LORA_SEND_TIMEOUT 5000                  // Timeout envio LoRa (5s)
+#define DIRECTION_CALCULATION_TIMEOUT 3000      // Timeout cálculo direção (3s)
+
+// Intervalos de manutenção
+#define MEMORY_CHECK_INTERVAL 300000            // Verificação memória (5 minutos)
+#define BATTERY_CHECK_INTERVAL 600000           // Verificação bateria (10 minutos)
+#define CALIBRATION_CHECK_INTERVAL 3600000     // Verificação calibração (1 hora)
+
+// ============================================================================
+// 🔧 CONFIGURAÇÕES DE DEBUG E DESENVOLVIMENTO
+// ============================================================================
+
+// Debug serial
+#define DEBUG_SERIAL true                       // Habilitar debug serial
+#define DEBUG_LORA false                        // Debug específico LoRa
+#define DEBUG_AOA false                         // Debug específico AoA
+#define DEBUG_DIRECTION false                   // Debug específico direção
+#define DEBUG_WIFI false                        // Debug específico WiFi
+#define SERIAL_BAUD_RATE 115200                 // Velocidade serial
+
+// Configurações de desenvolvimento
+#define ENABLE_SERIAL_COMMANDS true             // Comandos via serial
+#define ENABLE_TEST_MODE false                  // Modo de teste
+#define SIMULATE_DIRECTIONS false               // Simular detecções direção
+
+// ============================================================================
+// 🛡️ CONFIGURAÇÕES DE SEGURANÇA E ROBUSTEZ
+// ============================================================================
+
+// Thresholds de sinal
+#define MIN_RSSI_THRESHOLD -100                 // RSSI mínimo para comunicação
+#define MAX_RSSI_THRESHOLD -30                  // RSSI máximo válido
+#define MIN_SNR_THRESHOLD -10                   // SNR mínimo
+#define AOA_NOISE_THRESHOLD 5.0                 // Threshold ruído AoA (graus)
+
+// Watchdog (para produção)
+#define ENABLE_WATCHDOG false                   // Habilitar watchdog
+#define WATCHDOG_TIMEOUT 30000                  // Timeout watchdog (30s)
+
+// Criptografia LoRa (se implementada)
+// #define LORA_ENCRYPTION_KEY "chave_16_bytes"  // Chave de criptografia
+// #define LORA_USE_ENCRYPTION false             // Habilitar criptografia
+
+// ============================================================================
+// 🎨 CONFIGURAÇÕES DE DISPLAY
+// ============================================================================
+
+// Configurações visuais
+#define DISPLAY_CONTRAST 255                    // Contraste do display (0-255)
+#define DISPLAY_TIMEOUT 0                       // Timeout display (0=sempre ligado)
+#define DISPLAY_FLIP false                      // Inverter display
+#define DISPLAY_FONT_SIZE 1                     // Tamanho da fonte
+
+// Configurações de interface
+#define SHOW_RSSI_ON_DISPLAY true               // Mostrar RSSI no display
+#define SHOW_AOA_ON_DISPLAY true                // Mostrar AoA no display
+#define SHOW_DIRECTION_ON_DISPLAY true          // Mostrar direção no display
+#define SHOW_CONFIDENCE_ON_DISPLAY false        // Mostrar confiança no display
+
+// ============================================================================
+// 🔋 CONFIGURAÇÕES DE ENERGIA
+// ============================================================================
+
+// Gestão de energia
+#define ENABLE_POWER_SAVING false               // Habilitar economia energia
+#define LOW_POWER_MODE_THRESHOLD 20             // Threshold modo baixo consumo (%)
+#define BATTERY_VOLTAGE_MIN 3.3                 // Tensão mínima bateria (V)
+
+// Sleep modes
+#define ENABLE_LIGHT_SLEEP false                // Habilitar light sleep
+#define LIGHT_SLEEP_DURATION 1000               // Duração light sleep (1s)
+#define ENABLE_DEEP_SLEEP false                 // Habilitar deep sleep
+#define DEEP_SLEEP_DURATION 300000000           // Duração deep sleep (5 minutos)
+
+// ============================================================================
+// 📊 CONFIGURAÇÕES DE TELEMETRIA
+// ============================================================================
+
+// Dados a coletar
+#define COLLECT_RSSI true                       // Coletar RSSI
+#define COLLECT_SNR true                        // Coletar SNR
+#define COLLECT_AOA true                        // Coletar dados AoA
+#define COLLECT_DIRECTION_STATS true            // Coletar estatísticas direção
+#define COLLECT_BATTERY true                    // Coletar nível bateria
+#define COLLECT_MEMORY true                     // Coletar uso memória
+#define COLLECT_CALIBRATION_DATA false          // Coletar dados calibração
+
+// ============================================================================
+// 🧭 CONFIGURAÇÕES ESPECÍFICAS DE AoA (ANGLE OF ARRIVAL)
+// ============================================================================
+
+// Algoritmo AoA
+#define AOA_ALGORITHM "MUSIC"                    // Algoritmo: "MUSIC", "ESPRIT", "SIMPLE"
+#define AOA_ANTENNA_SPACING 0.125               // Espaçamento antenas (metros)
+#define AOA_FREQUENCY_CORRECTION true           // Correção frequência
+#define AOA_PHASE_CALIBRATION true              // Calibração fase
+
+// Filtros AoA
+#define AOA_ENABLE_KALMAN_FILTER false          // Habilitar filtro Kalman
+#define AOA_ENABLE_MOVING_AVERAGE true          // Habilitar média móvel
+#define AOA_MOVING_AVERAGE_SAMPLES 5            // Amostras média móvel
+
+// ============================================================================
+// 🚀 CONFIGURAÇÕES DE PRODUÇÃO
+// ============================================================================
+// 
+// Para ambiente de produção, considere alterar:
+// - DEBUG_SERIAL = false (desabilitar debug)
+// - ENABLE_WATCHDOG = true (habilitar watchdog)
+// - ENABLE_POWER_SAVING = true (economia energia)
+// - LORA_USE_ENCRYPTION = true (habilitar criptografia)
+// - AOA_ENABLE_KALMAN_FILTER = true (melhor precisão)
+// - Calibrar antenas para ambiente específico
+// - Otimizar thresholds para condições locais
+//
+// ============================================================================
+
+#endif // CONFIG_H
+
+// ============================================================================
+// 📋 EXEMPLOS DE CONFIGURAÇÃO POR POSIÇÃO
+// ============================================================================
+//
+// SENSOR NORTE ENTRADA:
+// #define DEVICE_ID "DIR_N_ENT"
+// #define SENSOR_POSITION "NORTE"
+// #define SENSOR_LANE "ENTRADA"
+//
+// SENSOR NORTE SAÍDA:
+// #define DEVICE_ID "DIR_N_SAI"
+// #define SENSOR_POSITION "NORTE"
+// #define SENSOR_LANE "SAIDA"
+//
+// SENSOR SUL ENTRADA:
+// #define DEVICE_ID "DIR_S_ENT"
+// #define SENSOR_POSITION "SUL"
+// #define SENSOR_LANE "ENTRADA"
+//
+// SENSOR SUL SAÍDA:
+// #define DEVICE_ID "DIR_S_SAI"
+// #define SENSOR_POSITION "SUL"
+// #define SENSOR_LANE "SAIDA"
+//
+// ============================================================================
+
+// ============================================================================
+// ⚠️ NOTAS IMPORTANTES DE SEGURANÇA
+// ============================================================================
+//
+// 🔒 NUNCA commite o ficheiro config.h real
+// 🌐 Use credenciais WiFi seguras (se aplicável)
+// 🧭 Calibre sensores AoA adequadamente
+// 🔋 Configure gestão de energia adequadamente
+// 🛡️ Habilite watchdog em produção
+// 📡 Configure criptografia LoRa para dados sensíveis
+// 🔧 Desabilite debug em produção
+// 📊 Monitore precisão AoA regularmente
+//
+// ============================================================================

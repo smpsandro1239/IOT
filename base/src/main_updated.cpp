@@ -12,14 +12,15 @@
 // CONFIGURAÇÕES PRINCIPAIS - ALTERE CONFORME SEU AMBIENTE
 // =================================================================================================
 
-// WiFi - CONFIGURE SUAS CREDENCIAIS
-const char* ssid = "Meo-9C27F0";        // <<<< ALTERE AQUI
-const char* password = "BB3F5435FF";   // <<<< ALTERE AQUI
+// Incluir configurações do ficheiro config.h
+#include "config.h"
 
-// API Server - CONFIGURE O IP DO SEU SERVIDOR
-#define API_HOST "192.168.1.90"  // <<<< ALTERE PARA SEU IP
-#define API_PORT 8000             // Porta do servidor
-#define API_BASE_PATH "/api/v1"   // Caminho base da API
+// WiFi - Configurações carregadas de config.h
+const char* ssid = WIFI_SSID;
+const char* password = WIFI_PASSWORD;
+
+// API Server - Configurações carregadas de config.h
+// Valores definidos em config.h (copie de config.h.example)
 
 // Versão do Firmware
 #define FIRMWARE_VERSION "2.0.0"
