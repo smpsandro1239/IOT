@@ -1,11 +1,11 @@
 {
     "barrier_status": "aberta",
-    "last_detection": "2025-07-27T23:19:09+00:00",
+    "last_detection": "2025-07-27T23:29:56+00:00",
     "updated_at": "2025-01-24T10:30:00Z",
     "last_sensor": "BASE_001",
     "last_rssi": -45,
-    "last_action": "CLOSE",
-    "last_action_time": "2025-07-25T16:01:01+00:00",
+    "last_action": "OPEN",
+    "last_action_time": "2025-07-27T23:29:56+00:00",
     "barrier_id": "main",
-    "auto_close_time": "2025-07-25T16:01:06+00:00"
+    "auto_close_time": "2025-07-27T23:30:01+00:00"
 }

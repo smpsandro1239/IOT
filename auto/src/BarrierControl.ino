@@ -2,9 +2,12 @@
 #include <HTTPClient.h>
 #include <LoRa.h>
 
-// WiFi credentials
-const char* ssid = "your_wifi_ssid";
-const char* password = "your_wifi_password";
+// Incluir configurações do ficheiro config.h
+#include "config.h"
+
+// WiFi - Configurações carregadas de config.h
+const char* ssid = WIFI_SSID;
+const char* password = WIFI_PASSWORD;
 
 // Backend API
 const char* serverUrl = "http://127.0.0.1:8000/api/v1/access-logs";

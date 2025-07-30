@@ -18,5 +18,15 @@
         "duration": 5,
         "timestamp": "2025-07-25T16:01:01+00:00",
         "created_at": "2025-07-25T16:01:01+00:00"
+    },
+    {
+        "id": "17536589966420",
+        "barrier_id": "main",
+        "action": "OPEN",
+        "previous_status": "aberta",
+        "new_status": "aberta",
+        "duration": 5,
+        "timestamp": "2025-07-27T23:29:56+00:00",
+        "created_at": "2025-07-27T23:29:56+00:00"
     }
 ]

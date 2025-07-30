@@ -1,0 +1,416 @@
+# ============================================================================
+# GITIGNORE SEGURO - SISTEMA IOT CONTROLE DE BARREIRAS
+# ============================================================================
+# Este ficheiro protege todas as credenciais, dados sensíveis e informações
+# confidenciais do projeto. NUNCA remova ou altere sem análise de segurança.
+# ============================================================================
+
+# ============================================================================
+# 🔒 CREDENCIAIS E CONFIGURAÇÕES SENSÍVEIS
+# ============================================================================
+
+# Ficheiros de ambiente Laravel
+.env
+.env.local
+.env.production
+.env.staging
+.env.testing
+*.env
+
+# Configurações ESP32 com credenciais
+base/src/config.h
+auto/src/config.h
+direcao/src/config.h
+*/config.h
+config.h
+
+# Chaves e certificados
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+private_key.*
+public_key.*
+certificate.*
+*.cert
+
+# Tokens e secrets
+*secret*
+*token*
+*api_key*
+*password*
+*credential*
+*auth*
+
+# Configurações pessoais
+.gitconfig
+settings.json
+config.json
+personal.json
+
+# ============================================================================
+# 🤖 ASSISTENTES IA E FERRAMENTAS DE DESENVOLVIMENTO
+# ============================================================================
+
+# Kiro IDE - CRÍTICO: Ocultar assistência IA
+.kiro/
+.emergent/
+*.kiro
+.kiro-*
+
+# Outros assistentes IA
+.cursor/
+.copilot/
+.codeium/
+.tabnine/
+.github-copilot/
+
+# Histórico de conversas e sessões IA
+*conversation*
+*chat_history*
+*ai_session*
+*assistant_*
+*dialogue*
+*interaction*
+
+# ============================================================================
+# 🖥️ BACKEND LARAVEL - DADOS SENSÍVEIS
+# ============================================================================
+
+# Laravel específico
+backend/.env*
+backend/storage/logs/*
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/storage/framework/testing/*
+backend/storage/app/private/*
+backend/storage/app/uploads/*
+backend/bootstrap/cache/*
+
+# Composer
+backend/vendor/
+backend/composer.lock
+
+# Base de dados
+*.sqlite
+*.sqlite3
+*.db
+database.sqlite*
+*.sql
+*.dump
+
+# Uploads e ficheiros temporários
+backend/storage/app/uploads/*
+backend/storage/app/temp/*
+backend/storage/debugbar/*
+
+# ============================================================================
+# 📱 FIRMWARE ESP32 - DADOS SENSÍVEIS
+# ============================================================================
+
+# Ficheiros compilados ESP32
+*.bin
+*.elf
+*.map
+*.hex
+
+# PlatformIO
+.pio/
+.pioenvs/
+.piolibdeps/
+
+# Arduino IDE
+*.ino.bin
+*.ino.elf
+*.ino.map
+
+# Configurações de desenvolvimento
+platformio.ini.local
+*.local
+
+# ============================================================================
+# 🌐 FRONTEND - DADOS TEMPORÁRIOS
+# ============================================================================
+
+# Node modules
+frontend/node_modules/
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build files
+frontend/dist/
+frontend/build/
+build/
+dist/
+
+# Cache
+frontend/.cache/
+.cache/
+.parcel-cache/
+
+# ============================================================================
+# 💾 DADOS E LOGS SENSÍVEIS
+# ============================================================================
+
+# Logs de sistema
+*.log
+*.log.*
+logs/
+log/
+*.out
+
+# Dados de backup
+*_backup.*
+*_dump.*
+*.bak
+*.backup
+backup_*
+dump_*
+
+# Dados reais/produção
+*_real.*
+*_production.*
+*_live.*
+*_prod.*
+dados_reais.*
+producao_*
+
+# Ficheiros temporários
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ============================================================================
+# 🛠️ FERRAMENTAS DE DESENVOLVIMENTO
+# ============================================================================
+
+# IDEs
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.idea/
+*.sublime-*
+*.code-workspace
+
+# Visual Studio Code
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json.example
+
+# ============================================================================
+# 📦 DEPENDÊNCIAS E BUILDS
+# ============================================================================
+
+# PHP
+vendor/
+composer.phar
+composer.lock
+
+# Node.js
+package-lock.json
+yarn.lock
+.npm/
+.yarn/
+
+# Python (se usado)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+.venv/
+
+# ============================================================================
+# 🧪 TESTES E DESENVOLVIMENTO
+# ============================================================================
+
+# Ficheiros de teste com dados reais
+*_test_real.*
+*_production_data.*
+*_live_data.*
+test_data_real.*
+
+# Coverage reports
+coverage/
+*.coverage
+.nyc_output/
+.coverage.*
+
+# ============================================================================
+# 📊 DADOS ESPECÍFICOS DO PROJETO IOT
+# ============================================================================
+
+# Dados de veículos reais
+exemplo_veiculos_real.csv
+macs_reais.csv
+*_dados_reais.*
+vehiculos_reais.*
+
+# Configurações de produção
+config_producao.*
+settings_live.*
+producao.json
+
+# Telemetria real
+telemetry_real.*
+sensor_data_real.*
+lora_data_real.*
+
+# ============================================================================
+# 🔧 CONFIGURAÇÕES DE SERVIDOR
+# ============================================================================
+
+# Configurações de servidor web
+nginx_real.conf
+apache_real.conf
+*_production.conf
+server_config.*
+
+# Scripts com credenciais
+*_credenciais.*
+*_passwords.*
+*_secrets.*
+deploy_keys/
+
+# ============================================================================
+# 🚀 DEPLOYMENT E DOCKER
+# ============================================================================
+
+# Docker com secrets
+docker-compose.override.yml
+.dockerignore
+*.env.docker
+
+# Deployment
+*.deploy
+*_deploy_*
+deployment_keys/
+
+# ============================================================================
+# 📱 MOBILE E OUTROS FRAMEWORKS
+# ============================================================================
+
+# React Native
+.expo/
+.expo-shared/
+
+# Flutter
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# ============================================================================
+# 🔍 ANÁLISE E MONITORAMENTO
+# ============================================================================
+
+# Análises de segurança
+security_scan.*
+vulnerability_report.*
+audit_report.*
+
+# Monitoramento
+monitoring_config.*
+alerting_rules.*
+
+# ============================================================================
+# 🎯 ESPECÍFICO DESTE PROJETO
+# ============================================================================
+
+# Configurações WiFi reais
+wifi_config.*
+network_settings.*
+wireless_config.*
+
+# IPs e endpoints reais
+api_endpoints_real.*
+server_ips.*
+network_topology.*
+
+# Dados de telemetria reais
+telemetry_real.*
+sensor_data_real.*
+lora_real.*
+
+# Configurações de hardware
+hardware_config_real.*
+esp32_config_real.*
+
+# ============================================================================
+# 📋 FICHEIROS PERMITIDOS (EXEMPLOS E TEMPLATES)
+# ============================================================================
+
+# Manter ficheiros de exemplo - IMPORTANTES!
+!*.example
+!*.template
+!*.sample
+!*_example.*
+!*_template.*
+!*_sample.*
+
+# Documentação pública
+!README.md
+!CHANGELOG.md
+!CONTRIBUTING.md
+!LICENSE
+!SECURITY.md
+!SEGURANCA.md
+
+# Scripts de exemplo
+!*.example.bat
+!*.template.bat
+!*.sample.bat
+
+# ============================================================================
+# 🔄 SISTEMA OPERATIVO
+# ============================================================================
+
+# Windows
+*.lnk
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+
+# Linux
+*~
+.nfs*
+
+# ============================================================================
+# 📝 NOTAS IMPORTANTES
+# ============================================================================
+#
+# ESTE .gitignore PROTEGE:
+# ✅ Credenciais WiFi e API
+# ✅ Chaves privadas e certificados
+# ✅ Ficheiros do Kiro IDE
+# ✅ Dados de sessão e logs
+# ✅ Configurações de produção
+# ✅ Dados reais de telemetria
+# ✅ IPs e topologia de rede
+#
+# SEMPRE COMMITADOS:
+# ✅ Ficheiros .example
+# ✅ Documentação
+# ✅ Scripts de configuração
+# ✅ Código fonte limpo
+#
+# NUNCA ALTERE ESTE FICHEIRO SEM ANÁLISE DE SEGURANÇA!
+#
+# ============================================================================

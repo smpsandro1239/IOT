@@ -9,5 +9,16 @@
         "distance": null,
         "timestamp": "2025-07-25T16:01:01+00:00",
         "created_at": "2025-07-25T16:01:01+00:00"
+    },
+    {
+        "id": "17536589965202",
+        "mac_address": "AA:BB:CC:DD:EE:FF",
+        "sensor_id": "BASE_001",
+        "rssi": -45,
+        "snr": null,
+        "direction": null,
+        "distance": null,
+        "timestamp": "2025-07-27T23:29:56+00:00",
+        "created_at": "2025-07-27T23:29:56+00:00"
     }
 ]

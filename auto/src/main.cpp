@@ -20,8 +20,12 @@
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-const char* ssid = "50N43Everywere 3";
-const char* password = "Benfica456+++++";
+// Incluir configurações do ficheiro config.h
+#include "config.h"
+
+// WiFi - Configurações carregadas de config.h
+const char* ssid = WIFI_SSID;
+const char* password = WIFI_PASSWORD;
 
 char chipid_str[13];
 unsigned long contadorEnvios = 0;
