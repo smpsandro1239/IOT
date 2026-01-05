@@ -101,7 +101,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - [ ] **API v2**: Nova versão da API com GraphQL
 
 ### v2.2.0 (Futuro)
-- [ ] **Machine Learning**: Detecção inteligente de padrões
+- [ ] **Relatórios Avançados**: Geração de relatórios analíticos
 - [ ] **Integração Cloud**: Sincronização com serviços cloud
 - [ ] **Mobile App**: Aplicativo móvel nativo
 - [ ] **Backup Automático**: Sistema de backup automático
@@ -111,7 +111,6 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 ### v3.0.0 (Longo Prazo)
 - [ ] **Microserviços**: Arquitetura de microserviços
 - [ ] **Kubernetes**: Deploy em Kubernetes
-- [ ] **AI/ML**: Inteligência artificial integrada
 - [ ] **IoT Platform**: Plataforma IoT completa
 - [ ] **Edge Computing**: Processamento na borda
 - [ ] **5G Integration**: Suporte para redes 5G
