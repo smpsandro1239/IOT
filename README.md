@@ -3,14 +3,16 @@
 ![Banner](https://raw.githubusercontent.com/smpsandro1239/IOT/main/docs/images/screenshots/interface-principal.png)
 
 ## 🎯 Visão Geral
-O **IOT Access Control** é uma solução de nível empresarial para o gerenciamento de barreiras físicas e monitoramento de acesso veicular. Integrando hardware ESP32 de alta performance com um backend Laravel robusto, o sistema oferece controle operacional preciso, segurança baseada em endereços MAC e atualizações em tempo real via LoRa.
+O **IoT Access Control** é um projeto de integração entre uma aplicação Web, firmware ESP32 e comunicação LoRa para explorar a gestão de barreiras físicas e o monitoramento de acessos veiculares. As capacidades descritas dependem da configuração, do hardware e de validação em ambiente real; este repositório não constitui, por si só, uma certificação de segurança ou uma garantia de alcance.
 
 ---
 
+> **Estado do projeto:** protótipo/implementação em evolução. As funcionalidades, imagens e valores apresentados devem ser confirmados no hardware e ambiente de execução antes de serem considerados validados. Não utilizar em controlo de acessos crítico sem análise de risco, testes de segurança, mecanismos fortes de autenticação e procedimentos de contingência.
+
 ## ✨ Funcionalidades
-- **📡 Long-Range Detection**: Detecção de veículos a até 500m utilizando tecnologia LoRa (433MHz).
-- **🛡️ Segurança MAC-Based**: Filtragem rigorosa de dispositivos autorizados com gestão centralizada.
-- **📊 Dashboard Operational**: Visualização em tempo real de métricas, status de conexão e logs de atividade.
+- **📡 Comunicação LoRa**: prototipagem de comunicação de longo alcance na banda configurada; o alcance efetivo deve ser medido no local e depende de antenas, potência permitida, obstáculos e interferência.
+- **🛡️ Controlo por MAC**: mecanismo adicional de identificação/filtragem de dispositivos; endereços MAC podem ser falsificados e não devem ser usados como único mecanismo de autenticação.
+- **📊 Dashboard operacional**: visualização de métricas, estado de ligação e registos de atividade, conforme a integração disponível.
 - **🎯 Detecção Direcional**: Cálculo de trajetória (NS/SN) para automação inteligente de abertura.
 - **📱 PWA Ready**: Interface adaptativa instalável com suporte a modo offline.
 - **🔍 Simulação de Hardware**: Ambiente de teste integrado para validar lógicas sem dispositivos físicos.
